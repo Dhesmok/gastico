@@ -21,7 +21,7 @@ dos ya existen:
 | Usuario | Contraseña temporal |
 | --- | --- |
 | `fabio` | `cuentas.7412` |
-| `pareja` | `cuentas.9358` |
+| `tata` | `cuentas.9358` |
 
 **Cámbialas apenas entren**, desde la app: *Configuración → Mi cuenta → Cambiar
 mi contraseña*.
@@ -51,11 +51,19 @@ declare
 begin
   insert into auth.users (
     id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
-    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+    -- OJO: estas columnas deben ir en '' y NO en NULL. El servicio de auth de
+    -- Supabase las lee como texto simple y con NULL falla al buscar al
+    -- usuario, respondiendo "credenciales inválidas" aunque la clave sea
+    -- correcta. Es el error más fácil de cometer creando usuarios a mano.
+    confirmation_token, recovery_token, email_change, email_change_token_new,
+    email_change_token_current, phone_change, phone_change_token,
+    reauthentication_token
   ) values (
     v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-    v_mail, extensions.crypt(v_clave, extensions.gen_salt('bf')), now(),
-    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()
+    v_mail, extensions.crypt(v_clave, extensions.gen_salt('bf', 10)), now(),
+    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
+    '', '', '', '', '', '', '', ''
   );
   insert into auth.identities (
     user_id, provider, provider_id, identity_data, last_sign_in_at, created_at, updated_at
@@ -67,6 +75,23 @@ begin
   );
 end $$;
 ```
+
+### Cambiarle el nombre a un usuario
+
+```sql
+update auth.users set email = 'nuevo@gastico.app', updated_at = now()
+where email = 'viejo@gastico.app';
+
+update auth.identities i
+set identity_data = jsonb_set(i.identity_data, '{email}', '"nuevo@gastico.app"'),
+    updated_at = now()
+from auth.users u
+where i.user_id = u.id and u.email = 'nuevo@gastico.app';
+```
+
+El apodo que se ve en el chat y en las estadísticas es otra cosa: ese se elige
+al entrar a la sala y se cambia cuando quieras desde *Configuración → Tu
+apodo*. El usuario de aquí es sólo para entrar.
 
 Después, esa persona entra con su usuario y se une a la sala con el ID y la
 contraseña de la sala.

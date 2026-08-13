@@ -1,26 +1,40 @@
 'use client'
 
 import { AlertTriangle, TrendingUp } from 'lucide-react'
-import { formatCOP, type Settings } from '@/lib/finance'
+import {
+  formatMoney,
+  periodRange,
+  type IncomeBudget,
+  type PeriodRange,
+  type Room,
+} from '@/lib/finance'
 import { cn } from '@/lib/utils'
 
 export function BudgetSummary({
   spent,
-  settings,
+  income,
+  room,
+  range,
   compact = false,
 }: {
   spent: number
-  settings: Settings
+  income: IncomeBudget
+  room: Room
+  range?: PeriodRange
   compact?: boolean
 }) {
-  const { monthlyIncome, spendingCap } = settings
-  const capPct = Math.min(100, spendingCap ? (spent / spendingCap) * 100 : 0)
-  const incomePct = Math.min(100, monthlyIncome ? (spent / monthlyIncome) * 100 : 0)
-  const overCap = spent > spendingCap
-  const overIncome = spent > monthlyIncome
-  const remaining = monthlyIncome - spent
+  const period = range ?? periodRange('month')
 
-  const monthLabel = new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+  // El tope se configura por mes; al mirar un trimestre o un año hay que
+  // escalarlo o la comparación no significa nada.
+  const budgetIncome = income.total
+  const cap = room.spendingCap * period.months
+
+  const capPct = cap > 0 ? Math.min(100, (spent / cap) * 100) : 0
+  const incomePct = budgetIncome > 0 ? Math.min(100, (spent / budgetIncome) * 100) : 0
+  const overCap = cap > 0 && spent > cap
+  const overIncome = budgetIncome > 0 && spent > budgetIncome
+  const remaining = budgetIncome - spent
 
   return (
     <div
@@ -34,17 +48,17 @@ export function BudgetSummary({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div>
-          <p className="text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
-            Gastado en {monthLabel}
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
+            Gastado · {period.label}
           </p>
           <p className="font-display text-2xl font-700 leading-tight text-foreground">
-            {formatCOP(spent)}
+            {formatMoney(spent, room.currency)}
           </p>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <p className="text-[11px] font-600 text-muted-foreground">
-            {overIncome ? 'Te pasaste por' : 'Disponible'}
+            {overIncome ? 'Se pasaron por' : 'Disponible'}
           </p>
           <p
             className={cn(
@@ -52,27 +66,28 @@ export function BudgetSummary({
               overIncome ? 'text-destructive' : 'text-foreground',
             )}
           >
-            {formatCOP(Math.abs(remaining))}
+            {formatMoney(Math.abs(remaining), room.currency)}
           </p>
         </div>
       </div>
 
-      {/* Barra de progreso vs tope */}
-      <div className="mt-3.5">
-        <div className="mb-1 flex items-center justify-between text-[11px] font-600 text-muted-foreground">
-          <span>Tope: {formatCOP(spendingCap)}</span>
-          <span>{Math.round(capPct)}%</span>
+      {cap > 0 && (
+        <div className="mt-3.5">
+          <div className="mb-1 flex items-center justify-between text-[11px] font-600 text-muted-foreground">
+            <span>Tope: {formatMoney(cap, room.currency)}</span>
+            <span>{Math.round(capPct)}%</span>
+          </div>
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-700 ease-out',
+                overIncome ? 'bg-destructive' : overCap ? 'bg-chart-3' : 'bg-primary',
+              )}
+              style={{ width: `${Math.max(3, capPct)}%` }}
+            />
+          </div>
         </div>
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn(
-              'h-full rounded-full transition-all duration-700 ease-out',
-              overIncome ? 'bg-destructive' : overCap ? 'bg-chart-3' : 'bg-primary',
-            )}
-            style={{ width: `${Math.max(3, capPct)}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {!compact && (
         <div
@@ -88,17 +103,27 @@ export function BudgetSummary({
           {overIncome ? (
             <>
               <AlertTriangle className="size-4 shrink-0" />
-              <span>¡Alto ahí! Van gastando más de lo que entró este mes. 😳</span>
+              <span>¡Alto ahí! Van gastando más de lo que entró. 😳</span>
             </>
           ) : overCap ? (
             <>
               <AlertTriangle className="size-4 shrink-0" />
               <span>Pasaron el tope que se pusieron. Ojito con los antojos. 👀</span>
             </>
+          ) : budgetIncome > 0 ? (
+            <>
+              <TrendingUp className="size-4 shrink-0" />
+              <span>
+                Van bien: {Math.round(incomePct)}% de{' '}
+                {income.usesRegistered ? 'lo que recibieron' : 'la nómina'}
+                {income.extra > 0 && ` (+ ${formatMoney(income.extra, room.currency)} extra)`}. ¡Sigan
+                así! 🎉
+              </span>
+            </>
           ) : (
             <>
               <TrendingUp className="size-4 shrink-0" />
-              <span>Van bien: {Math.round(incomePct)}% de la nómina usada. ¡Sigan así! 🎉</span>
+              <span>Configura la nómina y el tope para ver qué tan bien van. 🎯</span>
             </>
           )}
         </div>

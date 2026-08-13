@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Settings,
 } from 'lucide-react'
+import type { Member, Room } from '@/lib/finance'
 import { cn } from '@/lib/utils'
 
 export type View = 'chat' | 'stats' | 'settings'
@@ -20,14 +21,18 @@ const ITEMS: { id: View; label: string; icon: typeof MessageCircle }[] = [
 ]
 
 export function TopBar({
+  room,
+  members,
   view,
   onChangeView,
-  onLogout,
+  onExit,
   overBudget,
 }: {
+  room: Room
+  members: Member[]
   view: View
   onChangeView: (v: View) => void
-  onLogout: () => void
+  onExit: () => void
   overBudget: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -42,21 +47,25 @@ export function TopBar({
   }, [])
 
   const current = ITEMS.find((i) => i.id === view)!
+  const roster =
+    members.length <= 3
+      ? members.map((m) => m.nick).join(' & ')
+      : `${members.length} personas`
 
   return (
     <header className="glass sticky top-0 z-30 border-b border-border/60">
       <div className="mx-auto flex h-16 w-full max-w-2xl items-center justify-between gap-3 px-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/30">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/30">
             <HeartHandshake className="size-5" />
           </div>
-          <div className="leading-tight">
-            <p className="font-display text-base font-700 text-foreground">Cuentas Claras</p>
-            <p className="text-[11px] text-muted-foreground">Sofía & Andrés</p>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate font-display text-base font-700 text-foreground">{room.name}</p>
+            <p className="truncate text-[11px] text-muted-foreground">{roster}</p>
           </div>
         </div>
 
-        <div ref={ref} className="relative">
+        <div ref={ref} className="relative shrink-0">
           <button
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
@@ -66,9 +75,14 @@ export function TopBar({
             <current.icon className="size-4 text-primary" />
             <span className="hidden sm:inline">{current.label}</span>
             {overBudget && (
-              <span className="size-2 rounded-full bg-destructive" aria-label="Alerta de presupuesto" />
+              <span
+                className="size-2 rounded-full bg-destructive"
+                aria-label="Alerta de presupuesto"
+              />
             )}
-            <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', open && 'rotate-180')} />
+            <ChevronDown
+              className={cn('size-4 text-muted-foreground transition-transform', open && 'rotate-180')}
+            />
           </button>
 
           {open && (
@@ -86,9 +100,7 @@ export function TopBar({
                   }}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 transition-colors',
-                    view === item.id
-                      ? 'bg-primary/12 text-primary'
-                      : 'text-foreground hover:bg-muted',
+                    view === item.id ? 'bg-primary/12 text-primary' : 'text-foreground hover:bg-muted',
                   )}
                 >
                   <item.icon className="size-4" />
@@ -105,12 +117,12 @@ export function TopBar({
                 role="menuitem"
                 onClick={() => {
                   setOpen(false)
-                  onLogout()
+                  onExit()
                 }}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut className="size-4" />
-                Cerrar sesión
+                Salir de la sala
               </button>
             </div>
           )}

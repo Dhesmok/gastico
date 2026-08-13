@@ -1,33 +1,79 @@
-# gastico
+# Cuentas Claras
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Control de gastos del hogar por chat, para dos (o los que quieran). Le cuentas
+lo que compraste —o le mandas la foto de la factura— y la IA lo va anotando en
+el resumen del mes.
 
-## Built with v0
+👉 **Para ponerla a andar: [SETUP.md](./SETUP.md)** (hay un interruptor en
+Supabase que toca activar a mano).
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+## Cómo funciona
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_ZiKJpReFEPv0qKach3b3CcVamnZ0)
+**Salas, no cuentas.** Creas una sala y te da un ID de 8 caracteres tipo
+`KRPD-7M4X`. Se lo pasas a tu pareja junto con la contraseña y ya está: nada de
+correos, ni Google, ni registro. Pueden entrar cuantas personas quieran, cada
+una con su apodo, y cada gasto queda a nombre de quien lo registró.
 
-## Getting Started
+**Chateas, no llenas formularios.** "mercado en el D1 320mil", "uber 18k",
+"me pagaron la quincena 2 palos". Entiende la jerga colombiana (mil, k, luca,
+palo) y también preguntas: "¿cuánto llevamos en antojos este mes?".
 
-First, run the development server:
+**Facturas por foto.** Le mandas la foto y saca el total, la categoría y el
+comercio. Si la factura mezcla cosas muy distintas, la parte en varios
+movimientos.
+
+**En vivo.** Si tu pareja anota algo desde su celular, te aparece en el tuyo al
+instante.
+
+**Nunca se queda callada.** Si Gemini se cae o se acaba la cuota, un parser
+local sigue registrando los gastos escritos.
+
+## Las pantallas
+
+- **Chat** — anotar, preguntar, corregir. Arriba, cuánto llevan y cuánto queda.
+- **Estadísticas** — mensual, trimestral, semestral, anual o un rango a mano.
+  Por categoría, por persona, tendencia y el detalle movimiento por movimiento
+  (con botón para borrar lo que la IA entendió mal).
+- **Configuración** — el ID para invitar, nómina, tope de gasto, apodo, fondo
+  del chat, modo oscuro, y cada cuánto se borran las fotos.
+
+## Nómina y tope
+
+La **nómina** es lo que esperan que entre al mes. Si además registran el pago
+por el chat ("me pagaron la quincena"), esa manda sobre la configurada: así la
+misma plata no se cuenta dos veces. Los ingresos **extra** (freelance, ventas,
+bonos) sí se suman encima.
+
+Al mirar un trimestre o un año, la nómina y el tope se multiplican por los
+meses del periodo para que la comparación signifique algo.
+
+## Cómo está armado
+
+| Capa | Qué hay |
+| --- | --- |
+| `app/page.tsx` | Estado de la sala, sincronización en vivo, envío al bot |
+| `app/api/chat/` | Gemini. La API key nunca sale del servidor |
+| `lib/finance.ts` | Categorías, periodos, agregaciones y el parser de respaldo |
+| `lib/room.ts` | Todo el acceso a Supabase |
+| `lib/image.ts` | Compresión de facturas en el navegador |
+| `components/` | Las tres pantallas |
+
+Stack: Next.js 16 · React 19 · Tailwind 4 · Supabase (Postgres + RLS + Storage
++ Realtime) · Gemini Flash.
+
+## Seguridad
+
+- Las contraseñas de sala se guardan con bcrypt, nunca en texto plano.
+- RLS en todas las tablas: quien no es miembro de una sala no ve ni una fila.
+  Verificado con pruebas contra la base real.
+- El bucket de facturas es privado; las imágenes se sirven con URLs firmadas
+  que caducan.
+- La API key de Gemini vive sólo en el servidor.
+- 10 intentos fallidos por hora al entrar a una sala.
+
+## Desarrollo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-## Learn More
-
-To learn more, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.

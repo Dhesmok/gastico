@@ -60,12 +60,13 @@ meses del periodo para que la comparación signifique algo.
 | `app/page.tsx` | Estado de la sala, sincronización en vivo, envío al bot |
 | `app/api/chat/` | Gemini. La API key nunca sale del servidor |
 | `lib/finance.ts` | Categorías, periodos, agregaciones y el parser de respaldo |
+| `lib/gemini.ts` | El cliente de la IA, aislado: cambiar de modelo o proveedor se hace aquí |
 | `lib/room.ts` | Todo el acceso a Supabase |
 | `lib/image.ts` | Compresión de facturas en el navegador |
 | `components/` | Las tres pantallas |
 
 Stack: Next.js 16 · React 19 · Tailwind 4 · Supabase (Postgres + RLS + Storage
-+ Realtime) · Gemini Flash.
++ Realtime) · Gemini Flash-Lite.
 
 ## Seguridad
 

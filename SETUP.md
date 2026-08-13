@@ -108,15 +108,32 @@ Saca una API key gratis en <https://aistudio.google.com/apikey>.
 La key vive **sólo en el servidor** (`app/api/chat/route.ts`). El navegador
 nunca la ve, así que nadie puede sacarla del código.
 
-Por defecto usa `gemini-2.5-flash` y, si esa no está disponible para tu key,
-cae automáticamente a `gemini-2.0-flash`.
+### Qué modelo usa
+
+Por defecto **`gemini-3.1-flash-lite`**. Si tu key no tiene acceso a ese
+modelo, o Google le cambia el nombre, la app prueba sola con `gemini-2.5-flash`
+y luego con `gemini-2.0-flash`. No hay que hacer nada.
+
+Para forzar otro modelo, añade la variable `GEMINI_MODEL` con el nombre que
+quieras: manda sobre el valor por defecto.
+
+Ten en cuenta que **flash-lite es el modelo más liviano**: con texto va
+perfecto, pero leyendo fotos de facturas se equivoca más que `flash`. Si notas
+que las facturas salen mal, pon `GEMINI_MODEL=gemini-3.1-flash` (o
+`gemini-2.5-flash`) y listo, sin tocar código.
 
 > Ojo: en el plan gratuito de Google, lo que le mandes puede usarse para
 > entrenar sus modelos. Para las cuentas del mercado no es grave, pero vale la
 > pena saberlo.
 
-**Si Gemini falla** (se acabó la cuota, se cayó, no hay key), la app no se
-queda muda: un parser local en `lib/finance.ts` entiende "mercado 120mil",
+### Si algo falla
+
+La respuesta del bot incluye qué modelo contestó, y el servidor deja un aviso
+en los logs de Vercel cuando tuvo que usar uno de respaldo. Así se sabe qué
+pasó sin adivinar.
+
+**Si Gemini falla del todo** (se acabó la cuota, se cayó, no hay key), la app
+no se queda muda: un parser local en `lib/finance.ts` entiende "mercado 120mil",
 "uber 18k", "2 palos" y registra el gasto igual. Lo único que se pierde
 mientras tanto es la lectura de facturas por foto.
 

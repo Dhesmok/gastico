@@ -8,6 +8,8 @@ import {
   Image as ImageIcon,
   KeyRound,
   Laugh,
+  Lock,
+  LogOut,
   Moon,
   Receipt,
   Sun,
@@ -19,6 +21,7 @@ import {
 import { formatMoney, type Member, type Room } from '@/lib/finance'
 import { CHAT_BACKGROUNDS } from '@/lib/backgrounds'
 import { changeRoomPassword, formatCode } from '@/lib/room'
+import { changeMyPassword } from '@/lib/supabase/client'
 import { applyTheme, currentTheme, type Theme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +32,7 @@ export function SettingsView({
   onChange,
   onNickChange,
   onLeaveRoom,
+  onSignOut,
   notify,
 }: {
   room: Room
@@ -37,10 +41,12 @@ export function SettingsView({
   onChange: (patch: Partial<Room>) => void
   onNickChange: (nick: string) => void
   onLeaveRoom: () => void
+  onSignOut: () => void
   notify: (text: string) => void
 }) {
   const [nick, setNick] = useState(me.nick)
   const [newPassword, setNewPassword] = useState('')
+  const [myPassword, setMyPassword] = useState('')
   const [theme, setTheme] = useState<Theme>('light')
   const [copied, setCopied] = useState(false)
   const [confirmLeave, setConfirmLeave] = useState(false)
@@ -56,6 +62,20 @@ export function SettingsView({
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
       notify('No pude copiar. El ID es ' + formatCode(room.code))
+    }
+  }
+
+  async function saveMyPassword() {
+    if (myPassword.length < 6) {
+      notify('Tu contraseña de entrada necesita al menos 6 caracteres.')
+      return
+    }
+    try {
+      await changeMyPassword(myPassword)
+      setMyPassword('')
+      notify('Tu contraseña de entrada quedó cambiada.')
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No pude cambiarla.')
     }
   }
 
@@ -339,6 +359,54 @@ export function SettingsView({
             checked={room.humor}
             onChange={(v) => onChange({ humor: v })}
           />
+        </section>
+
+        {/* Mi cuenta */}
+        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+              <Lock className="size-5" />
+            </span>
+            <div>
+              <h3 className="font-display text-base font-700 text-foreground">Mi cuenta</h3>
+              <p className="text-xs text-muted-foreground">
+                La contraseña con la que entras a la app
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-end gap-2">
+            <TextField
+              className="flex-1"
+              label="Cambiar mi contraseña"
+              value={myPassword}
+              onChange={setMyPassword}
+              type="password"
+              placeholder="mínimo 6 caracteres"
+              maxLength={64}
+            />
+            <button
+              onClick={saveMyPassword}
+              disabled={myPassword.length < 6}
+              className="flex h-11 items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 text-xs font-700 text-foreground shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
+            >
+              <KeyRound className="size-3.5" />
+              Guardar
+            </button>
+          </div>
+
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+            Ojo: esta es distinta a la contraseña de la sala. Esta es sólo tuya; la de la sala es la
+            que compartes para que alguien entre.
+          </p>
+
+          <button
+            onClick={onSignOut}
+            className="mt-3 flex items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 py-2 text-xs font-700 text-muted-foreground transition-colors hover:text-destructive"
+          >
+            <LogOut className="size-3.5" />
+            Cerrar sesión
+          </button>
         </section>
 
         {/* Salir */}

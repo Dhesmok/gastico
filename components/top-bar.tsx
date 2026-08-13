@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   BarChart3,
   ChevronDown,
+  DoorOpen,
   HeartHandshake,
   LogOut,
   MessageCircle,
@@ -26,6 +27,7 @@ export function TopBar({
   view,
   onChangeView,
   onExit,
+  onSignOut,
   overBudget,
 }: {
   room: Room
@@ -33,6 +35,7 @@ export function TopBar({
   view: View
   onChangeView: (v: View) => void
   onExit: () => void
+  onSignOut: () => void
   overBudget: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -119,10 +122,21 @@ export function TopBar({
                   setOpen(false)
                   onExit()
                 }}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 text-foreground transition-colors hover:bg-muted"
+              >
+                <DoorOpen className="size-4" />
+                Cambiar de sala
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false)
+                  onSignOut()
+                }}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut className="size-4" />
-                Salir de la sala
+                Cerrar sesión
               </button>
             </div>
           )}

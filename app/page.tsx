@@ -2,12 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import { LoginScreen } from '@/components/login-screen'
 import { RoomGate } from '@/components/room-gate'
 import { TopBar, type View } from '@/components/top-bar'
 import { ChatView } from '@/components/chat-view'
 import { StatsView } from '@/components/stats-view'
 import { SettingsView } from '@/components/settings-view'
-import { ensureSession, getSupabase, supabaseConfigured } from '@/lib/supabase/client'
+import {
+  currentSession,
+  getSupabase,
+  signOut,
+  supabaseConfigured,
+} from '@/lib/supabase/client'
 import {
   deleteExpense as deleteExpenseRow,
   forgetRoom,
@@ -38,12 +44,12 @@ import {
 } from '@/lib/finance'
 import { applyStoredTheme } from '@/lib/theme'
 
-type Phase = 'booting' | 'gate' | 'loading' | 'ready'
+type Phase = 'booting' | 'login' | 'gate' | 'loading' | 'ready'
 
 export default function Page() {
   const [phase, setPhase] = useState<Phase>('booting')
   const [userId, setUserId] = useState<string | null>(null)
-  const [sessionError, setSessionError] = useState<string | null>(null)
+  const [configError, setConfigError] = useState<string | null>(null)
   const [roomId, setRoomId] = useState<string | null>(null)
 
   const [room, setRoom] = useState<Room | null>(null)
@@ -63,23 +69,27 @@ export default function Page() {
     window.setTimeout(() => setToast((t) => (t === text ? null : t)), 4000)
   }, [])
 
-  // ---- Arranque: sesión anónima + última sala usada -----------------------
+  // ---- Arranque: sesión guardada + última sala usada ----------------------
   useEffect(() => {
     applyStoredTheme()
 
     if (!supabaseConfigured) {
-      setSessionError(
+      setConfigError(
         'Faltan las variables de entorno de Supabase. Copia .env.example a .env.local y llénalas (ver SETUP.md).',
       )
-      setPhase('gate')
+      setPhase('login')
       return
     }
 
     let cancelled = false
-    ensureSession()
+    currentSession()
       .then((session) => {
         if (cancelled) return
-        setUserId(session?.user.id ?? null)
+        if (!session) {
+          setPhase('login')
+          return
+        }
+        setUserId(session.user.id)
         const saved = lastRoomId()
         if (saved) {
           setRoomId(saved)
@@ -88,14 +98,27 @@ export default function Page() {
           setPhase('gate')
         }
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (cancelled) return
-        setSessionError(error instanceof Error ? error.message : String(error))
-        setPhase('gate')
+        setPhase('login')
       })
 
     return () => {
       cancelled = true
+    }
+  }, [])
+
+  // Tras entrar con usuario y contraseña, seguir hacia la sala.
+  const handleLoggedIn = useCallback(async () => {
+    const session = await currentSession()
+    if (!session) return
+    setUserId(session.user.id)
+    const saved = lastRoomId()
+    if (saved) {
+      setRoomId(saved)
+      setPhase('loading')
+    } else {
+      setPhase('gate')
     }
   }, [])
 
@@ -382,7 +405,7 @@ export default function Page() {
     [notify, room, userId],
   )
 
-  const handleExit = useCallback(() => {
+  const clearRoomState = useCallback(() => {
     forgetRoom()
     setRoomId(null)
     setRoom(null)
@@ -390,8 +413,20 @@ export default function Page() {
     setExpenses([])
     setMembers([])
     setView('chat')
-    setPhase('gate')
   }, [])
+
+  /** Vuelve al selector de sala, sin cerrar la sesión. */
+  const handleExit = useCallback(() => {
+    clearRoomState()
+    setPhase('gate')
+  }, [clearRoomState])
+
+  const handleSignOut = useCallback(async () => {
+    clearRoomState()
+    setUserId(null)
+    await signOut().catch(() => {})
+    setPhase('login')
+  }, [clearRoomState])
 
   const handleLeaveRoom = useCallback(async () => {
     if (!room || !userId) return
@@ -405,14 +440,18 @@ export default function Page() {
     return <FullScreenLoader label="Abriendo la app…" />
   }
 
+  if (phase === 'login' || !userId) {
+    return <LoginScreen configError={configError} onLogin={handleLoggedIn} />
+  }
+
   if (phase === 'gate' || !roomId) {
     return (
       <RoomGate
-        sessionError={sessionError}
         onReady={(id) => {
           setRoomId(id)
           setPhase('loading')
         }}
+        onSignOut={handleSignOut}
       />
     )
   }
@@ -429,6 +468,7 @@ export default function Page() {
         view={view}
         onChangeView={setView}
         onExit={handleExit}
+        onSignOut={handleSignOut}
         overBudget={overBudget}
       />
 
@@ -466,6 +506,7 @@ export default function Page() {
           onChange={handleRoomChange}
           onNickChange={handleNickChange}
           onLeaveRoom={handleLeaveRoom}
+          onSignOut={handleSignOut}
           notify={notify}
         />
       )}

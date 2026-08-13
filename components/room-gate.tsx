@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DoorOpen, HeartHandshake, KeyRound, Loader2, Plus, Sparkles } from 'lucide-react'
+import { DoorOpen, HeartHandshake, KeyRound, Loader2, LogOut, Plus, Sparkles } from 'lucide-react'
 import { createRoom, formatCode, joinRoom, myRooms } from '@/lib/room'
 import { cn } from '@/lib/utils'
 
@@ -9,10 +9,10 @@ type Mode = 'create' | 'join'
 
 export function RoomGate({
   onReady,
-  sessionError,
+  onSignOut,
 }: {
   onReady: (roomId: string) => void
-  sessionError: string | null
+  onSignOut: () => void
 }) {
   const [mode, setMode] = useState<Mode>('create')
   const [roomName, setRoomName] = useState('')
@@ -23,11 +23,10 @@ export function RoomGate({
   const [error, setError] = useState<string | null>(null)
   const [known, setKnown] = useState<{ id: string; name: string; code: string }[]>([])
 
-  // Si este dispositivo ya pertenece a alguna sala, ofrecerla de un toque.
+  // Si este usuario ya pertenece a alguna sala, ofrecerla de un toque.
   useEffect(() => {
-    if (sessionError) return
     myRooms().then(setKnown).catch(() => setKnown([]))
-  }, [sessionError])
+  }, [])
 
   async function submit() {
     setError(null)
@@ -80,14 +79,7 @@ export function RoomGate({
           </p>
         </div>
 
-        {sessionError ? (
-          <div className="rounded-3xl border border-destructive/40 bg-destructive/10 p-4 text-sm leading-relaxed text-destructive">
-            <p className="font-700">No pude iniciar la sesión</p>
-            <p className="mt-1">{sessionError}</p>
-          </div>
-        ) : (
-          <>
-            {known.length > 0 && (
+        {known.length > 0 && (
               <div className="mb-5">
                 <p className="mb-2 text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
                   Tus salas
@@ -212,11 +204,17 @@ export function RoomGate({
               <span>
                 {mode === 'create'
                   ? 'Al crear la sala te damos un ID de 8 caracteres. Compártelo con tu pareja junto con la contraseña y listo: nadie más entra.'
-                  : 'Pide el ID y la contraseña a quien creó la sala. No hace falta correo ni cuenta de nada.'}
+                  : 'Pide el ID y la contraseña a quien creó la sala. Son distintas a las tuyas de entrada.'}
               </span>
             </div>
-          </>
-        )}
+
+            <button
+              onClick={onSignOut}
+              className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-700 text-muted-foreground transition-colors hover:text-destructive"
+            >
+              <LogOut className="size-3.5" />
+              Cerrar sesión
+            </button>
       </div>
     </main>
   )

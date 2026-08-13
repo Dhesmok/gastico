@@ -1,31 +1,82 @@
 # Puesta en marcha
 
-Todo el proyecto corre en planes gratuitos. Son cuatro pasos.
+Todo el proyecto corre en planes gratuitos.
+
+La base de datos y los usuarios **ya quedaron creados**: no hay que tocar nada
+en el panel de Supabase. Lo único que falta de verdad es la API key de Gemini
+(paso 2) y poner las variables donde va a correr (paso 3).
 
 ---
 
 ## 1. Supabase
 
 La base de datos ya está creada y migrada en el proyecto
-`imsknquotsqjwxqjciov`. Sólo falta **un interruptor que hay que activar a
-mano**, porque la API no lo permite:
+`imsknquotsqjwxqjciov`. **No hay que tocar nada en el panel.**
 
-> **Authentication → Sign In / Providers → Anonymous sign-ins → Enable**
+### Los usuarios ya están creados
 
-### ¿Por qué sesiones anónimas?
+No hay registro ni correos: los usuarios se crean a mano y sólo se entra. Estos
+dos ya existen:
 
-Tú pediste salas con ID + contraseña y sin usuarios visibles: nada de correos
-ni de "iniciar sesión con Google". Pero las reglas de seguridad de Postgres
-(RLS) necesitan saber *quién* es cada quien para que la sala A no vea los
-gastos de la sala B.
+| Usuario | Contraseña temporal |
+| --- | --- |
+| `fabio` | `cuentas.7412` |
+| `pareja` | `cuentas.9358` |
 
-La sesión anónima resuelve las dos cosas: al abrir la app, el dispositivo
-recibe una identidad real de Supabase de forma invisible (sin pedir nada), y
-sobre esa identidad se monta la membresía de la sala. La contraseña de verdad
-—la que decide quién entra— sigue siendo la de la sala.
+**Cámbialas apenas entren**, desde la app: *Configuración → Mi cuenta → Cambiar
+mi contraseña*.
 
-Si el interruptor está apagado, la app lo dice con todas sus letras en la
-pantalla de inicio en vez de fallar en silencio.
+Por dentro, la app le pega el dominio `@gastico.app` al usuario (`fabio` pasa a
+ser `fabio@gastico.app`), pero eso nunca se ve ni se escribe. Ese correo no
+existe ni recibe nada: es sólo la forma en que Supabase identifica la cuenta.
+
+### Añadir una tercera persona
+
+Dos formas.
+
+**Desde el panel:** *Authentication → Users → Add user*. El correo debe
+terminar en `@gastico.app` (por ejemplo `mama@gastico.app`), y hay que marcar
+**"Auto Confirm User"**.
+
+**Desde el editor SQL** (*SQL Editor → New query*), cambiando el usuario y la
+clave de la primera línea:
+
+```sql
+do $$
+declare
+  v_usuario constant text := 'mama';
+  v_clave   constant text := 'una-clave-buena';
+  v_uid uuid := gen_random_uuid();
+  v_mail text := v_usuario || '@gastico.app';
+begin
+  insert into auth.users (
+    id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) values (
+    v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+    v_mail, extensions.crypt(v_clave, extensions.gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now()
+  );
+  insert into auth.identities (
+    user_id, provider, provider_id, identity_data, last_sign_in_at, created_at, updated_at
+  ) values (
+    v_uid, 'email', v_uid::text,
+    jsonb_build_object('sub', v_uid::text, 'email', v_mail,
+                       'email_verified', true, 'phone_verified', false),
+    now(), now(), now()
+  );
+end $$;
+```
+
+Después, esa persona entra con su usuario y se une a la sala con el ID y la
+contraseña de la sala.
+
+### Dos contraseñas distintas (no las confundas)
+
+| Cuál | Para qué | Quién la sabe |
+| --- | --- | --- |
+| **Tu contraseña** | Entrar a la app | Sólo tú |
+| **Contraseña de la sala** | Unirse a la sala compartida | La compartes con tu pareja |
 
 ### Lo que ya quedó creado
 
@@ -45,8 +96,8 @@ Seguridad: RLS activo en todas las tablas. Un miembro sólo ve las filas de
 pruebas contra la base real, incluyendo el caso del extraño que intenta leer
 una sala ajena.
 
-La contraseña de la sala **nunca** se guarda en texto plano: se almacena el
-hash bcrypt y `join_room` lo compara del lado del servidor.
+Las contraseñas **nunca** se guardan en texto plano: se almacena el hash bcrypt
+y la comparación ocurre del lado del servidor.
 
 ---
 

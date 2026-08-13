@@ -4,15 +4,19 @@ Control de gastos del hogar por chat, para dos (o los que quieran). Le cuentas
 lo que compraste —o le mandas la foto de la factura— y la IA lo va anotando en
 el resumen del mes.
 
-👉 **Para ponerla a andar: [SETUP.md](./SETUP.md)** (hay un interruptor en
-Supabase que toca activar a mano).
+👉 **Para ponerla a andar: [SETUP.md](./SETUP.md)** (los usuarios y la base ya
+están listos; sólo falta la API key de Gemini y desplegar).
 
 ## Cómo funciona
 
-**Salas, no cuentas.** Creas una sala y te da un ID de 8 caracteres tipo
-`KRPD-7M4X`. Se lo pasas a tu pareja junto con la contraseña y ya está: nada de
-correos, ni Google, ni registro. Pueden entrar cuantas personas quieran, cada
-una con su apodo, y cada gasto queda a nombre de quien lo registró.
+**Entras con un usuario, no con un correo.** Las cuentas se crean a mano en
+Supabase (ver SETUP.md): no hay registro, ni Google, ni correos de
+confirmación. Escribes tu usuario y tu contraseña y entras.
+
+**Salas para compartir.** Ya dentro, creas una sala y te da un ID de 8
+caracteres tipo `KRPD-7M4X`. Se lo pasas a tu pareja junto con la contraseña de
+la sala y ya está. Pueden entrar cuantas personas quieran, cada una con su
+apodo, y cada gasto queda a nombre de quien lo registró.
 
 **Chateas, no llenas formularios.** "mercado en el D1 320mil", "uber 18k",
 "me pagaron la quincena 2 palos". Entiende la jerga colombiana (mil, k, luca,
@@ -35,7 +39,8 @@ local sigue registrando los gastos escritos.
   Por categoría, por persona, tendencia y el detalle movimiento por movimiento
   (con botón para borrar lo que la IA entendió mal).
 - **Configuración** — el ID para invitar, nómina, tope de gasto, apodo, fondo
-  del chat, modo oscuro, y cada cuánto se borran las fotos.
+  del chat, modo oscuro, cada cuánto se borran las fotos, y tu contraseña de
+  entrada.
 
 ## Nómina y tope
 
@@ -51,6 +56,7 @@ meses del periodo para que la comparación signifique algo.
 
 | Capa | Qué hay |
 | --- | --- |
+| `components/login-screen.tsx` | Entrada con usuario y contraseña |
 | `app/page.tsx` | Estado de la sala, sincronización en vivo, envío al bot |
 | `app/api/chat/` | Gemini. La API key nunca sale del servidor |
 | `lib/finance.ts` | Categorías, periodos, agregaciones y el parser de respaldo |
@@ -63,7 +69,8 @@ Stack: Next.js 16 · React 19 · Tailwind 4 · Supabase (Postgres + RLS + Storag
 
 ## Seguridad
 
-- Las contraseñas de sala se guardan con bcrypt, nunca en texto plano.
+- Las contraseñas (la tuya y la de la sala) se guardan con bcrypt, nunca en
+  texto plano.
 - RLS en todas las tablas: quien no es miembro de una sala no ve ni una fila.
   Verificado con pruebas contra la base real.
 - El bucket de facturas es privado; las imágenes se sirven con URLs firmadas

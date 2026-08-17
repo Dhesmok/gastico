@@ -26,6 +26,11 @@ palo) y también preguntas: "¿cuánto llevamos en antojos este mes?".
 comercio. Si la factura mezcla cosas muy distintas, la parte en varios
 movimientos.
 
+**Clasifica sola, y aprende.** Cada movimiento cae en una categoría (mercado,
+antojos, lujos, servicios…). Si algo queda mal puesto, tocas el gasto y se lo
+cambias: a la segunda corrección, la app aprende que "el corral" es antojo para
+ustedes y la IA lo usa de ahí en adelante.
+
 **En vivo.** Si tu pareja anota algo desde su celular, te aparece en el tuyo al
 instante.
 
@@ -36,11 +41,22 @@ local sigue registrando los gastos escritos.
 
 - **Chat** — anotar, preguntar, corregir. Arriba, cuánto llevan y cuánto queda.
 - **Estadísticas** — mensual, trimestral, semestral, anual o un rango a mano.
-  Por categoría, por persona, tendencia y el detalle movimiento por movimiento
-  (con botón para borrar lo que la IA entendió mal).
+  Compara con el periodo anterior, proyecta cómo va a cerrar el mes al ritmo
+  actual, y parte el gasto en *necesario / gustos / ahorro*. Por categoría (con
+  cuánto subió o bajó), por persona, tendencia con el promedio marcado, los
+  movimientos más grandes y el detalle, que se filtra tocando una categoría o
+  una persona. Cada movimiento se puede recategorizar o borrar.
 - **Configuración** — el ID para invitar, nómina, tope de gasto, apodo, fondo
   del chat, modo oscuro, cada cuánto se borran las fotos, y tu contraseña de
   entrada.
+
+## Necesario, gustos y ahorro
+
+Cada categoría sabe para qué sirve la plata: mercado, casa, servicios,
+transporte, salud, educación y mascotas son **necesario**; antojos, ocio y
+lujos son **gustos**; y ahorro/deudas va aparte porque sale de la cuenta pero
+no se "gasta". Dos meses con el mismo total pueden ser muy distintos según cómo
+caiga esa división, y es donde se ve qué se puede recortar.
 
 ## Nómina y tope
 

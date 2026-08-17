@@ -23,13 +23,60 @@ export type CategoryId =
   | 'nomina'
   | 'extra'
 
+/**
+ * Para qué sirve la plata. Sobre esto se arma el "en qué se les va": no es lo
+ * mismo pasarse en mercado que pasarse en lujos, aunque el total sea igual.
+ */
+export type Nature = 'necesario' | 'gusto' | 'ahorro' | 'suelto' | 'ingreso'
+
+export const NATURES: Record<Nature, { label: string; emoji: string; color: string; hint: string }> = {
+  necesario: {
+    label: 'Necesario',
+    emoji: '🧱',
+    color: 'var(--cat-mercado)',
+    hint: 'Mercado, casa, servicios, transporte, salud, educación y mascotas.',
+  },
+  gusto: {
+    label: 'Gustos',
+    emoji: '✨',
+    color: 'var(--cat-lujos)',
+    hint: 'Antojos, ocio y lujos: lo primero que se recorta si el mes viene apretado.',
+  },
+  ahorro: {
+    label: 'Ahorro y deudas',
+    emoji: '🐷',
+    color: 'var(--cat-ahorro)',
+    hint: 'Sale de la cuenta, pero no se "gasta": se guarda o abona una deuda.',
+  },
+  suelto: {
+    label: 'Sin clasificar',
+    emoji: '📦',
+    color: 'var(--cat-otros)',
+    hint: 'Lo que quedó en "Otros". Tócalo y corrígele la categoría.',
+  },
+  ingreso: {
+    label: 'Ingresos',
+    emoji: '💰',
+    color: 'var(--cat-nomina)',
+    hint: 'Lo que entra.',
+  },
+}
+
 export type Category = {
   id: CategoryId
   label: string
   emoji: string
   color: string
   kind: Kind
-  /** Pistas para la IA y para el parser local de respaldo. */
+  nature: Nature
+  /**
+   * Pistas para la IA y para el parser local de respaldo.
+   *
+   * Se comparan sin tildes y como palabra completa (con su plural), así que
+   * "energia" también pilla "energía" y "energías", pero "pan" no se dispara
+   * dentro de "pantalón". Una pista que termina en `*` se compara como
+   * prefijo: "droguer*" pilla "droguería" y "drogueria".
+   */
   hints: string[]
 }
 
@@ -40,7 +87,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🛒',
     color: 'var(--cat-mercado)',
     kind: 'expense',
-    hints: ['mercado', 'supermercado', 'super', 'd1', 'ara', 'exito', 'olimpica', 'jumbo', 'carulla', 'plaza', 'fruver', 'verduras', 'frutas', 'carniceria', 'despensa'],
+    nature: 'necesario',
+    hints: [
+      'mercado', 'mercar', 'mercamos', 'supermercado', 'super', 'd1', 'ara', 'justo y bueno',
+      'exito', 'olimpica', 'jumbo', 'carulla', 'makro', 'pricesmart', 'surtimax', 'zapatoca',
+      'la 14', 'colsubsidio', 'tienda', 'granero', 'plaza de mercado', 'fruver',
+      'verduras', 'frutas', 'carniceria', 'pollo', 'carne', 'huevos', 'leche', 'arroz',
+      'panaderia', 'pan', 'despensa', 'abarrotes', 'aseo del mercado', 'papel higienico',
+    ],
   },
   casa: {
     id: 'casa',
@@ -48,7 +102,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🏠',
     color: 'var(--cat-casa)',
     kind: 'expense',
-    hints: ['arriendo', 'renta', 'administracion', 'administración', 'hogar', 'muebles', 'reparacion', 'reparación', 'ferreteria', 'ferretería', 'aseo', 'plomero', 'electricista'],
+    nature: 'necesario',
+    hints: [
+      'arriendo', 'renta', 'administracion', 'hogar', 'muebles', 'mueble', 'reparacion',
+      'ferreteria', 'homecenter', 'sodimac', 'easy', 'plomero', 'electricista', 'cerrajero',
+      'pintura', 'lavadora', 'nevera', 'estufa', 'colchon', 'cortinas', 'vajilla', 'olla',
+      'decoracion', 'trasteo', 'mudanza', 'predial', 'impuesto de la casa', 'seguro del hogar',
+      'empleada', 'servicio de aseo',
+    ],
   },
   servicios: {
     id: 'servicios',
@@ -56,7 +117,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🧾',
     color: 'var(--cat-servicios)',
     kind: 'expense',
-    hints: ['luz', 'energia', 'energía', 'agua', 'gas', 'internet', 'celular', 'recibo', 'factura', 'netflix', 'spotify', 'suscripcion', 'suscripción', 'plan de datos'],
+    nature: 'necesario',
+    hints: [
+      'luz', 'energia', 'agua', 'acueducto', 'gas', 'internet', 'wifi', 'celular', 'recibo',
+      'recibos', 'servicios', 'epm', 'emcali', 'codensa', 'enel', 'vanti', 'afinia', 'air-e',
+      'claro', 'movistar', 'tigo', 'wom', 'etb', 'recarga', 'plan de datos', 'minutos',
+      'netflix', 'spotify', 'disney', 'hbo max', 'prime video', 'youtube premium', 'icloud',
+      'suscripcion', 'membresia',
+    ],
   },
   calle: {
     id: 'calle',
@@ -64,7 +132,15 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🌮',
     color: 'var(--cat-calle)',
     kind: 'expense',
-    hints: ['antojo', 'antojos', 'domicilio', 'rappi', 'almuerzo', 'desayuno', 'onces', 'empanada', 'arepa', 'cafe', 'café', 'tinto', 'helado', 'postre', 'cerveza', 'snack', 'comida rapida', 'comida rápida'],
+    nature: 'gusto',
+    hints: [
+      'antojo', 'domicilio', 'rappi', 'didi food', 'ifood', 'almuerzo', 'desayuno', 'onces',
+      'comida rapida', 'empanada', 'arepa', 'salchipapa', 'perro caliente', 'hamburguesa',
+      'pizza', 'sandwich', 'picada', 'mcdonalds', 'burger king', 'kfc', 'frisby', 'subway',
+      'dominos', 'presto', 'sierra nevada', 'cafe', 'tinto', 'juan valdez', 'tostao', 'oma',
+      'starbucks', 'helado', 'postre', 'malteada', 'jugo', 'gaseosa', 'snack', 'mecato',
+      'chocolatina', 'buñuelo', 'almojabana', 'cerveza', 'michelada',
+    ],
   },
   transporte: {
     id: 'transporte',
@@ -72,7 +148,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🚕',
     color: 'var(--cat-transporte)',
     kind: 'expense',
-    hints: ['uber', 'didi', 'indriver', 'taxi', 'bus', 'buseta', 'gasolina', 'combustible', 'peaje', 'parqueadero', 'transmilenio', 'metro', 'pasaje', 'sitp', 'mecanico', 'mecánico', 'lavada'],
+    nature: 'necesario',
+    hints: [
+      'uber', 'didi', 'indriver', 'cabify', 'taxi', 'bus', 'buseta', 'sitp', 'transmilenio',
+      'metro', 'tullave', 'civica', 'pasaje', 'gasolina', 'combustible', 'acpm',
+      'peaje', 'parqueadero', 'grua', 'mecanico', 'taller', 'llantas', 'aceite del carro',
+      'lavada del carro', 'soat', 'tecnomecanica', 'seguro del carro', 'moto', 'bicicleta',
+      'patineta',
+    ],
   },
   salud: {
     id: 'salud',
@@ -80,7 +163,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '💊',
     color: 'var(--cat-salud)',
     kind: 'expense',
-    hints: ['farmacia', 'droguer', 'medicina', 'medicamento', 'vitaminas', 'doctor', 'medico', 'médico', 'odontolog', 'eps', 'consulta', 'examen', 'terapia', 'gimnasio', 'gym'],
+    nature: 'necesario',
+    hints: [
+      'farmacia', 'droguer*', 'farmatodo', 'cruz verde', 'locatel', 'medicina', 'medicamento',
+      'pastillas', 'vitaminas', 'doctor', 'doctora', 'medico', 'odontolog*', 'psicolog*',
+      'nutricionista', 'optica', 'gafas', 'eps', 'sura', 'sanitas', 'compensar', 'copago',
+      'cita', 'consulta', 'examen', 'laboratorio', 'vacuna', 'terapia', 'gimnasio', 'gym',
+      'crossfit', 'yoga', 'pilates', 'proteina',
+    ],
   },
   lujos: {
     id: 'lujos',
@@ -88,7 +178,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '✨',
     color: 'var(--cat-lujos)',
     kind: 'expense',
-    hints: ['lujo', 'ropa', 'zapatos', 'camisa', 'vestido', 'regalo', 'joya', 'perfume', 'maquillaje', 'peluqueria', 'peluquería', 'spa', 'tecnologia', 'tecnología', 'capricho'],
+    nature: 'gusto',
+    hints: [
+      'lujo', 'capricho', 'ropa', 'zapatos', 'tenis', 'camisa', 'camiseta', 'pantalon',
+      'vestido', 'chaqueta', 'bolso', 'gorra', 'zara', 'falabella', 'arturo calle', 'totto',
+      'koaj', 'adidas', 'nike', 'regalo', 'joya', 'anillo', 'reloj', 'perfume', 'maquillaje',
+      'crema', 'peluqueria', 'barberia', 'corte de pelo', 'manicure', 'pedicure',
+      'spa', 'masaje', 'tatuaje', 'audifonos', 'tecnologia',
+    ],
   },
   ocio: {
     id: 'ocio',
@@ -96,7 +193,14 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🎬',
     color: 'var(--cat-ocio)',
     kind: 'expense',
-    hints: ['cine', 'restaurante', 'cena', 'salida', 'fiesta', 'rumba', 'concierto', 'viaje', 'paseo', 'hotel', 'vuelo', 'museo', 'juego', 'plan'],
+    nature: 'gusto',
+    hints: [
+      'cine', 'pelicula', 'teatro', 'concierto', 'festival', 'feria', 'museo', 'restaurante',
+      'cena', 'salida', 'fiesta', 'rumba', 'bar', 'discoteca', 'trago', 'licor', 'aguardiente',
+      'ron', 'whisky', 'billar', 'bolos', 'videojuego', 'steam', 'playstation', 'xbox',
+      'nintendo', 'viaje', 'paseo', 'finca', 'hotel', 'airbnb', 'vuelo', 'tiquete', 'crucero',
+      'parque', 'piscina', 'plan',
+    ],
   },
   mascotas: {
     id: 'mascotas',
@@ -104,7 +208,12 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🐾',
     color: 'var(--cat-mascotas)',
     kind: 'expense',
-    hints: ['perro', 'gato', 'mascota', 'veterinario', 'veterinaria', 'concentrado', 'purina', 'guarderia canina', 'arena para gato'],
+    nature: 'necesario',
+    hints: [
+      'perro', 'perrito', 'gato', 'gatico', 'mascota', 'veterinari*', 'concentrado', 'purina',
+      'dog chow', 'hills', 'arena para gato', 'guarderia canina', 'peluqueria canina',
+      'baño del perro', 'collar', 'guacal', 'desparasitante', 'vacuna del perro',
+    ],
   },
   educacion: {
     id: 'educacion',
@@ -112,7 +221,13 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '📚',
     color: 'var(--cat-educacion)',
     kind: 'expense',
-    hints: ['curso', 'universidad', 'colegio', 'matricula', 'matrícula', 'libro', 'libros', 'estudio', 'clase', 'certificacion', 'certificación'],
+    nature: 'necesario',
+    hints: [
+      'curso', 'universidad', 'colegio', 'jardin', 'sena', 'matricula', 'pension del colegio',
+      'semestre', 'diplomado', 'maestria', 'certificacion', 'libro', 'cuaderno', 'utiles',
+      'morral', 'uniforme', 'clase', 'profesor', 'tutoria', 'platzi', 'udemy', 'coursera',
+      'duolingo',
+    ],
   },
   ahorro: {
     id: 'ahorro',
@@ -120,7 +235,12 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🐷',
     color: 'var(--cat-ahorro)',
     kind: 'expense',
-    hints: ['ahorro', 'ahorre', 'ahorré', 'cdt', 'inversion', 'inversión', 'deuda', 'cuota', 'credito', 'crédito', 'tarjeta', 'prestamo', 'préstamo'],
+    nature: 'ahorro',
+    hints: [
+      'ahorro', 'ahorre', 'ahorramos', 'alcancia', 'bolsillo', 'cdt', 'fondo', 'inversion',
+      'acciones', 'dolares', 'cripto', 'bitcoin', 'deuda', 'cuota', 'abono', 'credito',
+      'tarjeta de credito', 'prestamo', 'hipoteca', 'libranza', 'intereses',
+    ],
   },
   otros: {
     id: 'otros',
@@ -128,6 +248,7 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '📦',
     color: 'var(--cat-otros)',
     kind: 'expense',
+    nature: 'suelto',
     hints: [],
   },
   nomina: {
@@ -136,7 +257,8 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '💼',
     color: 'var(--cat-nomina)',
     kind: 'income',
-    hints: ['nomina', 'nómina', 'sueldo', 'salario', 'quincena', 'pago del mes'],
+    nature: 'ingreso',
+    hints: ['nomina', 'sueldo', 'salario', 'quincena', 'mesada', 'pago del mes', 'pago mensual'],
   },
   extra: {
     id: 'extra',
@@ -144,7 +266,12 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     emoji: '🎁',
     color: 'var(--cat-extra)',
     kind: 'income',
-    hints: ['extra', 'freelance', 'venta', 'vendi', 'vendí', 'bono', 'prima', 'regalo recibido', 'devolucion', 'devolución', 'reembolso'],
+    nature: 'ingreso',
+    hints: [
+      'extra', 'freelance', 'venta', 'vendi', 'vendimos', 'bono', 'prima', 'cesantias',
+      'liquidacion', 'propina', 'rifa', 'loteria', 'dividendos', 'arriendo recibido',
+      'regalo recibido', 'me regalaron', 'devolucion', 'reembolso', 'cashback',
+    ],
   },
 }
 
@@ -345,6 +472,30 @@ export function periodRange(
   }
 }
 
+/**
+ * El mismo periodo, una unidad atrás. En los rangos "a mano" se corre la
+ * misma cantidad de días hacia atrás, que es lo único que compara peras con
+ * peras.
+ */
+export function previousRange(
+  period: PeriodId,
+  offset = 0,
+  custom?: { from: string; to: string },
+): PeriodRange {
+  if (period !== 'custom') return periodRange(period, offset - 1, custom)
+
+  const current = periodRange('custom', offset, custom)
+  const span = current.end.getTime() - current.start.getTime()
+  const start = new Date(current.start.getTime() - span)
+  const end = new Date(current.start)
+  return {
+    start,
+    end,
+    label: `${shortDate(start)} – ${shortDate(new Date(end.getTime() - 86_400_000))}`,
+    months: current.months,
+  }
+}
+
 export function inRange(iso: string, range: PeriodRange): boolean {
   const t = new Date(iso).getTime()
   return t >= range.start.getTime() && t < range.end.getTime()
@@ -398,15 +549,164 @@ export function incomeBudget(
   return { base, extra, total: base + extra, usesRegistered: nomina > 0 }
 }
 
-export function byCategory(items: Expense[]): { category: Category; total: number }[] {
-  const map = new Map<CategoryId, number>()
+export type CategoryTotal = {
+  category: Category
+  total: number
+  /** Cuántos movimientos, para poder mostrar el ticket promedio. */
+  count: number
+  /** Qué porción del gasto del periodo se llevó, de 0 a 1. */
+  share: number
+  /** Lo mismo en el periodo anterior; null si no se pidió comparación. */
+  previous: number | null
+  /** Variación contra el periodo anterior, de -1 a lo que sea. null si no aplica. */
+  change: number | null
+}
+
+/**
+ * Totales por categoría, de mayor a menor. Si se le pasan los movimientos del
+ * periodo anterior, cada categoría trae además cuánto cambió: eso es lo que
+ * convierte "gastamos 400 en antojos" en "los antojos subieron 60%".
+ */
+export function byCategory(items: Expense[], previousItems?: Expense[]): CategoryTotal[] {
+  const totals = new Map<CategoryId, { total: number; count: number }>()
   for (const e of items) {
     if (e.kind !== 'expense') continue
-    map.set(e.category, (map.get(e.category) ?? 0) + e.amount)
+    const acc = totals.get(e.category) ?? { total: 0, count: 0 }
+    acc.total += e.amount
+    acc.count += 1
+    totals.set(e.category, acc)
   }
-  return [...map.entries()]
-    .map(([id, total]) => ({ category: categoryOf(id), total }))
+
+  const before = new Map<CategoryId, number>()
+  if (previousItems) {
+    for (const e of previousItems) {
+      if (e.kind !== 'expense') continue
+      before.set(e.category, (before.get(e.category) ?? 0) + e.amount)
+    }
+  }
+
+  const spent = [...totals.values()].reduce((s, t) => s + t.total, 0) || 1
+
+  return [...totals.entries()]
+    .map(([id, { total, count }]) => {
+      const previous = previousItems ? (before.get(id) ?? 0) : null
+      return {
+        category: categoryOf(id),
+        total,
+        count,
+        share: total / spent,
+        previous,
+        change: previous ? (total - previous) / previous : null,
+      }
+    })
     .sort((a, b) => b.total - a.total)
+}
+
+export type NatureTotal = {
+  nature: Nature
+  label: string
+  emoji: string
+  color: string
+  hint: string
+  total: number
+  share: number
+}
+
+/**
+ * El reparto que de verdad importa: cuánto se fue en lo que toca, cuánto en
+ * gustos y cuánto quedó guardado. Dos meses con el mismo total pueden ser
+ * muy distintos según cómo caiga esta división.
+ */
+export function byNature(items: Expense[]): NatureTotal[] {
+  const totals = new Map<Nature, number>()
+  for (const e of items) {
+    if (e.kind !== 'expense') continue
+    const nature = categoryOf(e.category).nature
+    totals.set(nature, (totals.get(nature) ?? 0) + e.amount)
+  }
+  const spent = [...totals.values()].reduce((s, t) => s + t, 0) || 1
+  const order: Nature[] = ['necesario', 'gusto', 'ahorro', 'suelto']
+
+  return order
+    .filter((nature) => (totals.get(nature) ?? 0) > 0)
+    .map((nature) => ({
+      nature,
+      ...NATURES[nature],
+      total: totals.get(nature) ?? 0,
+      share: (totals.get(nature) ?? 0) / spent,
+    }))
+}
+
+/** Los movimientos más grandes: casi siempre explican el mes entero. */
+export function topExpenses(items: Expense[], limit = 5): Expense[] {
+  return items
+    .filter((e) => e.kind === 'expense')
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, limit)
+}
+
+export type Pace = {
+  /** Días que dura el periodo. */
+  days: number
+  /** Días ya vividos (el periodo puede estar a medias). */
+  elapsed: number
+  /** true si el periodo todavía está corriendo. */
+  running: boolean
+  /** Gasto promedio por día vivido. */
+  perDay: number
+  /** A este ritmo, cuánto cerraría el periodo. */
+  projected: number
+  /** Cuánto pueden gastar por día que queda sin pasarse del tope. 0 si ya se pasaron. */
+  allowancePerDay: number
+}
+
+/**
+ * El ritmo del periodo. Sirve para avisar a mitad de mes, que es cuando
+ * todavía se puede hacer algo, en vez de dar el parte de guerra el día 30.
+ */
+export function pace(spent: number, range: PeriodRange, cap: number, now = new Date()): Pace {
+  const days = Math.max(1, (range.end.getTime() - range.start.getTime()) / 86_400_000)
+  const running = now >= range.start && now < range.end
+  // En días enteros: así el ritmo no cambia con cada segundo que pasa y el
+  // número se ve igual toda la jornada.
+  const elapsed = running
+    ? Math.max(1, Math.ceil((now.getTime() - range.start.getTime()) / 86_400_000))
+    : now < range.start
+      ? 0
+      : days
+
+  const perDay = elapsed > 0 ? spent / elapsed : 0
+  const left = Math.max(0, days - elapsed)
+
+  return {
+    days,
+    elapsed,
+    running,
+    perDay,
+    projected: elapsed > 0 ? perDay * days : 0,
+    allowancePerDay: cap > 0 && left > 0 ? Math.max(0, (cap - spent) / left) : 0,
+  }
+}
+
+/** Qué porción de lo que entró quedó sin gastar. Negativo = se pasaron. */
+export function savingsRate(income: number, spent: number): number | null {
+  if (income <= 0) return null
+  return (income - spent) / income
+}
+
+/** El día que más pesó en el periodo, para el "¿en qué se nos fue?". */
+export function heaviestDay(items: Expense[]): { date: Date; total: number } | null {
+  const byDay = new Map<string, number>()
+  for (const e of items) {
+    if (e.kind !== 'expense') continue
+    const key = e.occurredAt.slice(0, 10)
+    byDay.set(key, (byDay.get(key) ?? 0) + e.amount)
+  }
+  let best: { date: Date; total: number } | null = null
+  for (const [key, total] of byDay) {
+    if (!best || total > best.total) best = { date: new Date(`${key}T12:00:00`), total }
+  }
+  return best
 }
 
 export function byMember(
@@ -423,6 +723,112 @@ export function byMember(
   return [...map.entries()]
     .map(([nick, total]) => ({ nick, color: colorFor(nick), total }))
     .sort((a, b) => b.total - a.total)
+}
+
+// ---- Avisos ----------------------------------------------------------------
+// Un número solo no dice nada; "los antojos subieron 60%" sí. Estas frases se
+// arman con lo que ya está calculado y salen arriba de las gráficas.
+
+export type Insight = {
+  id: string
+  tone: 'bien' | 'ojo' | 'alerta' | 'dato'
+  emoji: string
+  text: string
+}
+
+export function buildInsights(input: {
+  range: PeriodRange
+  spent: number
+  previousSpent: number
+  income: IncomeBudget
+  cap: number
+  currency: string
+  categories: CategoryTotal[]
+  natures: NatureTotal[]
+  rhythm: Pace
+}): Insight[] {
+  const { range, spent, previousSpent, income, cap, currency, categories, natures, rhythm } = input
+  const out: Insight[] = []
+  const pct = (v: number) => Math.round(Math.abs(v) * 100)
+
+  if (spent === 0) return out
+
+  // 1. Ritmo y proyección: sólo tiene sentido con el periodo en curso y con
+  //    un par de días encima, o la proyección se vuelve un chiste.
+  if (rhythm.running && rhythm.elapsed >= 2) {
+    const overCap = cap > 0 && rhythm.projected > cap
+    out.push({
+      id: 'ritmo',
+      tone: overCap ? 'ojo' : 'dato',
+      emoji: '🗓️',
+      text: `Van ${formatMoney(rhythm.perDay, currency)} por día. A este ritmo, ${range.label.toLowerCase()} cierra en ${formatMoney(rhythm.projected, currency)}${
+        overCap ? `, ${formatMoney(rhythm.projected - cap, currency)} por encima del tope` : ''
+      }.`,
+    })
+  }
+
+  // 2. Contra el periodo anterior.
+  if (previousSpent > 0) {
+    const change = (spent - previousSpent) / previousSpent
+    if (Math.abs(change) >= 0.08) {
+      out.push({
+        id: 'vs-anterior',
+        tone: change < 0 ? 'bien' : 'ojo',
+        emoji: change < 0 ? '📉' : '📈',
+        text: `${pct(change)}% ${change < 0 ? 'menos' : 'más'} que el periodo anterior (${formatMoney(previousSpent, currency)}).`,
+      })
+    }
+  }
+
+  // 3. La categoría que más se movió, si pesa lo suficiente como para importar.
+  const jumped = categories
+    .filter((c) => c.change !== null && c.change >= 0.35 && c.share >= 0.08)
+    .sort((a, b) => (b.change ?? 0) - (a.change ?? 0))[0]
+  if (jumped) {
+    out.push({
+      id: `subio-${jumped.category.id}`,
+      tone: 'ojo',
+      emoji: jumped.category.emoji,
+      text: `${jumped.category.label} subió ${pct(jumped.change ?? 0)}%: de ${formatMoney(jumped.previous ?? 0, currency)} a ${formatMoney(jumped.total, currency)}.`,
+    })
+  }
+
+  // 4. Gustos: el dato que más ayuda a decidir dónde recortar.
+  const gustos = natures.find((n) => n.nature === 'gusto')
+  if (gustos && gustos.share >= 0.3) {
+    out.push({
+      id: 'gustos',
+      tone: gustos.share >= 0.45 ? 'ojo' : 'dato',
+      emoji: '✨',
+      text: `${pct(gustos.share)}% del gasto se fue en gustos (${formatMoney(gustos.total, currency)}). Ahí es donde más fácil se recorta.`,
+    })
+  }
+
+  // 5. Cuánto quedó de lo que entró
+  //    (cuando sobra, el dato ya está arriba en su recuadro: aquí sólo va lo feo)
+  const rate = savingsRate(income.total, spent)
+  if (rate !== null && rate < 0) {
+    out.push({
+      id: 'ahorro',
+      tone: 'alerta',
+      emoji: '😳',
+      text: `Gastaron ${formatMoney(spent - income.total, currency)} más de lo que entró.`,
+    })
+  }
+
+  // 6. Lo que quedó sin clasificar: se arregla tocando el movimiento.
+  const sueltos = natures.find((n) => n.nature === 'suelto')
+  if (sueltos && sueltos.share >= 0.15) {
+    out.push({
+      id: 'sin-clasificar',
+      tone: 'dato',
+      emoji: '📦',
+      text: `${pct(sueltos.share)}% quedó en "Otros". Toca el movimiento y cámbiale la categoría para que las cuentas hablen claro.`,
+    })
+  }
+
+  const rank = { alerta: 0, ojo: 1, bien: 2, dato: 3 }
+  return out.sort((a, b) => rank[a.tone] - rank[b.tone]).slice(0, 4)
 }
 
 /**
@@ -507,14 +913,150 @@ export function parseAmount(text: string): number | null {
   return null
 }
 
-export function detectCategory(text: string, kind: Kind = 'expense'): CategoryId {
-  const lower = text.toLowerCase()
+/** Sin tildes, sin mayúsculas, sin dobles espacios: así se comparan las pistas. */
+export function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Una pista se busca como palabra completa (aceptando el plural) para que
+ * "pan" no se dispare dentro de "pantalón". Con `*` al final se compara como
+ * prefijo: "droguer*" pilla "droguería" y "drogueristas".
+ */
+const hintPatterns = new Map<string, RegExp>()
+
+function hintPattern(hint: string): RegExp {
+  let pattern = hintPatterns.get(hint)
+  if (!pattern) {
+    const prefix = hint.endsWith('*')
+    const body = normalizeText(prefix ? hint.slice(0, -1) : hint).replace(
+      /[.*+?^${}()|[\]\\]/g,
+      '\\$&',
+    )
+    // Con `*` la palabra puede seguir ("droguer" → "droguería"); sin `*` tiene
+    // que cerrar ahí, aceptando el plural.
+    pattern = new RegExp(`(?:^|[^a-z0-9])${body}${prefix ? '' : 'e?s?(?![a-z0-9])'}`)
+    hintPatterns.set(hint, pattern)
+  }
+  return pattern
+}
+
+/**
+ * Lo que esta casa ya clasificó a mano. Vale más que cualquier lista que
+ * traiga la app: si para ellos "carulla" es mercado y "el corral" es antojo,
+ * eso es lo que manda.
+ */
+export type CategoryMemory = Map<string, CategoryId>
+
+const STOPWORDS = new Set([
+  'para', 'con', 'del', 'los', 'las', 'una', 'unos', 'unas', 'por', 'que', 'este', 'esta',
+  'mil', 'lucas', 'luca', 'palo', 'palos', 'pague', 'pagamos', 'compre', 'compramos', 'gaste',
+  'gastamos', 'ayer', 'hoy', 'mañana', 'manana', 'total', 'pesos', 'plata', 'cosas', 'algo',
+])
+
+function keywordsOf(text: string): string[] {
+  return normalizeText(text)
+    .split(/[^a-z0-9ñ]+/)
+    .filter((w) => w.length >= 4 && !/^\d+$/.test(w) && !STOPWORDS.has(w))
+}
+
+/** Lo mínimo que hace falta para aprender: qué escribieron y dónde lo pusieron. */
+export type Classified = { note: string; category: CategoryId }
+
+/**
+ * Arma la memoria con lo que ya está registrado. Una palabra sólo entra si
+ * aparece al menos dos veces y si en dos de cada tres casos cayó en la misma
+ * categoría: así una corrección ocasional no arrastra todo el historial.
+ */
+export function buildCategoryMemory(items: Classified[]): CategoryMemory {
+  const memory: CategoryMemory = new Map()
+  for (const { word, category } of tallyWords(items)) memory.set(word, category)
+  return memory
+}
+
+/**
+ * Las palabras que esta casa ya clasificó, de la más repetida a la menos.
+ * Sirve para enseñarle sus mañas a la IA sin mandarle el historial entero.
+ */
+export function memoryHighlights(
+  items: Classified[],
+  limit = 20,
+): { word: string; category: Category; count: number }[] {
+  return tallyWords(items)
+    .slice(0, limit)
+    .map(({ word, category, count }) => ({ word, category: categoryOf(category), count }))
+}
+
+function tallyWords(
+  items: Classified[],
+): { word: string; category: CategoryId; count: number }[] {
+  const counts = new Map<string, Map<CategoryId, number>>()
+
+  for (const e of items) {
+    if (!e.note) continue
+    for (const word of new Set(keywordsOf(e.note))) {
+      const byCat = counts.get(word) ?? new Map<CategoryId, number>()
+      byCat.set(e.category, (byCat.get(e.category) ?? 0) + 1)
+      counts.set(word, byCat)
+    }
+  }
+
+  const learned: { word: string; category: CategoryId; count: number }[] = []
+  for (const [word, byCat] of counts) {
+    let winner: CategoryId | null = null
+    let top = 0
+    let total = 0
+    for (const [cat, n] of byCat) {
+      total += n
+      if (n > top) {
+        top = n
+        winner = cat
+      }
+    }
+    // Dos apariciones y dos tercios de acuerdo: suficiente para creerles,
+    // poco para que un gasto raro contamine la memoria.
+    if (winner && total >= 2 && top / total >= 0.66 && winner !== 'otros') {
+      learned.push({ word, category: winner, count: top })
+    }
+  }
+
+  return learned.sort((a, b) => b.count - a.count || a.word.localeCompare(b.word))
+}
+
+export function detectCategory(
+  text: string,
+  kind: Kind = 'expense',
+  memory?: CategoryMemory,
+): CategoryId {
+  const normalized = normalizeText(text)
+
+  // Primero la memoria de la casa: la palabra más larga que ya hayan
+  // clasificado antes gana, porque es la más específica ("juan valdez" pesa
+  // más que "cafe").
+  if (memory && memory.size > 0) {
+    let best: CategoryId | null = null
+    let bestScore = 0
+    for (const word of keywordsOf(normalized)) {
+      const remembered = memory.get(word)
+      if (remembered && categoryOf(remembered).kind === kind && word.length > bestScore) {
+        best = remembered
+        bestScore = word.length
+      }
+    }
+    if (best) return best
+  }
+
   let best: CategoryId = kind === 'income' ? 'extra' : 'otros'
   let bestScore = 0
   for (const cat of CATEGORY_LIST) {
     if (cat.kind !== kind) continue
     for (const hint of cat.hints) {
-      if (lower.includes(hint) && hint.length > bestScore) {
+      if (hint.length > bestScore && hintPattern(hint).test(normalized)) {
         best = cat.id
         bestScore = hint.length
       }
@@ -529,7 +1071,7 @@ export function detectCategory(text: string, kind: Kind = 'expense'): CategoryId
  * a mano incluyendo las vocales acentuadas y la ñ.
  */
 const INCOME_HINTS =
-  /(?:^|[^a-záéíóúüñ])(me pagaron|me consignaron|me cay[oó]|me lleg[oó]|recib[ií]|ingres[oó]|entr[oó] (?:plata|la n[oó]mina|el pago|el sueldo)|n[oó]mina|sueldo|salario|quincena|vend[ií])(?![a-záéíóúüñ])/
+  /(?:^|[^a-záéíóúüñ])(me pagaron|me consignaron|me cay[oó]|me lleg[oó]|me devolvieron|me reembolsaron|me transfirieron|me giraron|me depositaron|me gan[eé]|recib[ií]|cobr[eé]|ingres[oó]|entr[oó] (?:plata|la n[oó]mina|el pago|el sueldo)|n[oó]mina|sueldo|salario|quincena|vend[ií])(?![a-záéíóúüñ])/
 
 export function detectKind(text: string): Kind {
   return INCOME_HINTS.test(text.toLowerCase()) ? 'income' : 'expense'
@@ -544,14 +1086,14 @@ export type ParsedEntry = {
 }
 
 /** Interpretación local, sin IA. Devuelve null si no encuentra un monto. */
-export function parseLocally(text: string): ParsedEntry | null {
+export function parseLocally(text: string, memory?: CategoryMemory): ParsedEntry | null {
   const amount = parseAmount(text)
   if (amount == null) return null
   const kind = detectKind(text)
   return {
     kind,
     amount,
-    category: detectCategory(text, kind),
+    category: detectCategory(text, kind, memory),
     note: text.trim().slice(0, 200),
   }
 }

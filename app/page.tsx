@@ -485,6 +485,7 @@ export default function Page() {
           onSend={handleSend}
           onSendReceipt={handleReceipt}
           onDeleteExpense={handleDeleteExpense}
+          onUpdateExpense={handleUpdateExpense}
         />
       )}
 

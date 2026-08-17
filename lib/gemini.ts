@@ -64,6 +64,8 @@ export type GeminiContext = {
   income: number
   breakdown: string[]
   recent: string[]
+  /** Cómo clasifica esta casa: "corral → Antojos / Calle". Manda sobre las listas. */
+  habits: string[]
 }
 
 // ---- Errores con nombre ----------------------------------------------------
@@ -255,6 +257,14 @@ ${gastos}
 
 CATEGORÍAS DE INGRESO
 ${ingresos}
+
+${
+  ctx.habits.length
+    ? `CÓMO CLASIFICA ESTA CASA (esto manda sobre las listas de arriba)
+Estas palabras ya las clasificaron ellos mismos. Si el mensaje trae alguna, usa esa categoría aunque tu instinto diga otra cosa.
+${ctx.habits.map((h) => `- ${h}`).join('\n')}`
+    : 'Todavía no hay historial suficiente para saber cómo clasifica esta casa.'
+}
 
 FACTURAS
 - La foto puede estar torcida, arrugada o con poca luz: igual busca el TOTAL.
@@ -535,6 +545,7 @@ export async function diagnoseGemini(): Promise<AiDiagnosis> {
         income: 0,
         breakdown: [],
         recent: [],
+        habits: [],
       },
       { budgetMs: 20_000 },
     )

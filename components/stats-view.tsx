@@ -501,7 +501,7 @@ export function StatsView({
           expense={editing}
           currency={room.currency}
           onPick={(category) => {
-            onUpdateExpense(editing.id, { category, kind: categoryOf(category).kind })
+            onUpdateExpense?.(editing.id, { category, kind: categoryOf(category).kind })
             setEditing(null)
           }}
           onClose={() => setEditing(null)}

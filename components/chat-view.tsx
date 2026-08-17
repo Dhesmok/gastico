@@ -5,6 +5,7 @@ import { Camera, Edit2, Loader2, Sparkles, Trash2, X } from 'lucide-react'
 import {
   categoryOf,
   formatMoney,
+  type CategoryId,
   type Expense,
   type IncomeBudget,
   type Member,
@@ -14,6 +15,7 @@ import {
 import { getBackground } from '@/lib/backgrounds'
 import { receiptUrl } from '@/lib/room'
 import { BudgetSummary } from '@/components/budget-summary'
+import { CategorySheet } from '@/components/category-sheet'
 import { cn } from '@/lib/utils'
 
 export function ChatView({
@@ -29,6 +31,7 @@ export function ChatView({
   onSendReceipt,
   onEditExpense,
   onDeleteExpense,
+  onUpdateExpense,
 }: {
   room: Room
   members: Member[]
@@ -42,8 +45,10 @@ export function ChatView({
   onSendReceipt: (file: File, caption: string) => void
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
+  onUpdateExpense: (id: string, patch: Partial<Expense>) => void
 }) {
   const [text, setText] = useState('')
+  const [editing, setEditing] = useState<Expense | null>(null)
   const [pendingFile, setPendingFile] = useState<{ file: File; url: string } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -119,6 +124,7 @@ export function ChatView({
               last={i === messages.length - 1}
               onEditExpense={onEditExpense}
               onDeleteExpense={onDeleteExpense}
+              onEditExpense={setEditing}
             />
           ))}
           {thinking && <TypingBubble />}
@@ -203,6 +209,18 @@ export function ChatView({
           </button>
         </div>
       </div>
+
+      {editing && (
+        <CategorySheet
+          expense={editing}
+          currency={room.currency}
+          onPick={(category) => {
+            onUpdateExpense(editing.id, { category, kind: categoryOf(category).kind })
+            setEditing(null)
+          }}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </div>
   )
 }
@@ -247,6 +265,7 @@ function MessageBubble({
   last,
   onEditExpense,
   onDeleteExpense,
+  onEditExpense,
 }: {
   message: Message
   member?: Member
@@ -256,6 +275,7 @@ function MessageBubble({
   last: boolean
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
+  onEditExpense: (expense: Expense) => void
 }) {
   const isBot = message.role === 'assistant'
 
@@ -354,17 +374,21 @@ function ExpenseChip({
   currency,
   onEdit,
   onDelete,
+  onEdit,
 }: {
   expense: Expense
   currency: string
   onEdit: (expense: Expense) => void
   onDelete: (id: string) => void
+  onEdit: (expense: Expense) => void
 }) {
   const cat = categoryOf(expense.category)
   return (
     <div className="mt-2 flex items-center gap-1.5">
-      <span
-        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-700 text-foreground"
+      <button
+        onClick={() => onEdit(expense)}
+        title="Cambiar la categoría"
+        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-700 text-foreground transition-transform hover:-translate-y-0.5"
         style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)` }}
       >
         <span>{cat.emoji}</span>
@@ -374,7 +398,7 @@ function ExpenseChip({
           {expense.kind === 'income' ? '+' : ''}
           {formatMoney(expense.amount, currency)}
         </span>
-      </span>
+      </button>
       <button
         onClick={() => onEdit(expense)}
         title="Editar o corregir este movimiento"

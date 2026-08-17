@@ -1,7 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ListFilter, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Edit2, ListFilter, Trash2, X } from 'lucide-react'
 import {
   buildInsights,
   byCategory,
@@ -39,14 +38,16 @@ export function StatsView({
   room,
   members,
   expenses,
+  onEditExpense,
   onDeleteExpense,
   onUpdateExpense,
 }: {
   room: Room
   members: Member[]
   expenses: Expense[]
+  onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
-  onUpdateExpense: (id: string, patch: Partial<Expense>) => void
+  onUpdateExpense?: (id: string, patch: Partial<Expense>) => void
 }) {
   const [period, setPeriod] = useState<PeriodId>('month')
   const [offset, setOffset] = useState(0)
@@ -485,7 +486,7 @@ export function StatsView({
                   key={e.id}
                   expense={e}
                   currency={room.currency}
-                  onEdit={setEditing}
+                  onEdit={onEditExpense}
                   onDelete={onDeleteExpense}
                   showDate
                 />
@@ -500,7 +501,7 @@ export function StatsView({
           expense={editing}
           currency={room.currency}
           onPick={(category) => {
-            onUpdateExpense(editing.id, { category, kind: categoryOf(category).kind })
+            onUpdateExpense?.(editing.id, { category, kind: categoryOf(category).kind })
             setEditing(null)
           }}
           onClose={() => setEditing(null)}

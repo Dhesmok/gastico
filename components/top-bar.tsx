@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   BarChart3,
+  CalendarClock,
   ChevronDown,
   DoorOpen,
   HeartHandshake,
@@ -13,11 +14,12 @@ import {
 import type { Member, Room } from '@/lib/finance'
 import { cn } from '@/lib/utils'
 
-export type View = 'chat' | 'stats' | 'settings'
+export type View = 'chat' | 'stats' | 'recurring' | 'settings'
 
 const ITEMS: { id: View; label: string; icon: typeof MessageCircle }[] = [
   { id: 'chat', label: 'Chat', icon: MessageCircle },
   { id: 'stats', label: 'Estadísticas', icon: BarChart3 },
+  { id: 'recurring', label: 'Gastos Fijos', icon: CalendarClock },
   { id: 'settings', label: 'Configuración', icon: Settings },
 ]
 

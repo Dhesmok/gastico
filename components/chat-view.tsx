@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Loader2, Sparkles, Trash2, X } from 'lucide-react'
+import { Camera, Edit2, Loader2, Sparkles, Trash2, X } from 'lucide-react'
 import {
   categoryOf,
   formatMoney,
@@ -29,6 +29,7 @@ export function ChatView({
   income,
   onSend,
   onSendReceipt,
+  onEditExpense,
   onDeleteExpense,
   onUpdateExpense,
 }: {
@@ -42,8 +43,9 @@ export function ChatView({
   income: IncomeBudget
   onSend: (text: string) => void
   onSendReceipt: (file: File, caption: string) => void
+  onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
-  onUpdateExpense: (id: string, patch: Partial<Expense>) => void
+  onUpdateExpense?: (id: string, patch: Partial<Expense>) => void
 }) {
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<Expense | null>(null)
@@ -120,6 +122,7 @@ export function ChatView({
               expense={m.expenseId ? expenseById.get(m.expenseId) : undefined}
               currency={room.currency}
               last={i === messages.length - 1}
+              onEditExpense={onEditExpense}
               onDeleteExpense={onDeleteExpense}
               onEditExpense={setEditing}
             />
@@ -212,7 +215,7 @@ export function ChatView({
           expense={editing}
           currency={room.currency}
           onPick={(category) => {
-            onUpdateExpense(editing.id, { category, kind: categoryOf(category).kind })
+            onUpdateExpense?.(editing.id, { category, kind: categoryOf(category).kind })
             setEditing(null)
           }}
           onClose={() => setEditing(null)}
@@ -260,6 +263,7 @@ function MessageBubble({
   expense,
   currency,
   last,
+  onEditExpense,
   onDeleteExpense,
   onEditExpense,
 }: {
@@ -269,6 +273,7 @@ function MessageBubble({
   expense?: Expense
   currency: string
   last: boolean
+  onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
   onEditExpense: (expense: Expense) => void
 }) {
@@ -286,8 +291,8 @@ function MessageBubble({
             <ExpenseChip
               expense={expense}
               currency={currency}
-              onDelete={onDeleteExpense}
               onEdit={onEditExpense}
+              onDelete={onDeleteExpense}
             />
           )}
         </div>
@@ -367,11 +372,13 @@ function ReceiptThumb({ message }: { message: Message }) {
 function ExpenseChip({
   expense,
   currency,
+  onEdit,
   onDelete,
   onEdit,
 }: {
   expense: Expense
   currency: string
+  onEdit: (expense: Expense) => void
   onDelete: (id: string) => void
   onEdit: (expense: Expense) => void
 }) {
@@ -391,6 +398,13 @@ function ExpenseChip({
           {expense.kind === 'income' ? '+' : ''}
           {formatMoney(expense.amount, currency)}
         </span>
+      </button>
+      <button
+        onClick={() => onEdit(expense)}
+        title="Editar o corregir este movimiento"
+        className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+      >
+        <Edit2 className="size-3.5" />
       </button>
       <button
         onClick={() => onDelete(expense.id)}

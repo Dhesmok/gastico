@@ -16,14 +16,6 @@ import { receiptUrl } from '@/lib/room'
 import { BudgetSummary } from '@/components/budget-summary'
 import { cn } from '@/lib/utils'
 
-const QUICK_CHIPS = [
-  'Mercado 120mil',
-  'Uber 18k',
-  'Antojo 25.000',
-  '¿Cuánto llevamos este mes?',
-  'Me pagaron la quincena 2 palos',
-]
-
 export function ChatView({
   room,
   members,
@@ -131,7 +123,7 @@ export function ChatView({
       </div>
 
       <div className="glass border-t border-border/60 px-4 pb-4 pt-3">
-        {pendingFile ? (
+        {pendingFile && (
           <div className="mb-2.5 flex items-center gap-3 rounded-2xl border border-border bg-card/80 p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -155,18 +147,6 @@ export function ChatView({
             >
               <X className="size-4" />
             </button>
-          </div>
-        ) : (
-          <div className="no-scrollbar mb-2.5 flex gap-2 overflow-x-auto">
-            {QUICK_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                onClick={() => setText(chip)}
-                className="shrink-0 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-600 text-foreground transition-colors hover:bg-muted"
-              >
-                {chip}
-              </button>
-            ))}
           </div>
         )}
 

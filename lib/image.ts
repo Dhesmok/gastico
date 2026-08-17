@@ -3,14 +3,18 @@
 // ---------------------------------------------------------------------------
 // Compresión de facturas en el navegador.
 //
-// Una foto de celular pesa 3–6 MB. Una factura legible cabe en ~80 KB si la
-// bajamos a 1280 px y la pasamos a WebP. Con eso, el gigabyte gratis de
-// Supabase Storage da para más de 10.000 facturas: no hay que pagar nada ni
+// Una foto de celular pesa 3–6 MB. Una factura legible cabe en ~150 KB si la
+// bajamos a 1600 px y la pasamos a WebP. Con eso, el gigabyte gratis de
+// Supabase Storage da para más de 6.000 facturas: no hay que pagar nada ni
 // montar un Drive aparte.
+//
+// Subimos de 1280 a 1600 px porque el dato que importa —el "TOTAL A PAGAR"—
+// suele venir en la letra más chiquita del papel, y es lo primero que se
+// pierde al comprimir. Pesa un poco más y se lee mucho mejor.
 // ---------------------------------------------------------------------------
 
-const MAX_SIDE = 1280
-const QUALITY = 0.72
+const MAX_SIDE = 1600
+const QUALITY = 0.8
 
 export type PreparedImage = {
   /** Para subir a Storage. */

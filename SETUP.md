@@ -110,17 +110,19 @@ nunca la ve, así que nadie puede sacarla del código.
 
 ### Qué modelo usa
 
-Por defecto **`gemini-3.1-flash-lite`**. Si tu key no tiene acceso a ese
-modelo, o Google le cambia el nombre, la app prueba sola con `gemini-2.5-flash`
-y luego con `gemini-2.0-flash`. No hay que hacer nada.
+La app le **pregunta a Google qué modelos acepta tu key** (una vez cada diez
+minutos) y escoge entre esos. Así, si Google jubila un nombre o tu key todavía
+no tiene acceso a lo último, no hay que tocar nada.
+
+Entre los disponibles prefiere, en este orden:
+
+- **Para leer facturas**: `gemini-2.5-flash` → `gemini-3.1-flash` →
+  `gemini-3.1-flash-lite` → `gemini-2.0-flash`. Los "lite" son más rápidos y
+  baratos, pero leyendo fotos se equivocan más, así que van de últimos.
+- **Para texto**: `gemini-3.1-flash-lite` primero, que es el más rápido.
 
 Para forzar otro modelo, añade la variable `GEMINI_MODEL` con el nombre que
-quieras: manda sobre el valor por defecto.
-
-Ten en cuenta que **flash-lite es el modelo más liviano**: con texto va
-perfecto, pero leyendo fotos de facturas se equivoca más que `flash`. Si notas
-que las facturas salen mal, pon `GEMINI_MODEL=gemini-3.1-flash` (o
-`gemini-2.5-flash`) y listo, sin tocar código.
+quieras: manda sobre todo lo anterior.
 
 > Ojo: en el plan gratuito de Google, lo que le mandes puede usarse para
 > entrenar sus modelos. Para las cuentas del mercado no es grave, pero vale la
@@ -128,9 +130,15 @@ que las facturas salen mal, pon `GEMINI_MODEL=gemini-3.1-flash` (o
 
 ### Si algo falla
 
-La respuesta del bot incluye qué modelo contestó, y el servidor deja un aviso
-en los logs de Vercel cuando tuvo que usar uno de respaldo. Así se sabe qué
-pasó sin adivinar.
+**Ajustes → Fotos de facturas → "Probar el lector de facturas"** manda una
+imagen de prueba por el mismo camino que una factura y dice en español qué
+pasó: falta la API key, la key no sirve, se acabó la cuota, el modelo ya no
+existe o la IA se está demorando demasiado. También muestra qué modelos acepta
+tu key, que es justo lo que hay que poner en `GEMINI_MODEL` si toca forzarlo.
+
+Cuando falla en medio de un chat, el bot ya no dice sólo "no pude leer la
+factura": dice la razón. La respuesta del servidor además incluye qué modelo
+contestó, y los logs de Vercel guardan el detalle.
 
 **Si Gemini falla del todo** (se acabó la cuota, se cayó, no hay key), la app
 no se queda muda: un parser local en `lib/finance.ts` entiende "mercado 120mil",

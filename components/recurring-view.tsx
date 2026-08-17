@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   Calendar,
@@ -52,12 +52,14 @@ export function RecurringView({
   }) => Promise<void>
   notify: (text: string) => void
 }) {
-  const [recurringList, setRecurringList] = useState<RecurringExpense[]>(() =>
-    loadRecurring(room.id),
-  )
+  const [recurringList, setRecurringList] = useState<RecurringExpense[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<RecurringExpense | null>(null)
   const [payingId, setPayingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setRecurringList(loadRecurring(room.id))
+  }, [room.id])
 
   // Form state
   const [name, setName] = useState('')

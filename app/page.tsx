@@ -7,7 +7,9 @@ import { RoomGate } from '@/components/room-gate'
 import { TopBar, type View } from '@/components/top-bar'
 import { ChatView } from '@/components/chat-view'
 import { StatsView } from '@/components/stats-view'
+import { RecurringView } from '@/components/recurring-view'
 import { SettingsView } from '@/components/settings-view'
+import { EditExpenseModal } from '@/components/edit-expense-modal'
 import {
   currentSession,
   getSupabase,
@@ -17,6 +19,7 @@ import {
 import {
   deleteExpense as deleteExpenseRow,
   forgetRoom,
+  insertExpenses,
   insertUserMessage,
   lastRoomId,
   leaveRoom,
@@ -37,6 +40,7 @@ import {
   incomeBudget,
   periodRange,
   sumExpenses,
+  type CategoryId,
   type Expense,
   type Member,
   type Message,
@@ -60,6 +64,8 @@ export default function Page() {
   const [view, setView] = useState<View>('chat')
   const [thinking, setThinking] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const roomIdRef = useRef<string | null>(null)
   roomIdRef.current = roomId
@@ -375,6 +381,28 @@ export default function Page() {
     [expenses, notify],
   )
 
+  const handleOpenEditExpense = useCallback((expense: Expense) => {
+    setEditingExpense(expense)
+    setIsEditModalOpen(true)
+  }, [])
+
+  const handleAddDirectExpense = useCallback(
+    async (entry: {
+      kind: 'expense'
+      amount: number
+      category: CategoryId
+      note: string
+      occurredAt?: string
+    }) => {
+      if (!roomId || !userId || !me) return
+      const created = await insertExpenses(roomId, userId, me.nick, [entry])
+      if (created.length > 0) {
+        setExpenses((prev) => [created[0], ...prev])
+      }
+    },
+    [me, roomId, userId],
+  )
+
   // ---- Ajustes -------------------------------------------------------------
 
   const handleRoomChange = useCallback(
@@ -484,6 +512,7 @@ export default function Page() {
           income={monthIncome}
           onSend={handleSend}
           onSendReceipt={handleReceipt}
+          onEditExpense={handleOpenEditExpense}
           onDeleteExpense={handleDeleteExpense}
         />
       )}
@@ -493,8 +522,20 @@ export default function Page() {
           room={room}
           members={members}
           expenses={expenses}
+          onEditExpense={handleOpenEditExpense}
           onDeleteExpense={handleDeleteExpense}
           onUpdateExpense={handleUpdateExpense}
+        />
+      )}
+
+      {view === 'recurring' && (
+        <RecurringView
+          room={room}
+          members={members}
+          expenses={expenses}
+          me={me}
+          onAddExpense={handleAddDirectExpense}
+          notify={notify}
         />
       )}
 
@@ -510,6 +551,19 @@ export default function Page() {
           notify={notify}
         />
       )}
+
+      {/* Modal para Corregir / Editar / Cambiar a Ingreso cualquier Movimiento */}
+      <EditExpenseModal
+        expense={editingExpense}
+        currency={room.currency}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setEditingExpense(null)
+        }}
+        onSave={handleUpdateExpense}
+        onDelete={handleDeleteExpense}
+      />
 
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">

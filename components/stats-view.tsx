@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ListFilter, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Edit2, ListFilter, Trash2 } from 'lucide-react'
 import {
   byCategory,
   byMember,
@@ -27,13 +27,16 @@ export function StatsView({
   room,
   members,
   expenses,
+  onEditExpense,
   onDeleteExpense,
+  onUpdateExpense,
 }: {
   room: Room
   members: Member[]
   expenses: Expense[]
+  onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
-  onUpdateExpense: (id: string, patch: Partial<Expense>) => void
+  onUpdateExpense?: (id: string, patch: Partial<Expense>) => void
 }) {
   const [period, setPeriod] = useState<PeriodId>('month')
   const [offset, setOffset] = useState(0)
@@ -306,11 +309,20 @@ export function StatsView({
                       {formatMoney(e.amount, room.currency)}
                     </span>
                     <button
+                      onClick={() => onEditExpense(e)}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                      aria-label="Editar o corregir movimiento"
+                      title="Editar o corregir"
+                    >
+                      <Edit2 className="size-3.5" />
+                    </button>
+                    <button
                       onClick={() => onDeleteExpense(e.id)}
                       className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Borrar movimiento"
+                      title="Borrar"
                     >
-                      <Trash2 className="size-4" />
+                      <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 )

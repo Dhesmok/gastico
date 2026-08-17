@@ -45,7 +45,7 @@ export function ChatView({
   onSendReceipt: (file: File, caption: string) => void
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
-  onUpdateExpense: (id: string, patch: Partial<Expense>) => void
+  onUpdateExpense?: (id: string, patch: Partial<Expense>) => void
 }) {
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<Expense | null>(null)
@@ -215,7 +215,7 @@ export function ChatView({
           expense={editing}
           currency={room.currency}
           onPick={(category) => {
-            onUpdateExpense(editing.id, { category, kind: categoryOf(category).kind })
+            onUpdateExpense?.(editing.id, { category, kind: categoryOf(category).kind })
             setEditing(null)
           }}
           onClose={() => setEditing(null)}

@@ -32,8 +32,8 @@ const BASE_URL =
  *
  * GEMINI_MODEL (variable de entorno) manda sobre todo esto.
  */
-const PREFER_VISION = ['gemini-2.5-flash', 'gemini-3.1-flash', 'gemini-3.1-flash-lite', 'gemini-2.0-flash']
-const PREFER_TEXT = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash']
+const PREFER_VISION = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+const PREFER_TEXT = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
 
 /** Modelos que existen pero no sirven para esto (audio, imágenes, embeddings). */
 const NOT_FOR_CHAT = /embedding|aqa|imagen|image-generation|tts|veo|live|native-audio|learnlm/i

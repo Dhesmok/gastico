@@ -11,14 +11,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import {
+  buildCategoryMemory,
   byCategory,
   categoryOf,
   formatMoney,
   localReply,
+  memoryHighlights,
   parseLocally,
   periodRange,
   sumExpenses,
   sumIncome,
+  type Classified,
 } from '@/lib/finance'
 import { askGemini, describeFailure, type AiFailure, type Entry } from '@/lib/gemini'
 import { toExpense } from '@/lib/mappers'
@@ -89,15 +92,28 @@ export async function POST(request: Request) {
   // Contexto del mes en curso para que el bot pueda responder preguntas
   // ("¿cuánto llevamos en mercado?") y no sólo registrar.
   const month = periodRange('month')
-  const { data: monthRows } = await supabase
-    .from('expenses')
-    .select('*')
-    .eq('room_id', roomId)
-    .gte('occurred_at', month.start.toISOString())
-    .lt('occurred_at', month.end.toISOString())
-    .order('occurred_at', { ascending: false })
+  const [{ data: monthRows }, { data: historyRows }] = await Promise.all([
+    supabase
+      .from('expenses')
+      .select('*')
+      .eq('room_id', roomId)
+      .gte('occurred_at', month.start.toISOString())
+      .lt('occurred_at', month.end.toISOString())
+      .order('occurred_at', { ascending: false }),
+    // Historial corto para aprender cómo clasifica esta casa: si para ellos
+    // "el corral" es antojo y no ocio, eso pesa más que cualquier lista que
+    // traiga la app.
+    supabase
+      .from('expenses')
+      .select('note, category')
+      .eq('room_id', roomId)
+      .order('occurred_at', { ascending: false })
+      .limit(300),
+  ])
 
   const monthExpenses = (monthRows ?? []).map(toExpense)
+  const history = (historyRows ?? []) as Classified[]
+  const memory = buildCategoryMemory(history)
 
   let reply: string
   let entries: Entry[]
@@ -126,6 +142,9 @@ export async function POST(request: Request) {
           (e) =>
             `${e.occurredAt.slice(0, 10)} · ${e.nick} · ${categoryOf(e.category).label} · ${formatMoney(e.amount, currency)} · ${e.note}`,
         ),
+      habits: memoryHighlights(history).map(
+        (h) => `"${h.word}" → ${h.category.id} (${h.category.label})`,
+      ),
     })
     reply = result.reply
     entries = result.entries
@@ -138,7 +157,7 @@ export async function POST(request: Request) {
     // Sin IA todavía podemos anotar lo que venga escrito: el parser local
     // entiende "mercado 120mil". Lo que no puede es leer una foto, así que
     // ahí sí decimos qué fue lo que falló en vez de un "no pude" a secas.
-    const parsed = parseLocally(text)
+    const parsed = parseLocally(text, memory)
     if (parsed) {
       entries = [parsed]
       reply = localReply(parsed, humor, currency)

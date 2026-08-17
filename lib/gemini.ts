@@ -329,7 +329,12 @@ export async function askGemini(
 
   const parts: Record<string, unknown>[] = []
   if (ctx.image) {
-    parts.push({ inline_data: { mime_type: ctx.image.mimeType, data: ctx.image.base64 } })
+    parts.push({
+      inlineData: {
+        mimeType: ctx.image.mimeType,
+        data: ctx.image.base64,
+      },
+    })
   }
   parts.push({
     text: ctx.text.trim() || (ctx.image ? 'Te mando esta factura, anótala por favor.' : 'Hola'),

@@ -5,8 +5,6 @@ import { Check, Trash2, X } from 'lucide-react'
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
-  categoryOf,
-  formatMoney,
   type CategoryId,
   type Expense,
   type Kind,

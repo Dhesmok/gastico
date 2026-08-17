@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Edit2, ListFilter, Trash2, X } from 'lucide-react'
 import {
   buildInsights,

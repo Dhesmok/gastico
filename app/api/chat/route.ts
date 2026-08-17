@@ -20,7 +20,7 @@ import {
   sumExpenses,
   sumIncome,
 } from '@/lib/finance'
-import { askGemini, type Entry } from '@/lib/gemini'
+import { askGemini, describeFailure, type AiFailure, type Entry } from '@/lib/gemini'
 import { toExpense } from '@/lib/mappers'
 
 export const runtime = 'nodejs'
@@ -103,6 +103,7 @@ export async function POST(request: Request) {
   let entries: Entry[]
   let usedAI = true
   let usedModel: string | null = null
+  let aiFailure: AiFailure | null = null
 
   try {
     const result = await askGemini({
@@ -131,6 +132,12 @@ export async function POST(request: Request) {
     usedModel = result.model
   } catch (error) {
     usedAI = false
+    const problem = describeFailure(error)
+    aiFailure = problem.failure
+
+    // Sin IA todavía podemos anotar lo que venga escrito: el parser local
+    // entiende "mercado 120mil". Lo que no puede es leer una foto, así que
+    // ahí sí decimos qué fue lo que falló en vez de un "no pude" a secas.
     const parsed = parseLocally(text)
     if (parsed) {
       entries = [parsed]
@@ -138,10 +145,10 @@ export async function POST(request: Request) {
     } else {
       entries = []
       reply = image
-        ? 'No pude leer la factura en este momento. 😅 Dime el total y la anoto: por ejemplo “mercado 120mil”.'
+        ? `No pude leer la factura: ${problem.message}. 😅 Dime el total y la anoto: por ejemplo “mercado 120mil”.`
         : 'Mmm, no le pillé el valor a eso. 🤔 Escríbelo con el monto, por ejemplo: “mercado 120mil”, “uber 18k” o “cena 90.000”.'
     }
-    console.error('[chat] Gemini falló, usando parser local:', error)
+    console.error(`[chat] Gemini falló (${problem.failure}), usando parser local:`, error)
   }
 
   // Escritura de los movimientos detectados.
@@ -185,6 +192,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     reply,
     usedAI,
+    aiFailure,
     model: usedModel,
     message: assistantRow ?? null,
     expenses: inserted,

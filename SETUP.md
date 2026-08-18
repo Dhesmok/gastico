@@ -110,6 +110,7 @@ contraseña de la sala.
 | `rooms` | La sala: código, contraseña (hasheada con bcrypt), nómina, tope, preferencias |
 | `room_members` | Quién pertenece a cada sala y con qué apodo |
 | `expenses` | Gastos e ingresos |
+| `recurring_expenses` | Gastos fijos del hogar (arriendo, internet…), compartidos por sala |
 | `messages` | El historial del chat |
 | `join_attempts` | Freno a la fuerza bruta: 10 intentos fallidos por hora |
 
@@ -141,10 +142,12 @@ no tiene acceso a lo último, no hay que tocar nada.
 
 Entre los disponibles prefiere, en este orden:
 
-- **Para leer facturas**: `gemini-2.5-flash` → `gemini-3.1-flash` →
-  `gemini-3.1-flash-lite` → `gemini-2.0-flash`. Los "lite" son más rápidos y
-  baratos, pero leyendo fotos se equivocan más, así que van de últimos.
-- **Para texto**: `gemini-3.1-flash-lite` primero, que es el más rápido.
+- **Para leer facturas**: los `flash` completos primero (`gemini-3.6-flash`,
+  `gemini-3.7-flash`, `gemini-2.5-flash`, `gemini-3.1-flash`) y los `lite` de
+  últimos. Los "lite" son más rápidos, pero leyendo fotos se equivocan más y
+  aquí lo que importa es acertar el total.
+- **Para texto** ("mercado 120mil"): `gemini-3.1-flash-lite` primero, que es el
+  más rápido y de sobra para eso.
 
 Para forzar otro modelo, añade la variable `GEMINI_MODEL` con el nombre que
 quieras: manda sobre todo lo anterior.
@@ -155,11 +158,11 @@ quieras: manda sobre todo lo anterior.
 
 ### Si algo falla
 
-**Ajustes → Fotos de facturas → "Probar el lector de facturas"** manda una
-imagen de prueba por el mismo camino que una factura y dice en español qué
-pasó: falta la API key, la key no sirve, se acabó la cuota, el modelo ya no
-existe o la IA se está demorando demasiado. También muestra qué modelos acepta
-tu key, que es justo lo que hay que poner en `GEMINI_MODEL` si toca forzarlo.
+La ruta `/api/diagnose` manda una imagen de prueba por el mismo camino que una
+factura y responde qué pasó: falta la API key, la key no sirve, se acabó la
+cuota, el modelo ya no existe o la IA se está demorando demasiado. También
+lista qué modelos acepta tu key, que es justo lo que hay que poner en
+`GEMINI_MODEL` si toca forzarlo.
 
 Cuando falla en medio de un chat, el bot ya no dice sólo "no pude leer la
 factura": dice la razón. La respuesta del servidor además incluye qué modelo

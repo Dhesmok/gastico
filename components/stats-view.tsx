@@ -132,7 +132,7 @@ export function StatsView({
   }
 
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-4rem)] w-full max-w-2xl overflow-y-auto px-4 py-5">
+    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-5">
       <div className="flex flex-col gap-4 pb-8">
         <div>
           <h2 className="font-display text-2xl font-700 text-foreground">Estadísticas</h2>
@@ -155,7 +155,8 @@ export function StatsView({
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {p.label}
+              <span className="sm:hidden">{p.short}</span>
+              <span className="hidden sm:inline">{p.label}</span>
             </button>
           ))}
         </div>

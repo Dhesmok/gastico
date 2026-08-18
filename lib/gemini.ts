@@ -32,17 +32,31 @@ const BASE_URL =
  *
  * GEMINI_MODEL (variable de entorno) manda sobre todo esto.
  */
+/** Los "lite" son más rápidos, pero leyendo fotos de facturas se equivocan más. */
+const ES_LITE = /lite/i
+
+/**
+ * Para una factura importa acertar, no la velocidad: los modelos completos van
+ * primero y los "lite" quedan de último recurso.
+ */
 const PREFER_VISION = [
   'gemini-3.6-flash',
   'gemini-3.7-flash',
+  'gemini-2.5-flash',
+  'gemini-3.1-flash',
+  'gemini-flash-latest',
   'gemini-3.1-flash-lite',
   'gemini-flash-lite-latest',
 ]
+
+/** Para texto suelto ("mercado 120mil") el rápido sobra y se siente mejor. */
 const PREFER_TEXT = [
-  'gemini-3.6-flash',
-  'gemini-3.7-flash',
   'gemini-3.1-flash-lite',
   'gemini-flash-lite-latest',
+  'gemini-3.6-flash',
+  'gemini-3.7-flash',
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
 ]
 
 /** Modelos que existen pero no sirven para esto (audio, imágenes, embeddings). */
@@ -200,10 +214,13 @@ export function chooseModels(available: string[], wantsVision: boolean): string[
   const present = unique.filter((m) => available.includes(m))
   if (present.length > 0) return present.slice(0, 8)
 
-  // Si ninguno coincide, usar lo que la cuenta tenga disponible (preferir flash)
+  // Si ninguno de los preferidos existe, tirar de lo que haya: primero los
+  // flash estables, y para fotos dejando los "lite" de últimos.
   const flash = available.filter((m) => /flash/i.test(m) && !/preview|exp/i.test(m))
+  const completos = wantsVision ? flash.filter((m) => !ES_LITE.test(m)) : flash
+  const lite = wantsVision ? flash.filter((m) => ES_LITE.test(m)) : []
   const rest = available.filter((m) => !flash.includes(m))
-  return [...flash, ...rest].slice(0, 8)
+  return [...completos, ...lite, ...rest].slice(0, 8)
 }
 
 // ---- El prompt -------------------------------------------------------------
@@ -527,7 +544,9 @@ export async function diagnoseGemini(): Promise<AiDiagnosis> {
     rawError: null,
   }
 
-  if (!base.keyConfigured) {
+  // Comprobamos apiKey y no base.keyConfigured para que TypeScript sepa que
+  // de aquí en adelante la key existe.
+  if (!apiKey) {
     return { ...base, ...describeAsProblem(new GeminiError('sin-key', 'sin key')), rawError: 'GEMINI_API_KEY no configurada', ms: 0 }
   }
 

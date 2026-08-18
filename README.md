@@ -46,6 +46,9 @@ local sigue registrando los gastos escritos.
   cuánto subió o bajó), por persona, tendencia con el promedio marcado, los
   movimientos más grandes y el detalle, que se filtra tocando una categoría o
   una persona. Cada movimiento se puede recategorizar o borrar.
+- **Gastos fijos** — arriendo, internet, suscripciones, con su día de pago.
+  Son de la casa, no de quien los creó: los dos ven la misma lista, y cuando
+  uno marca algo como pagado, al otro le aparece al instante.
 - **Configuración** — el ID para invitar, nómina, tope de gasto, apodo, fondo
   del chat, modo oscuro, cada cuánto se borran las fotos, y tu contraseña de
   entrada.
@@ -78,11 +81,12 @@ meses del periodo para que la comparación signifique algo.
 | `lib/finance.ts` | Categorías, periodos, agregaciones y el parser de respaldo |
 | `lib/gemini.ts` | El cliente de la IA, aislado: cambiar de modelo o proveedor se hace aquí |
 | `lib/room.ts` | Todo el acceso a Supabase |
+| `lib/recurring.ts` | Gastos fijos compartidos |
 | `lib/image.ts` | Compresión de facturas en el navegador |
 | `components/` | Las tres pantallas |
 
 Stack: Next.js 16 · React 19 · Tailwind 4 · Supabase (Postgres + RLS + Storage
-+ Realtime) · Gemini Flash-Lite.
++ Realtime) · Gemini Flash.
 
 ## Seguridad
 

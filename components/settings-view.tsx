@@ -21,7 +21,7 @@ import {
 import { formatMoney, type Member, type Room } from '@/lib/finance'
 import { CHAT_BACKGROUNDS } from '@/lib/backgrounds'
 import { changeRoomPassword, formatCode } from '@/lib/room'
-import { changeMyPassword, currentSession } from '@/lib/supabase/client'
+import { changeMyPassword } from '@/lib/supabase/client'
 import { applyTheme, currentTheme, type Theme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
@@ -50,7 +50,6 @@ export function SettingsView({
   const [theme, setTheme] = useState<Theme>('light')
   const [copied, setCopied] = useState(false)
   const [confirmLeave, setConfirmLeave] = useState(false)
-  const [probe, setProbe] = useState<{ loading: boolean; ok: boolean; text: string } | null>(null)
 
   useEffect(() => setTheme(currentTheme()), [])
   useEffect(() => setNick(me.nick), [me.nick])
@@ -63,44 +62,6 @@ export function SettingsView({
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
       notify('No pude copiar. El ID es ' + formatCode(room.code))
-    }
-  }
-
-  /**
-   * Manda una imagen de prueba por el mismo camino que una factura. Si el
-   * lector no sirve, esto dice por qué (falta la API key, se acabó la cuota,
-   * el modelo ya no existe…) en vez de dejarlo en "no pude leer la factura".
-   */
-  async function testReceiptReader() {
-    setProbe({ loading: true, ok: false, text: 'Probando con una imagen de prueba…' })
-    try {
-      const session = await currentSession()
-      if (!session) throw new Error('Se venció la sesión. Vuelve a entrar.')
-
-      const response = await fetch('/api/ai-status', {
-        headers: { authorization: `Bearer ${session.access_token}` },
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error ?? 'No pude hacer la prueba.')
-
-      if (data.ok) {
-        setProbe({
-          loading: false,
-          ok: true,
-          text: `Todo bien: la IA leyó la imagen con ${data.model} en ${(data.ms / 1000).toFixed(1)} s.`,
-        })
-      } else {
-        const disponibles = data.models?.length
-          ? ` Modelos que sí acepta tu API key: ${data.models.slice(0, 4).join(', ')}.`
-          : ''
-        setProbe({ loading: false, ok: false, text: `No funcionó: ${data.problem}.${disponibles}` })
-      }
-    } catch (error) {
-      setProbe({
-        loading: false,
-        ok: false,
-        text: error instanceof Error ? error.message : 'No pude hacer la prueba.',
-      })
     }
   }
 
@@ -133,7 +94,7 @@ export function SettingsView({
   }
 
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-4rem)] w-full max-w-2xl overflow-y-auto px-4 py-5">
+    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-5">
       <div className="flex flex-col gap-4 pb-8">
         <div>
           <h2 className="font-display text-2xl font-700 text-foreground">Configuración</h2>
@@ -307,26 +268,6 @@ export function SettingsView({
             </div>
           )}
 
-          <div className="mt-3 border-t border-border/60 pt-3">
-            <button
-              onClick={testReceiptReader}
-              disabled={probe?.loading}
-              className="flex items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 py-2 text-xs font-700 text-foreground shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
-            >
-              <Receipt className="size-3.5" />
-              {probe?.loading ? 'Probando…' : 'Probar el lector de facturas'}
-            </button>
-            {probe && !probe.loading && (
-              <p
-                className={cn(
-                  'mt-2 text-[11px] leading-relaxed',
-                  probe.ok ? 'text-primary' : 'text-destructive',
-                )}
-              >
-                {probe.text}
-              </p>
-            )}
-          </div>
         </section>
 
         {/* Apariencia */}

@@ -32,8 +32,15 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#fbe9df',
+  colorScheme: 'light dark',
+  // La barra del navegador toma el color del fondo, y cambia con el tema para
+  // que en el celular no quede una franja clara encima de la app oscura.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f6fc' },
+    { media: '(prefers-color-scheme: dark)', color: '#22212b' },
+  ],
+  // La app ocupa hasta detrás de la barra de gestos; el padding lo pone el CSS.
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({

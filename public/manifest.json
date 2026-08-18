@@ -7,8 +7,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
-  "theme_color": "#fbe9df",
+  "background_color": "#f7f6fc",
+  "theme_color": "#f7f6fc",
   "icons": [
     {
       "src": "/apple-icon.png",

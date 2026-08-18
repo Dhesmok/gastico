@@ -33,17 +33,23 @@ const BASE_URL =
  * GEMINI_MODEL (variable de entorno) manda sobre todo esto.
  */
 const PREFER_VISION = [
+  'gemini-flash-latest',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro',
+  'gemini-flash-lite-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-pro-latest',
 ]
 const PREFER_TEXT = [
+  'gemini-flash-latest',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
+  'gemini-flash-lite-latest',
+  'gemini-3.5-flash-lite',
 ]
 
 /** Modelos que existen pero no sirven para esto (audio, imágenes, embeddings). */
@@ -199,12 +205,12 @@ export function chooseModels(available: string[], wantsVision: boolean): string[
   if (available.length === 0) return unique
 
   const present = unique.filter((m) => available.includes(m))
-  if (present.length > 0) return present
+  if (present.length > 0) return present.slice(0, 8)
 
   // Si ninguno coincide, usar lo que la cuenta tenga disponible (preferir flash)
   const flash = available.filter((m) => /flash/i.test(m) && !/preview|exp/i.test(m))
   const rest = available.filter((m) => !flash.includes(m))
-  return [...flash, ...rest].slice(0, 4)
+  return [...flash, ...rest].slice(0, 8)
 }
 
 // ---- El prompt -------------------------------------------------------------

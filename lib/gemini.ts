@@ -32,8 +32,19 @@ const BASE_URL =
  *
  * GEMINI_MODEL (variable de entorno) manda sobre todo esto.
  */
-const PREFER_VISION = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-lite']
-const PREFER_TEXT = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b']
+const PREFER_VISION = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+]
+const PREFER_TEXT = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+]
 
 /** Modelos que existen pero no sirven para esto (audio, imágenes, embeddings). */
 const NOT_FOR_CHAT = /embedding|aqa|imagen|image-generation|tts|veo|live|native-audio|learnlm/i
@@ -295,21 +306,8 @@ ${ctx.recent.length ? ctx.recent.map((r) => `  ${r}`).join('\n') : '  (ninguno)'
  * Cada modelo se intenta primero con el razonamiento al mínimo y, si rechaza
  * el campo o se queda corto de tokens, otra vez sin él y con más espacio.
  */
-function attemptsFor(model: string): { thinking: Record<string, unknown> | null; maxTokens: number }[] {
-  if (/^gemini-([3-9]|\d{2})/.test(model)) {
-    // Gemini 3 en adelante: se controla con thinkingLevel, no con presupuesto.
-    return [
-      { thinking: { thinkingLevel: 'low' }, maxTokens: 2048 },
-      { thinking: null, maxTokens: 4096 },
-    ]
-  }
-  if (/^gemini-2\.5/.test(model)) {
-    return [
-      { thinking: { thinkingBudget: 0 }, maxTokens: 2048 },
-      { thinking: null, maxTokens: 4096 },
-    ]
-  }
-  return [{ thinking: null, maxTokens: 2048 }]
+function attemptsFor(_model: string): { thinking: Record<string, unknown> | null; maxTokens: number }[] {
+  return [{ thinking: null, maxTokens: 4096 }]
 }
 
 // ---- La llamada ------------------------------------------------------------

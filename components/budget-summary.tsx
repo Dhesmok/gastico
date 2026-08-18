@@ -39,12 +39,12 @@ export function BudgetSummary({
   return (
     <div
       className={cn(
-        'rounded-3xl border p-4 shadow-sm transition-colors',
+        'rounded-3xl border p-4 shadow-sm transition-all duration-300 backdrop-blur-md',
         overIncome
-          ? 'border-destructive/40 bg-destructive/8'
+          ? 'border-destructive/40 bg-destructive/10'
           : overCap
-            ? 'border-chart-3/50 bg-chart-3/10'
-            : 'border-border/70 bg-card/80',
+            ? 'border-chart-3/50 bg-chart-3/12'
+            : 'border-border/70 bg-card/85 shadow-sm',
       )}
     >
       <div className="flex items-center justify-between gap-2">

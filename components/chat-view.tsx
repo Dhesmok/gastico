@@ -132,14 +132,14 @@ export function ChatView({
         </div>
       </div>
 
-      <div className="glass border-t border-border/60 px-4 pb-4 pt-3">
+      <div className="glass sticky bottom-0 z-20 border-t border-border/60 px-3.5 pb-5 pt-2.5 sm:px-4 sm:pb-4">
         {pendingFile && (
-          <div className="mb-2.5 flex items-center gap-3 rounded-2xl border border-border bg-card/80 p-2">
+          <div className="mb-2.5 flex items-center gap-3 rounded-2xl border border-border bg-card/90 p-2 shadow-xs backdrop-blur">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={pendingFile.url}
               alt="Factura por enviar"
-              className="size-14 rounded-xl object-cover"
+              className="size-14 rounded-xl object-cover shadow-xs"
             />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-700 text-foreground">Factura lista para enviar</p>
@@ -172,12 +172,12 @@ export function ChatView({
           <button
             onClick={() => fileRef.current?.click()}
             title="Tomar o subir la foto de una factura"
-            className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:text-primary hover:shadow-md"
+            className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:text-primary hover:shadow-md active:scale-95"
           >
             <Camera className="size-5" />
           </button>
 
-          <div className="flex flex-1 items-end rounded-2xl border border-border bg-card px-3 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
+          <div className="flex min-h-[44px] flex-1 items-center rounded-2xl border border-border bg-card px-3.5 py-1 shadow-xs focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -196,14 +196,14 @@ export function ChatView({
               placeholder={
                 pendingFile ? 'Nota para la factura (opcional)…' : 'Cuéntame el gasto… ej: “mercado 120mil”'
               }
-              className="max-h-28 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="max-h-28 min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-snug text-foreground outline-none placeholder:text-xs placeholder:text-muted-foreground sm:placeholder:text-sm"
             />
           </div>
 
           <button
             onClick={submit}
             disabled={(!text.trim() && !pendingFile) || thinking}
-            className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-40 disabled:shadow-none"
+            className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:shadow-none"
             aria-label="Enviar"
           >
             {thinking ? <Loader2 className="size-5 animate-spin" /> : <SendIcon />}
@@ -337,20 +337,20 @@ function MessageBubble({
       {!isMine && <Avatar initials={initials} color={color} />}
       <div
         className={cn(
-          'rounded-3xl px-4 py-2.5 shadow-md',
+          'rounded-3xl p-3 sm:px-4 sm:py-2.5 shadow-md backdrop-blur-xs',
           isMine
             ? 'rounded-br-md bg-primary text-primary-foreground shadow-primary/20'
-            : 'rounded-bl-md bg-card text-foreground',
+            : 'rounded-bl-md bg-card/95 text-foreground border border-border/50',
           message.pending && 'opacity-70',
         )}
       >
         {!isMine && (
-          <p className="mb-0.5 text-[11px] font-700" style={{ color }}>
+          <p className="mb-1 text-[11px] font-700" style={{ color }}>
             {message.nick}
           </p>
         )}
         <ReceiptThumb message={message} onOpenImage={onOpenImage} />
-        {message.text && <p className="text-sm leading-relaxed">{message.text}</p>}
+        {message.text && <p className="text-sm leading-relaxed px-0.5">{message.text}</p>}
       </div>
       {isMine && <Avatar initials={initials} color={color} />}
     </div>

@@ -506,6 +506,7 @@ export type AiDiagnosis = {
   ms: number
   problem: string | null
   failure: AiFailure | null
+  rawError: string | null
 }
 
 /**
@@ -524,17 +525,18 @@ export async function diagnoseGemini(): Promise<AiDiagnosis> {
     ms: 0,
     problem: null,
     failure: null,
+    rawError: null,
   }
 
   if (!base.keyConfigured) {
-    return { ...base, ...describeAsProblem(new GeminiError('sin-key', 'sin key')), ms: 0 }
+    return { ...base, ...describeAsProblem(new GeminiError('sin-key', 'sin key')), rawError: 'GEMINI_API_KEY no configurada', ms: 0 }
   }
 
   try {
     base.models = await availableModels(process.env.GEMINI_API_KEY!)
     base.willTry = chooseModels(base.models, true)
   } catch (error) {
-    return { ...base, ...describeAsProblem(error), ms: Date.now() - startedAt }
+    return { ...base, ...describeAsProblem(error), rawError: error instanceof Error ? error.message : String(error), ms: Date.now() - startedAt }
   }
 
   try {
@@ -558,7 +560,7 @@ export async function diagnoseGemini(): Promise<AiDiagnosis> {
     )
     return { ...base, ok: true, model: result.model, ms: Date.now() - startedAt }
   } catch (error) {
-    return { ...base, ...describeAsProblem(error), ms: Date.now() - startedAt }
+    return { ...base, ...describeAsProblem(error), rawError: error instanceof Error ? error.message : String(error), ms: Date.now() - startedAt }
   }
 }
 

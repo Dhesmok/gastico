@@ -252,7 +252,7 @@ export function RecurringView({
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <span
-                        className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-xs"
+                        className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-sm"
                         style={{
                           backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)`,
                         }}
@@ -303,7 +303,7 @@ export function RecurringView({
                         <button
                           onClick={() => handlePay(item)}
                           disabled={payingId === item.id}
-                          className="flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-700 text-primary-foreground shadow-xs transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                          className="flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-700 text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-50"
                         >
                           <CalendarCheck className="size-3.5" />
                           <span>{payingId === item.id ? 'Registrando…' : 'Pagar'}</span>

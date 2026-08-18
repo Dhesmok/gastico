@@ -32,8 +32,8 @@ const BASE_URL =
  *
  * GEMINI_MODEL (variable de entorno) manda sobre todo esto.
  */
-const PREFER_VISION = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
-const PREFER_TEXT = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+const PREFER_VISION = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-lite']
+const PREFER_TEXT = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b']
 
 /** Modelos que existen pero no sirven para esto (audio, imágenes, embeddings). */
 const NOT_FOR_CHAT = /embedding|aqa|imagen|image-generation|tts|veo|live|native-audio|learnlm/i
@@ -180,22 +180,20 @@ export async function availableModels(apiKey: string, timeoutMs = 8_000): Promis
 
 /** La lista de intentos, en orden, según lo que exista de verdad. */
 export function chooseModels(available: string[], wantsVision: boolean): string[] {
-  const preferred = [
-    process.env.GEMINI_MODEL,
-    ...(wantsVision ? PREFER_VISION : PREFER_TEXT),
-  ].filter(Boolean) as string[]
-  const unique = [...new Set(preferred)]
+  const fallbackList = wantsVision ? PREFER_VISION : PREFER_TEXT
+  const candidate = process.env.GEMINI_MODEL?.trim()
+  const list = [candidate, ...fallbackList].filter(Boolean) as string[]
+  const unique = [...new Set(list)]
 
   if (available.length === 0) return unique
 
   const present = unique.filter((m) => available.includes(m))
   if (present.length > 0) return present
 
-  // Ninguno de los que conocemos: usamos lo que haya, empezando por los flash
-  // (rápidos y baratos) y dejando los pro de último.
-  const flash = available.filter((m) => /flash/.test(m) && !/preview|exp/.test(m))
+  // Si ninguno coincide, usar lo que la cuenta tenga disponible (preferir flash)
+  const flash = available.filter((m) => /flash/i.test(m) && !/preview|exp/i.test(m))
   const rest = available.filter((m) => !flash.includes(m))
-  return [...flash, ...rest].slice(0, 3)
+  return [...flash, ...rest].slice(0, 4)
 }
 
 // ---- El prompt -------------------------------------------------------------

@@ -23,12 +23,17 @@ import {
   type Room,
 } from '@/lib/finance'
 import {
+  createRecurring,
+  deleteRecurring,
+  fetchRecurring,
   getRecurringStatus,
-  loadRecurring,
-  saveRecurring,
+  migrateLocalRecurring,
+  subscribeToRecurring,
+  updateRecurring,
   type RecurringExpense,
   type RecurringStatus,
 } from '@/lib/recurring'
+import { getSupabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 export function RecurringView({
@@ -56,10 +61,41 @@ export function RecurringView({
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<RecurringExpense | null>(null)
   const [payingId, setPayingId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
+  // La lista es de la sala: se carga de Supabase y se mantiene al día sola,
+  // así lo que anota uno le aparece al otro sin recargar.
   useEffect(() => {
-    setRecurringList(loadRecurring(room.id))
-  }, [room.id])
+    let cancelled = false
+
+    async function load(first = false) {
+      try {
+        let items = await fetchRecurring(room.id)
+        if (first) {
+          // Rescata lo que hubiera quedado guardado sólo en este celular.
+          items = await migrateLocalRecurring(room.id, me.userId, items)
+        }
+        if (!cancelled) setRecurringList(items)
+      } catch (error) {
+        if (!cancelled) {
+          notify(error instanceof Error ? error.message : 'No pude cargar los gastos fijos.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    setLoading(true)
+    load(true)
+
+    const channel = subscribeToRecurring(room.id, () => load())
+    return () => {
+      cancelled = true
+      getSupabase().removeChannel(channel)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.id, me.userId])
 
   // Form state
   const [name, setName] = useState('')
@@ -111,43 +147,48 @@ export function RecurringView({
     setModalOpen(true)
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const num = Math.round(Number(amount))
     const day = Math.min(31, Math.max(1, Number(dueDay) || 1))
-    if (!name.trim() || num <= 0) return
+    if (!name.trim() || num <= 0 || saving) return
 
-    let updated: RecurringExpense[]
-    if (editingItem) {
-      updated = recurringList.map((item) =>
-        item.id === editingItem.id
-          ? { ...item, name: name.trim(), amount: num, category, dueDay: day }
-          : item,
-      )
-      notify('Gasto fijo actualizado.')
-    } else {
-      const newItem: RecurringExpense = {
-        id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        name: name.trim(),
-        amount: num,
-        category,
-        dueDay: day,
-        active: true,
+    const patch = { name: name.trim(), amount: num, category, dueDay: day }
+    const previous = recurringList
+    setSaving(true)
+
+    try {
+      if (editingItem) {
+        // Se pinta de una y se corrige si el guardado falla.
+        setRecurringList((list) =>
+          list.map((item) => (item.id === editingItem.id ? { ...item, ...patch } : item)),
+        )
+        await updateRecurring(editingItem.id, patch)
+        notify('Gasto fijo actualizado para toda la casa.')
+      } else {
+        const creado = await createRecurring(room.id, me.userId, { ...patch, active: true })
+        setRecurringList((list) => [...list, creado])
+        notify('Gasto fijo añadido. Tu pareja también lo verá.')
       }
-      updated = [...recurringList, newItem]
-      notify('Gasto fijo añadido a la lista.')
+      setModalOpen(false)
+    } catch (error) {
+      setRecurringList(previous)
+      notify(error instanceof Error ? error.message : 'No pude guardarlo.')
+    } finally {
+      setSaving(false)
     }
-
-    setRecurringList(updated)
-    saveRecurring(room.id, updated)
-    setModalOpen(false)
   }
 
-  function handleDelete(id: string) {
-    const updated = recurringList.filter((item) => item.id !== id)
-    setRecurringList(updated)
-    saveRecurring(room.id, updated)
-    notify('Gasto fijo eliminado.')
+  async function handleDelete(id: string) {
+    const previous = recurringList
+    setRecurringList((list) => list.filter((item) => item.id !== id))
+    try {
+      await deleteRecurring(id)
+      notify('Gasto fijo eliminado.')
+    } catch (error) {
+      setRecurringList(previous)
+      notify(error instanceof Error ? error.message : 'No pude eliminarlo.')
+    }
   }
 
   async function handlePay(item: RecurringExpense) {
@@ -169,7 +210,7 @@ export function RecurringView({
   }
 
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-4rem)] w-full max-w-2xl overflow-y-auto px-4 py-5">
+    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-5">
       <div className="flex flex-col gap-4 pb-12">
         {/* Encabezado */}
         <div className="flex items-center justify-between">
@@ -181,10 +222,10 @@ export function RecurringView({
           </div>
           <button
             onClick={handleOpenCreate}
-            className="flex items-center gap-1.5 rounded-2xl bg-primary px-3.5 py-2.5 font-display text-xs font-700 text-primary-foreground shadow-sm shadow-primary/30 transition-all hover:-translate-y-0.5 hover:shadow-md"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-2xl bg-primary px-3.5 py-2.5 font-display text-xs font-700 text-primary-foreground shadow-sm shadow-primary/30 transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-95"
           >
             <Plus className="size-4" />
-            <span>Nuevo Fijo</span>
+            <span>Nuevo fijo</span>
           </button>
         </div>
 

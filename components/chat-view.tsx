@@ -102,7 +102,7 @@ export function ChatView({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-4rem)] w-full max-w-2xl flex-col">
+    <div className="mx-auto flex h-[calc(100svh-var(--app-header))] w-full max-w-2xl flex-col">
       <div className="px-4 pt-4">
         <BudgetSummary spent={spent} income={income} room={room} compact />
       </div>
@@ -132,7 +132,7 @@ export function ChatView({
         </div>
       </div>
 
-      <div className="glass sticky bottom-0 z-20 border-t border-border/60 px-3.5 pb-5 pt-2.5 sm:px-4 sm:pb-4">
+      <div className="glass pb-safe sticky bottom-0 z-20 border-t border-border/60 px-3.5 pt-2.5 sm:px-4">
         {pendingFile && (
           <div className="mb-2.5 flex items-center gap-3 rounded-2xl border border-border bg-card/90 p-2 shadow-xs backdrop-blur">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -422,7 +422,7 @@ function ExpenseChip({
       <button
         onClick={() => onEdit(expense)}
         title="Cambiar la categoría"
-        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-700 text-foreground transition-transform hover:-translate-y-0.5"
+        className="inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-700 text-foreground transition-transform hover:-translate-y-0.5 active:scale-95"
         style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)` }}
       >
         <span>{cat.emoji}</span>

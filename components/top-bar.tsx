@@ -58,7 +58,7 @@ export function TopBar({
       : `${members.length} personas`
 
   return (
-    <header className="glass sticky top-0 z-30 border-b border-border/60">
+    <header className="glass pt-safe sticky top-0 z-30 border-b border-border/60">
       <div className="mx-auto flex h-16 w-full max-w-2xl items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/30">

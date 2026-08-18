@@ -33,23 +33,16 @@ const BASE_URL =
  * GEMINI_MODEL (variable de entorno) manda sobre todo esto.
  */
 const PREFER_VISION = [
-  'gemini-flash-latest',
+  'gemini-3.6-flash',
   'gemini-3.7-flash',
-  'gemini-3.5-flash',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
+  'gemini-3.1-flash-lite',
   'gemini-flash-lite-latest',
-  'gemini-3.5-flash-lite',
-  'gemini-pro-latest',
 ]
 const PREFER_TEXT = [
-  'gemini-flash-latest',
+  'gemini-3.6-flash',
   'gemini-3.7-flash',
-  'gemini-3.5-flash',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
+  'gemini-3.1-flash-lite',
   'gemini-flash-lite-latest',
-  'gemini-3.5-flash-lite',
 ]
 
 /** Modelos que existen pero no sirven para esto (audio, imágenes, embeddings). */
@@ -516,8 +509,9 @@ export type AiDiagnosis = {
  */
 export async function diagnoseGemini(): Promise<AiDiagnosis> {
   const startedAt = Date.now()
+  const apiKey = process.env.GEMINI_API_KEY
   const base: AiDiagnosis = {
-    keyConfigured: Boolean(process.env.GEMINI_API_KEY),
+    keyConfigured: Boolean(apiKey),
     models: [],
     willTry: [],
     ok: false,
@@ -533,7 +527,7 @@ export async function diagnoseGemini(): Promise<AiDiagnosis> {
   }
 
   try {
-    base.models = await availableModels(process.env.GEMINI_API_KEY!)
+    base.models = await availableModels(apiKey)
     base.willTry = chooseModels(base.models, true)
   } catch (error) {
     return { ...base, ...describeAsProblem(error), rawError: error instanceof Error ? error.message : String(error), ms: Date.now() - startedAt }

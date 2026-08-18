@@ -265,7 +265,6 @@ function MessageBubble({
   last,
   onEditExpense,
   onDeleteExpense,
-  onEditExpense,
 }: {
   message: Message
   member?: Member
@@ -275,7 +274,6 @@ function MessageBubble({
   last: boolean
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
-  onEditExpense: (expense: Expense) => void
 }) {
   const isBot = message.role === 'assistant'
 
@@ -374,13 +372,11 @@ function ExpenseChip({
   currency,
   onEdit,
   onDelete,
-  onEdit,
 }: {
   expense: Expense
   currency: string
   onEdit: (expense: Expense) => void
   onDelete: (id: string) => void
-  onEdit: (expense: Expense) => void
 }) {
   const cat = categoryOf(expense.category)
   return (

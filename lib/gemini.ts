@@ -274,11 +274,16 @@ ${ctx.habits.map((h) => `- ${h}`).join('\n')}`
     : 'Todavía no hay historial suficiente para saber cómo clasifica esta casa.'
 }
 
-FACTURAS
-- La foto puede estar torcida, arrugada o con poca luz: igual busca el TOTAL.
-- Saca el TOTAL pagado (el de más abajo, "TOTAL A PAGAR"), no el subtotal, ni los impuestos, ni la suma de los productos.
-- Si la foto trae varios recibos, o compras de categorías muy distintas, sepáralas en varias entries.
-- En "note" pon el nombre del comercio y un resumen corto ("Éxito · 14 productos").
+FACTURAS Y DESGLOSE INTELIGENTE DE PRODUCTOS
+- La foto puede estar torcida, arrugada o con poca luz: busca el total y analiza los ítems comprados.
+- DISCRIMINACIÓN INTELIGENTE: Si en una factura de supermercado (Éxito, Carulla, D1, Jumbo, Ara, etc.) hay productos que claramente NO son mercado básico de alimentación o aseo de la casa:
+  * Cervezas, licores, vinos o tragos -> clasifícalos en "calle" (antojos/bebidas) o en "ocio" (licor/rumba).
+  * Mecato, chocolates, helados o dulces en cantidad -> clasifícalos en "calle" (antojos).
+  * Ropa, calzado, accesorios, tecnología -> clasifícalos en "lujos".
+  * Alimento de perros/gatos, arena, antipulgas -> clasifícalos en "mascotas".
+  * El resto de víveres, comida y aseo déjalos en "mercado".
+  * Crea una entry para cada grupo discriminado (por ejemplo: una entry para Mercado y otra para Cervezas/Antojos). La suma de los montos debe coincidir con el total de la factura.
+- Si toda la factura es solo mercado normal o el desglose no es legible, crea una sola entry con el total y en "note" pon: "[Comercio] · [Resumen]".
 - Si de verdad no se alcanza a leer el total, deja "entries" vacío y dilo en "reply" pidiendo el dato.
 
 RESPUESTA

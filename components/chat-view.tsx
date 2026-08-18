@@ -50,6 +50,7 @@ export function ChatView({
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<Expense | null>(null)
   const [pendingFile, setPendingFile] = useState<{ file: File; url: string } | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const bg = getBackground(room.chatBackground)
@@ -124,7 +125,7 @@ export function ChatView({
               last={i === messages.length - 1}
               onEditExpense={onEditExpense}
               onDeleteExpense={onDeleteExpense}
-              onEditExpense={setEditing}
+              onOpenImage={setPreviewImage}
             />
           ))}
           {thinking && <TypingBubble />}
@@ -221,6 +222,28 @@ export function ChatView({
           onClose={() => setEditing(null)}
         />
       )}
+
+      {previewImage && (
+        <div
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in"
+        >
+          <button
+            onClick={() => setPreviewImage(null)}
+            className="absolute right-4 top-4 z-10 flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition-all hover:bg-white/30 hover:scale-110 active:scale-95"
+            aria-label="Cerrar foto"
+          >
+            <X className="size-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewImage}
+            alt="Factura completa"
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[88vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl animate-pop-in"
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -265,6 +288,7 @@ function MessageBubble({
   last,
   onEditExpense,
   onDeleteExpense,
+  onOpenImage,
 }: {
   message: Message
   member?: Member
@@ -274,6 +298,7 @@ function MessageBubble({
   last: boolean
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
+  onOpenImage?: (url: string) => void
 }) {
   const isBot = message.role === 'assistant'
 
@@ -324,7 +349,7 @@ function MessageBubble({
             {message.nick}
           </p>
         )}
-        <ReceiptThumb message={message} />
+        <ReceiptThumb message={message} onOpenImage={onOpenImage} />
         {message.text && <p className="text-sm leading-relaxed">{message.text}</p>}
       </div>
       {isMine && <Avatar initials={initials} color={color} />}
@@ -333,7 +358,13 @@ function MessageBubble({
 }
 
 /** La foto vive en un bucket privado: hay que pedir una URL firmada. */
-function ReceiptThumb({ message }: { message: Message }) {
+function ReceiptThumb({
+  message,
+  onOpenImage,
+}: {
+  message: Message
+  onOpenImage?: (url: string) => void
+}) {
   const [url, setUrl] = useState<string | null>(message.localImageUrl ?? null)
 
   useEffect(() => {
@@ -354,7 +385,14 @@ function ReceiptThumb({ message }: { message: Message }) {
   if (!message.imagePath && !message.localImageUrl) return null
 
   return (
-    <div className="mb-2 overflow-hidden rounded-2xl bg-black/10">
+    <div
+      onClick={() => url && onOpenImage?.(url)}
+      className={cn(
+        'mb-2 overflow-hidden rounded-2xl bg-black/10 transition-transform',
+        url && 'cursor-pointer hover:opacity-90 active:scale-[0.98]',
+      )}
+      title={url ? 'Toca para ver la foto en pantalla completa' : undefined}
+    >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt="Factura" className="max-h-56 w-full object-cover" />

@@ -242,6 +242,12 @@ export default function Page() {
       const result = await response.json()
       if (result.message) mergeMessage(toMessage(result.message))
       for (const row of result.expenses ?? []) mergeExpense(toExpense(row))
+      // El bot también puede corregir o borrar lo que ya estaba anotado.
+      for (const row of result.updated ?? []) mergeExpense(toExpense(row))
+      const borrados: string[] = result.deleted ?? []
+      if (borrados.length > 0) {
+        setExpenses((prev) => prev.filter((e) => !borrados.includes(e.id)))
+      }
       return result
     },
     [mergeExpense, mergeMessage],

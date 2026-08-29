@@ -22,8 +22,15 @@ import {
   sumExpenses,
   sumIncome,
   type Classified,
+  type Expense,
 } from '@/lib/finance'
-import { askGemini, describeFailure, type AiFailure, type Entry } from '@/lib/gemini'
+import {
+  askGemini,
+  describeFailure,
+  type AiFailure,
+  type Correction,
+  type Entry,
+} from '@/lib/gemini'
 import { toExpense } from '@/lib/mappers'
 
 export const runtime = 'nodejs'
@@ -115,8 +122,16 @@ export async function POST(request: Request) {
   const history = (historyRows ?? []) as Classified[]
   const memory = buildCategoryMemory(history)
 
+  // A la IA nunca le pasamos ids de la base: cada movimiento reciente viaja con
+  // un "#N" y sólo esos se pueden corregir o borrar. Si se inventa un número,
+  // no apunta a ninguna fila y no pasa nada.
+  const recent = monthExpenses.slice(0, 10)
+  const byRef = new Map(recent.map((e, i) => [`#${i + 1}`, e]))
+
   let reply: string
   let entries: Entry[]
+  let updates: Correction[] = []
+  let deletes: string[] = []
   let usedAI = true
   let usedModel: string | null = null
   let aiFailure: AiFailure | null = null
@@ -136,18 +151,18 @@ export async function POST(request: Request) {
       breakdown: byCategory(monthExpenses).map(
         (c) => `${c.category.label}: ${formatMoney(c.total, currency)}`,
       ),
-      recent: monthExpenses
-        .slice(0, 10)
-        .map(
-          (e) =>
-            `${e.occurredAt.slice(0, 10)} · ${e.nick} · ${categoryOf(e.category).label} · ${formatMoney(e.amount, currency)} · ${e.note}`,
-        ),
+      recent: recent.map(
+        (e, i) =>
+          `#${i + 1} · ${e.occurredAt.slice(0, 10)} · ${e.nick} · ${categoryOf(e.category).label} · ${formatMoney(e.amount, currency)} · ${e.note}`,
+      ),
       habits: memoryHighlights(history).map(
         (h) => `"${h.word}" → ${h.category.id} (${h.category.label})`,
       ),
     })
     reply = result.reply
     entries = result.entries
+    updates = result.updates
+    deletes = result.deletes
     usedModel = result.model
   } catch (error) {
     usedAI = false
@@ -170,8 +185,51 @@ export async function POST(request: Request) {
     console.error(`[chat] Gemini falló (${problem.failure}), usando parser local:`, error)
   }
 
+  // Correcciones a lo que ya estaba guardado. Van antes de insertar porque una
+  // corrección típica ("saca los plátanos del mercado") baja el movimiento
+  // viejo y crea el nuevo: si fallara la primera parte, no queremos la segunda.
+  const deleted: string[] = []
+  const updatedRows: any[] = []
+
+  for (const ref of deletes) {
+    const target = byRef.get(ref)
+    if (!target) continue
+    const { error } = await supabase.from('expenses').delete().eq('id', target.id)
+    if (error) console.error(`[chat] no pude borrar ${target.id}:`, error.message)
+    else deleted.push(target.id)
+  }
+
+  for (const correction of updates) {
+    const target = byRef.get(correction.ref)
+    if (!target || deleted.includes(target.id)) continue
+
+    const patch: Record<string, unknown> = {}
+    if (correction.category) {
+      patch.category = correction.category
+      // Cambiar a una categoría de ingreso convierte el movimiento en ingreso.
+      patch.kind = categoryOf(correction.category).kind
+    }
+    if (correction.amount) patch.amount = correction.amount
+    if (correction.note) patch.note = correction.note
+
+    const { data, error } = await supabase
+      .from('expenses')
+      .update(patch)
+      .eq('id', target.id)
+      .select()
+    if (error) console.error(`[chat] no pude corregir ${target.id}:`, error.message)
+    else if (data?.[0]) updatedRows.push(data[0])
+  }
+
   // Escritura de los movimientos detectados.
   let inserted: any[] = []
+  const skipped = entries.filter((e) => isDuplicate(e, recent, text))
+  entries = entries.filter((e) => !skipped.includes(e))
+  if (skipped.length > 0) {
+    console.warn(`[chat] ${skipped.length} movimiento(s) ya estaban anotados; no los dupliqué`)
+    reply = `${reply} (Eso ya estaba anotado hace un momento, así que no lo dupliqué. Si de verdad fue otra compra, dime “anótalo de nuevo”.)`
+  }
+
   if (entries.length > 0) {
     const { data, error } = await supabase
       .from('expenses')
@@ -203,7 +261,8 @@ export async function POST(request: Request) {
       room_id: roomId,
       role: 'assistant',
       text: reply,
-      expense_id: inserted[0]?.id ?? null,
+      // Si sólo hubo corrección, el mensaje muestra el movimiento corregido.
+      expense_id: inserted[0]?.id ?? updatedRows[0]?.id ?? null,
     })
     .select()
     .single()
@@ -215,5 +274,33 @@ export async function POST(request: Request) {
     model: usedModel,
     message: assistantRow ?? null,
     expenses: inserted,
+    updated: updatedRows,
+    deleted,
   })
+}
+
+/** Cuando alguien insiste, sí queremos anotarlo dos veces. */
+const OTRA_VEZ = /(otra vez|de nuevo|nuevamente|repite|repit[eí]|volv[ií] a|dos veces|igual que)/i
+
+/** Cuánto rato consideramos que un gasto idéntico es un duplicado y no otra compra. */
+const VENTANA_MS = 5 * 60_000
+
+/**
+ * El bot no puede editar lo que ya guardó pidiéndoselo dos veces: antes, cuando
+ * le corregían algo, volvía a insertar la misma compra y las cuentas se
+ * inflaban solas. Ahora tiene "updates"; esto es el cinturón por si aun así
+ * repite. Un gasto idéntico (mismo valor, misma categoría) hecho hace menos de
+ * cinco minutos es un duplicado, salvo que la persona diga que fue de verdad
+ * otra vez.
+ */
+function isDuplicate(entry: Entry, recent: Expense[], text: string): boolean {
+  if (OTRA_VEZ.test(text)) return false
+  const limit = Date.now() - VENTANA_MS
+  return recent.some(
+    (e) =>
+      e.kind === entry.kind &&
+      e.category === entry.category &&
+      Math.round(e.amount) === Math.round(entry.amount) &&
+      new Date(e.createdAt).getTime() >= limit,
+  )
 }

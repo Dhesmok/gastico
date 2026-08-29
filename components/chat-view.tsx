@@ -55,9 +55,20 @@ export function ChatView({
   const fileRef = useRef<HTMLInputElement>(null)
   const bg = getBackground(room.chatBackground)
 
-  const expenseById = useMemo(() => {
-    const map = new Map<string, Expense>()
-    for (const e of expenses) map.set(e.id, e)
+  /**
+   * Un mensaje puede haber creado varios movimientos: un mercado con antojos se
+   * parte en dos o tres. El mensaje sólo guarda el primero, pero todos los del
+   * mismo desglose entran en la misma inserción y comparten `createdAt` al
+   * microsegundo, así que por ahí se recupera el grupo completo.
+   */
+  const expenseGroupById = useMemo(() => {
+    const siblings = new Map<string, Expense[]>()
+    for (const e of expenses) {
+      const key = `${e.createdAt}·${e.nick}`
+      siblings.set(key, [...(siblings.get(key) ?? []), e])
+    }
+    const map = new Map<string, Expense[]>()
+    for (const e of expenses) map.set(e.id, siblings.get(`${e.createdAt}·${e.nick}`) ?? [e])
     return map
   }, [expenses])
 
@@ -120,7 +131,7 @@ export function ChatView({
               message={m}
               member={m.nick ? memberByNick.get(m.nick) : undefined}
               isMine={m.userId === me.userId}
-              expense={m.expenseId ? expenseById.get(m.expenseId) : undefined}
+              entries={m.expenseId ? expenseGroupById.get(m.expenseId) : undefined}
               currency={room.currency}
               last={i === messages.length - 1}
               onEditExpense={onEditExpense}
@@ -283,7 +294,7 @@ function MessageBubble({
   message,
   member,
   isMine,
-  expense,
+  entries,
   currency,
   last,
   onEditExpense,
@@ -293,7 +304,8 @@ function MessageBubble({
   message: Message
   member?: Member
   isMine: boolean
-  expense?: Expense
+  /** Los movimientos que salieron de este mensaje: casi siempre uno, varios si se desglosó. */
+  entries?: Expense[]
   currency: string
   last: boolean
   onEditExpense: (expense: Expense) => void
@@ -310,14 +322,15 @@ function MessageBubble({
         </div>
         <div className="rounded-3xl rounded-bl-md bg-card/90 px-4 py-2.5 shadow-sm backdrop-blur">
           <p className="text-sm leading-relaxed text-foreground">{renderText(message.text)}</p>
-          {expense && (
+          {entries?.map((expense) => (
             <ExpenseChip
+              key={expense.id}
               expense={expense}
               currency={currency}
               onEdit={onEditExpense}
               onDelete={onDeleteExpense}
             />
-          )}
+          ))}
         </div>
       </div>
     )

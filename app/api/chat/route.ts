@@ -15,9 +15,9 @@ import {
   byCategory,
   categoryOf,
   formatMoney,
-  localReply,
+  localReplyFor,
   memoryHighlights,
-  parseLocally,
+  parseAllLocally,
   periodRange,
   sumExpenses,
   sumIncome,
@@ -157,10 +157,10 @@ export async function POST(request: Request) {
     // Sin IA todavía podemos anotar lo que venga escrito: el parser local
     // entiende "mercado 120mil". Lo que no puede es leer una foto, así que
     // ahí sí decimos qué fue lo que falló en vez de un "no pude" a secas.
-    const parsed = parseLocally(text, memory)
-    if (parsed) {
-      entries = [parsed]
-      reply = localReply(parsed, humor, currency)
+    const parsed = parseAllLocally(text, memory)
+    if (parsed.length > 0) {
+      entries = parsed
+      reply = localReplyFor(parsed, humor, currency)
     } else {
       entries = []
       reply = image

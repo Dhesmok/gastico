@@ -1065,6 +1065,192 @@ export function detectCategory(
   return best
 }
 
+// ---- Lo que va en el carrito pero no es mercado ----------------------------
+// En una compra de supermercado casi siempre se cuelan cosas que no son
+// mercado: la cerveza, el helado de la fila de la caja, el mecato, la camiseta
+// en oferta. Meterlas todas en "Mercado" hace que el gasto necesario se vea
+// inflado y que los gustos desaparezcan del resumen, que es justo lo que la
+// gente quiere ver. Estas reglas dicen a dónde va cada producto.
+//
+// Se comparan como las pistas de las categorías (sin tildes, palabra completa,
+// `*` = prefijo), y gana la coincidencia más larga: "chocolatina" pesa más que
+// "chocolate", así el chocolate de mesa sigue siendo mercado.
+
+export type BasketRule = { category: CategoryId; words: string[] }
+
+export const BASKET_RULES: BasketRule[] = [
+  {
+    // Antojos: lo que se come o se bebe por gusto, no por alimentarse.
+    category: 'calle',
+    words: [
+      'helado', 'paleta', 'malteada', 'postre', 'ponque', 'ponqué', 'brownie', 'torta',
+      'galleta', 'galletas', 'chocolatina', 'chocolatinas', 'bombombun', 'chocolatinas jet',
+      'jet', 'dulce', 'dulces', 'confite', 'confites', 'chicle', 'chicles', 'gomita', 'gomitas',
+      'masmelo', 'masmelos', 'malvavisco', 'mecato', 'snack', 'snacks', 'pasabocas',
+      'papita', 'papitas', 'papas fritas', 'platanitos', 'chitos', 'doritos', 'detodito',
+      'margarita', 'de todito', 'tostitos', 'cheetos', 'ducales', 'festival', 'oreo',
+      'gaseosa', 'gaseosas', 'coca cola', 'coca-cola', 'pepsi', 'postobon', 'colombiana',
+      'sprite', 'fanta', 'quatro', 'manzana postobon', 'energizante', 'red bull', 'monster',
+      'vive100', 'speed max', 'te helado', 'mr tea', 'hatsu', 'chocorramo', 'achira',
+    ],
+  },
+  {
+    // Licor: se compre en el bar o en el D1, sigue siendo rumba.
+    category: 'ocio',
+    words: [
+      'cerveza', 'cervezas', 'sixpack', 'six pack', 'poker', 'aguila', 'club colombia',
+      'corona', 'heineken', 'stella', 'budweiser', 'costeña', 'costena', 'michelada',
+      'vino', 'vinos', 'champaña', 'champana', 'espumoso', 'licor', 'licores', 'trago',
+      'tragos', 'aguardiente', 'guaro', 'ron', 'whisky', 'whiskey', 'tequila', 'vodka',
+      'ginebra', 'gin', 'brandy', 'crema de whisky', 'baileys', 'sangria', 'coctel',
+      'cigarrillo', 'cigarrillos', 'tabaco', 'vape',
+    ],
+  },
+  {
+    // Antojos que no se comen: la camiseta, el cargador, el perfume.
+    category: 'lujos',
+    words: [
+      'ropa', 'camiseta', 'camisa', 'pantalon', 'jean', 'vestido', 'blusa', 'chaqueta',
+      'buzo', 'pijama', 'medias', 'ropa interior', 'zapatos', 'tenis', 'sandalias',
+      'chanclas', 'gorra', 'bolso', 'maleta', 'billetera', 'reloj', 'joya', 'arete',
+      'perfume', 'locion', 'maquillaje', 'labial', 'pestañina', 'esmalte', 'juguete',
+      'juguetes', 'peluche', 'audifono', 'audifonos', 'parlante', 'cargador',
+      'usb', 'diadema', 'accesorio',
+    ],
+  },
+  {
+    category: 'mascotas',
+    words: [
+      'concentrado', 'purina', 'dog chow', 'cat chow', 'hills', 'chunky', 'ringo',
+      'arena para gato', 'arena sanitaria', 'antipulgas', 'desparasitante', 'snack para perro',
+      'hueso para perro', 'juguete para perro', 'shampoo para perro', 'comida para gato',
+      'comida para perro', 'alimento para perro', 'alimento para gato', 'whiskas', 'felix',
+    ],
+  },
+  {
+    category: 'salud',
+    words: [
+      'acetaminofen', 'ibuprofeno', 'dolex', 'noraver', 'advil', 'aspirina', 'omeprazol',
+      'medicamento', 'medicina', 'pastilla', 'pastillas', 'vitamina', 'vitaminas',
+      'suplemento', 'proteina', 'creatina', 'alcohol antiseptico', 'curitas',
+      'tapabocas', 'termometro', 'suero oral', 'anticonceptivo', 'preservativo', 'condon',
+    ],
+  },
+  {
+    // Cosas de la casa que se compran en el mismo super pero duran años.
+    category: 'casa',
+    words: [
+      // Ojo con las palabras sueltas: "mesa" pilla el chocolate de mesa y
+      // "toalla" las toallas higiénicas, que sí son mercado. Van completas.
+      'olla', 'ollas', 'sarten', 'vajilla', 'cubiertos', 'bombillo', 'bombillos',
+      'extension electrica', 'toalla de baño', 'toallas de baño', 'sabana', 'sabanas',
+      'cobija', 'almohada', 'cortina', 'cortinas', 'matera', 'organizador', 'escoba',
+      'trapero', 'balde', 'destornillador', 'martillo', 'tornillos', 'pila', 'pilas',
+    ],
+  },
+]
+
+/**
+ * A qué categoría pertenece de verdad un producto de la canasta.
+ * Si no coincide con ninguna excepción, se queda donde venía (mercado).
+ */
+export function classifyBasketItem(name: string, fallback: CategoryId = 'mercado'): CategoryId {
+  const normalized = normalizeText(name)
+  if (!normalized) return fallback
+
+  let best: CategoryId = fallback
+  let bestScore = 0
+  for (const rule of BASKET_RULES) {
+    for (const word of rule.words) {
+      if (word.length > bestScore && hintPattern(word).test(normalized)) {
+        best = rule.category
+        bestScore = word.length
+      }
+    }
+  }
+  return best
+}
+
+/** Un producto leído de la factura o del mensaje. */
+export type BasketItem = { name: string; amount: number }
+
+export type BasketGroup = {
+  category: CategoryId
+  amount: number
+  /** Los nombres que cayeron en este grupo, para poder escribir la nota. */
+  names: string[]
+}
+
+/**
+ * Reparte una compra entre las categorías que de verdad la componen.
+ *
+ * `total` manda siempre: es el número que la persona pagó y el que tiene que
+ * cuadrar en el resumen. Si los productos leídos suman menos (la factura trae
+ * más renglones de los que el modelo listó), la diferencia se queda en la
+ * categoría base; si suman de más, se reparte a prorrata. Nunca inventamos ni
+ * perdemos plata.
+ *
+ * Devuelve un solo grupo cuando no hay nada que separar, que es el caso normal
+ * de un mercado sin antojos.
+ */
+export function splitBasket(
+  items: BasketItem[],
+  total: number,
+  baseCategory: CategoryId = 'mercado',
+): BasketGroup[] {
+  const clean = items
+    .map((i) => ({ name: String(i?.name ?? '').trim(), amount: Number(i?.amount) }))
+    .filter((i) => i.name && Number.isFinite(i.amount) && i.amount > 0)
+
+  const rounded = Math.round(total)
+  if (clean.length === 0 || rounded <= 0) {
+    return [{ category: baseCategory, amount: rounded, names: [] }]
+  }
+
+  const grouped = new Map<CategoryId, BasketGroup>()
+  const add = (category: CategoryId, amount: number, name?: string) => {
+    const group = grouped.get(category) ?? { category, amount: 0, names: [] }
+    group.amount += amount
+    if (name) group.names.push(name)
+    grouped.set(category, group)
+  }
+
+  let itemsSum = 0
+  for (const item of clean) {
+    const category = classifyBasketItem(item.name, baseCategory)
+    add(category, item.amount, item.name)
+    itemsSum += item.amount
+  }
+
+  // Lo que la factura tiene de más y el modelo no listó (o el IVA y las bolsas)
+  // pertenece a la compra base, no a los antojos.
+  if (itemsSum < rounded) add(baseCategory, rounded - itemsSum)
+
+  const groups = [...grouped.values()]
+
+  // Si los productos suman más que el total (descuentos, un valor mal leído),
+  // se escala todo a prorrata en vez de descuadrar el mes.
+  const sum = groups.reduce((s, g) => s + g.amount, 0)
+  if (sum !== rounded && sum > 0) {
+    for (const g of groups) g.amount = Math.round((g.amount * rounded) / sum)
+  }
+
+  for (const g of groups) g.amount = Math.round(g.amount)
+  const usable = groups.filter((g) => g.amount > 0)
+  if (usable.length === 0) return [{ category: baseCategory, amount: rounded, names: [] }]
+
+  // El redondeo se lo come el grupo más grande: así la suma cuadra al peso.
+  const diff = rounded - usable.reduce((s, g) => s + g.amount, 0)
+  if (diff !== 0) {
+    const biggest = usable.reduce((a, b) => (b.amount > a.amount ? b : a))
+    biggest.amount += diff
+  }
+
+  return usable
+    .filter((g) => g.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
+}
+
 /**
  * Ojo con \b: en JavaScript sólo entiende letras ASCII, así que "recibí" o
  * "entró" nunca cierran un límite de palabra. Por eso los bordes se escriben
@@ -1098,6 +1284,42 @@ export function parseLocally(text: string, memory?: CategoryMemory): ParsedEntry
   }
 }
 
+/** Por dónde se parte un mensaje con varias compras: "mercado 200mil y helado 8mil". */
+const PARTS = /\s*(?:,|;|\+|\b(?:y|e|mas|más|ademas|además|tambien|también)\b)\s*/i
+
+/**
+ * Igual que `parseLocally`, pero cuando el mensaje trae varias cosas con su
+ * propio valor devuelve una por una: así "mercado 180mil y una gaseosa 5mil"
+ * no termina entero en Mercado. Si sólo hay un monto se comporta como antes.
+ */
+export function parseAllLocally(text: string, memory?: CategoryMemory): ParsedEntry[] {
+  const single = parseLocally(text, memory)
+  if (!single) return []
+
+  const pieces = text
+    .split(PARTS)
+    .map((p) => p.trim())
+    .filter(Boolean)
+
+  const parsed: ParsedEntry[] = []
+  for (const piece of pieces) {
+    const amount = parseAmount(piece)
+    if (amount == null) continue
+    // Un pedazo suelto ("y 8mil de helado") no siempre dice si entra o sale:
+    // en eso manda el mensaje completo.
+    const kind = detectKind(piece) === 'income' ? 'income' : single.kind
+    parsed.push({
+      kind,
+      amount,
+      category: detectCategory(piece, kind, memory),
+      note: piece.slice(0, 200),
+    })
+  }
+
+  // Partir sólo vale la pena si de verdad quedaron dos gastos con su valor.
+  return parsed.length >= 2 ? parsed.slice(0, 10) : [single]
+}
+
 const FUNNY_LINES = [
   'Anotado. Su cuenta de ahorros les manda saludos… nerviosos.',
   '¡Listo! Prometo no juzgar. (Miento un poquito, pero lo anoto igual.)',
@@ -1119,4 +1341,25 @@ export function localReply(entry: ParsedEntry, humor: boolean, currency = 'COP')
     : NEUTRAL_LINES[Math.floor(Math.random() * NEUTRAL_LINES.length)]
   const verb = entry.kind === 'income' ? 'Sumé' : 'Registré'
   return `${cat.emoji} ${verb} ${formatMoney(entry.amount, currency)} en *${cat.label}*. ${closer}`
+}
+
+/** La misma confirmación cuando el mensaje trajo varios movimientos. */
+export function localReplyFor(
+  entries: ParsedEntry[],
+  humor: boolean,
+  currency = 'COP',
+): string {
+  if (entries.length === 0) return ''
+  if (entries.length === 1) return localReply(entries[0], humor, currency)
+
+  const closer = humor
+    ? FUNNY_LINES[Math.floor(Math.random() * FUNNY_LINES.length)]
+    : NEUTRAL_LINES[Math.floor(Math.random() * NEUTRAL_LINES.length)]
+  const detail = entries
+    .map((e) => {
+      const cat = categoryOf(e.category)
+      return `${cat.emoji} ${formatMoney(e.amount, currency)} en *${cat.label}*`
+    })
+    .join(', ')
+  return `Lo separé: ${detail}. ${closer}`
 }

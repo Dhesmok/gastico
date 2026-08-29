@@ -77,6 +77,18 @@ export type Entry = {
   occurredAt?: string
 }
 
+/**
+ * Una corrección a un movimiento que YA está guardado. `ref` es el "#3" con el
+ * que se le presentó al modelo en la lista de recientes: nunca le pasamos ids
+ * de la base, así no puede tocar nada que no le hayamos mostrado.
+ */
+export type Correction = {
+  ref: string
+  category?: CategoryId
+  amount?: number
+  note?: string
+}
+
 export type GeminiContext = {
   text: string
   image: { base64: string; mimeType: string } | null
@@ -262,6 +274,26 @@ const RESPONSE_SCHEMA = {
         required: ['kind', 'amount', 'category', 'note'],
       },
     },
+    updates: {
+      type: 'array',
+      description:
+        'Correcciones a movimientos YA guardados. Sólo lo que cambia; el resto se queda igual.',
+      items: {
+        type: 'object',
+        properties: {
+          ref: { type: 'string', description: 'El "#N" del movimiento en la lista de recientes.' },
+          category: { type: 'string', enum: CATEGORY_LIST.map((c) => c.id) },
+          amount: { type: 'number', description: 'Nuevo valor, sólo si cambia.' },
+          note: { type: 'string', description: 'Nueva descripción, sólo si cambia.' },
+        },
+        required: ['ref'],
+      },
+    },
+    deletes: {
+      type: 'array',
+      description: 'Los "#N" de los movimientos que hay que borrar porque estaban de más.',
+      items: { type: 'string' },
+    },
   },
   required: ['reply', 'entries'],
 }
@@ -333,9 +365,20 @@ FACTURAS
 - En "note" pon "[Comercio] · [Resumen corto]".
 - Si de verdad no se alcanza a leer el total, deja "entries" vacío y dilo en "reply" pidiendo el dato.
 
+CORREGIR LO QUE YA ESTÁ ANOTADO (lee esto con calma)
+Los movimientos de "Últimos movimientos" YA ESTÁN GUARDADOS en la base. Cada uno
+tiene un número (#1, #2…). Volver a mandarlos en "entries" NO los corrige: los
+duplica y les daña las cuentas. Es el segundo error más grave que puedes cometer.
+- Para cambiarle la categoría, el valor o la descripción a uno: mándalo en "updates" con su "#N" y sólo los campos que cambian.
+- Para borrar uno que sobra: su "#N" en "deletes".
+- Para sacar un producto de una compra ya guardada (ej: "los plátanos de 1.690 del mercado son mecato"): baja el valor del movimiento viejo en "updates" (160360 - 1690 = 158670) y crea SÓLO el producto nuevo en "entries" (1690 en "calle"). El total no puede cambiar.
+- Si te corrigen algo que acabas de anotar, va en "updates". "entries" es únicamente para gastos nuevos que todavía no están en la lista.
+- Si no sabes a cuál "#N" se refieren, no adivines ni anotes nada: pregúntales cuál es.
+- No prometas en "reply" un cambio que no mandaste en "updates" o "deletes".
+
 RESPUESTA
 - Máximo 2 frases. Puedes usar *asteriscos* para resaltar y algún emoji.
-- Confirma lo que anotaste con el valor y la categoría.
+- Confirma lo que anotaste (o lo que corregiste) con el valor y la categoría.
 - Si con este gasto se pasan del tope, dilo con cariño.
 
 CONTEXTO DE ${ctx.monthLabel.toUpperCase()}
@@ -344,7 +387,7 @@ CONTEXTO DE ${ctx.monthLabel.toUpperCase()}
 - Gastado hasta ahora: ${formatMoney(ctx.spent, ctx.currency)}
 - Ingresos registrados: ${formatMoney(ctx.income, ctx.currency)}
 - Por categoría: ${ctx.breakdown.length ? ctx.breakdown.join(' · ') : 'todavía nada'}
-- Últimos movimientos:
+- Últimos movimientos (YA GUARDADOS; usa su #N para corregirlos, nunca los repitas en "entries"):
 ${ctx.recent.length ? ctx.recent.map((r) => `  ${r}`).join('\n') : '  (ninguno)'}`
 }
 
@@ -366,7 +409,13 @@ function attemptsFor(_model: string): { thinking: Record<string, unknown> | null
 export async function askGemini(
   ctx: GeminiContext,
   options?: { budgetMs?: number },
-): Promise<{ reply: string; entries: Entry[]; model: string }> {
+): Promise<{
+  reply: string
+  entries: Entry[]
+  updates: Correction[]
+  deletes: string[]
+  model: string
+}> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new GeminiError('sin-key', 'GEMINI_API_KEY no está configurada')
 
@@ -495,7 +544,10 @@ export async function askGemini(
 }
 
 /** Nunca confiamos de una en lo que devuelve el modelo. */
-function normalize(raw: any, currency = 'COP'): { reply: string; entries: Entry[] } {
+function normalize(
+  raw: any,
+  currency = 'COP',
+): { reply: string; entries: Entry[]; updates: Correction[]; deletes: string[] } {
   let reply =
     typeof raw?.reply === 'string' && raw.reply.trim()
       ? raw.reply.trim()
@@ -565,7 +617,44 @@ function normalize(raw: any, currency = 'COP'): { reply: string; entries: Entry[
     reply = `${reply} Ojo: separé ${list}, que no van en la misma bolsa. 😉`
   }
 
-  return { reply, entries: entries.slice(0, 10) }
+  return {
+    reply,
+    entries: entries.slice(0, 10),
+    updates: normalizeUpdates(raw?.updates),
+    deletes: normalizeRefs(raw?.deletes),
+  }
+}
+
+/** Sólo dejamos pasar un "#N": el servidor decide después a qué fila apunta. */
+const REF = /^#?(\d{1,3})$/
+
+function normalizeRefs(raw: unknown): string[] {
+  const refs: string[] = []
+  for (const value of Array.isArray(raw) ? raw : []) {
+    const match = REF.exec(String(value ?? '').trim())
+    if (match) refs.push(`#${match[1]}`)
+  }
+  return [...new Set(refs)].slice(0, 10)
+}
+
+function normalizeUpdates(raw: unknown): Correction[] {
+  const updates: Correction[] = []
+  for (const item of Array.isArray(raw) ? raw : []) {
+    const [ref] = normalizeRefs([item?.ref])
+    if (!ref) continue
+
+    const correction: Correction = { ref }
+    if (VALID_CATEGORIES.has(item?.category)) correction.category = item.category
+    const amount = Number(item?.amount)
+    if (Number.isFinite(amount) && amount > 0) correction.amount = Math.round(amount)
+    if (typeof item?.note === 'string' && item.note.trim()) {
+      correction.note = item.note.trim().slice(0, 200)
+    }
+
+    // Un "update" que no cambia nada sólo gastaría una escritura.
+    if (correction.category || correction.amount || correction.note) updates.push(correction)
+  }
+  return updates.slice(0, 10)
 }
 
 /**

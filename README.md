@@ -26,6 +26,13 @@ palo) y también preguntas: "¿cuánto llevamos en antojos este mes?".
 comercio. Si la factura mezcla cosas muy distintas, la parte en varios
 movimientos.
 
+**El mercado se separa solo.** En el mismo carrito van la cerveza, el helado,
+las papitas o una camiseta, y eso no es mercado: la IA lee los productos con su
+valor y la app decide a qué categoría va cada uno (antojos, ocio, lujos,
+mascotas…). La suma siempre cuadra con lo que pagaste, y lo necesario deja de
+verse inflado. Funciona igual escribiendo: "mercado 180mil y un helado de 8mil"
+quedan como dos movimientos.
+
 **Clasifica sola, y aprende.** Cada movimiento cae en una categoría (mercado,
 antojos, lujos, servicios…). Si algo queda mal puesto, tocas el gasto y se lo
 cambias: a la segunda corrección, la app aprende que "el corral" es antojo para

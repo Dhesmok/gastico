@@ -17,6 +17,8 @@ import {
   INCOME_CATEGORIES,
   categoryOf,
   formatMoney,
+  splitBasket,
+  type BasketItem,
   type CategoryId,
   type Kind,
 } from '@/lib/finance'
@@ -243,6 +245,19 @@ const RESPONSE_SCHEMA = {
           category: { type: 'string', enum: CATEGORY_LIST.map((c) => c.id) },
           note: { type: 'string', description: 'Descripción corta del movimiento.' },
           date: { type: 'string', description: 'Fecha YYYY-MM-DD si el mensaje la menciona.' },
+          items: {
+            type: 'array',
+            description:
+              'Los productos de la compra con su valor, tal como aparecen en la factura o en el mensaje. Obligatorio en compras de supermercado.',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Nombre del producto o del grupo.' },
+                amount: { type: 'number', description: 'Lo que costó ese producto.' },
+              },
+              required: ['name', 'amount'],
+            },
+          },
         },
         required: ['kind', 'amount', 'category', 'note'],
       },
@@ -287,20 +302,35 @@ ${
   ctx.habits.length
     ? `CÓMO CLASIFICA ESTA CASA (esto manda sobre las listas de arriba)
 Estas palabras ya las clasificaron ellos mismos. Si el mensaje trae alguna, usa esa categoría aunque tu instinto diga otra cosa.
-${ctx.habits.map((h) => `- ${h}`).join('\n')}`
+${ctx.habits.map((h) => `- ${h}`).join('\n')}
+Ojo: esto sirve para escoger la categoría de una compra, NO para meter todo en una sola. La regla de separar los antojos manda sobre esta memoria.`
     : 'Todavía no hay historial suficiente para saber cómo clasifica esta casa.'
 }
 
-FACTURAS Y DESGLOSE INTELIGENTE DE PRODUCTOS
-- La foto puede estar torcida, arrugada o con poca luz: busca el total y analiza los ítems comprados.
-- DISCRIMINACIÓN INTELIGENTE: Si en una factura de supermercado (Éxito, Carulla, D1, Jumbo, Ara, etc.) hay productos que claramente NO son mercado básico de alimentación o aseo de la casa:
-  * Cervezas, licores, vinos o tragos -> clasifícalos en "calle" (antojos/bebidas) o en "ocio" (licor/rumba).
-  * Mecato, chocolates, helados o dulces en cantidad -> clasifícalos en "calle" (antojos).
-  * Ropa, calzado, accesorios, tecnología -> clasifícalos en "lujos".
-  * Alimento de perros/gatos, arena, antipulgas -> clasifícalos en "mascotas".
-  * El resto de víveres, comida y aseo déjalos en "mercado".
-  * Crea una entry para cada grupo discriminado (por ejemplo: una entry para Mercado y otra para Cervezas/Antojos). La suma de los montos debe coincidir con el total de la factura.
-- Si toda la factura es solo mercado normal o el desglose no es legible, crea una sola entry con el total y en "note" pon: "[Comercio] · [Resumen]".
+REGLA DE ORO: EL MERCADO SE SEPARA
+Un mercado casi nunca es sólo mercado: en el mismo carrito van la cerveza, el
+helado, la gaseosa, el mecato o una camiseta. Esos NO son mercado y meterlos ahí
+es el error más grave que puedes cometer: infla lo necesario y esconde los
+gustos, que es justo lo que ellos quieren ver.
+- "mercado" es sólo alimentación básica de la casa y aseo del hogar (víveres, frutas, verduras, carnes, lácteos, granos, huevos, pan, jabón, papel higiénico, detergente).
+- Antojos: helado, dulces, chocolatinas, galletas, mecato, papitas, gaseosas, energizantes, postres → "calle".
+- Licor y cigarrillos: cerveza, vino, aguardiente, ron, whisky → "ocio".
+- Ropa, calzado, accesorios, perfumes, maquillaje, tecnología, juguetes → "lujos".
+- Concentrado, arena, antipulgas, snacks de mascota → "mascotas".
+- Medicamentos, vitaminas, suplementos → "salud".
+- Ollas, bombillos, toallas, cortinas, herramientas → "casa".
+
+CÓMO LO REPORTAS (esto es lo importante)
+- Siempre que la compra tenga varios productos —factura de supermercado o mensaje escrito— llena "items" con cada producto (o grupo de productos) y su valor, tal como aparece.
+- Crea una entry por cada categoría distinta: por ejemplo una de "mercado" y otra de "calle" por las cervezas y el helado. La suma de las entries tiene que dar el total pagado, ni un peso más ni uno menos.
+- "mercado 180mil y un helado de 8mil" son DOS entries: 180000 en "mercado" y 8000 en "calle".
+- "mercado 200mil, ahí van 20mil de cerveza" es un total de 200000 que se parte: 180000 en "mercado" y 20000 en "ocio".
+- Nunca devuelvas una sola entry de "mercado" cuando alcanzas a leer antojos, licor o ropa en la compra.
+
+FACTURAS
+- La foto puede estar torcida, arrugada o con poca luz: busca el total y lee los renglones uno por uno.
+- Pon en "items" todos los renglones que alcances a leer con su valor. Si sólo alcanzas a leer algunos, pon esos: lo que falte se queda en la categoría base.
+- En "note" pon "[Comercio] · [Resumen corto]".
 - Si de verdad no se alcanza a leer el total, deja "entries" vacío y dilo en "reply" pidiendo el dato.
 
 RESPUESTA
@@ -452,7 +482,7 @@ export async function askGemini(
         if (model !== models[0]) {
           console.warn(`[gemini] "${models[0]}" no respondió; usé "${model}" en su lugar.`)
         }
-        return { ...normalize(parsed), model }
+        return { ...normalize(parsed, ctx.currency), model }
       } catch (error) {
         lastError = classifyThrown(error, model)
         console.error(`[gemini] ${model} falló:`, lastError.message)
@@ -465,13 +495,15 @@ export async function askGemini(
 }
 
 /** Nunca confiamos de una en lo que devuelve el modelo. */
-function normalize(raw: any): { reply: string; entries: Entry[] } {
-  const reply =
+function normalize(raw: any, currency = 'COP'): { reply: string; entries: Entry[] } {
+  let reply =
     typeof raw?.reply === 'string' && raw.reply.trim()
       ? raw.reply.trim()
       : 'Listo, lo dejé anotado.'
 
   const entries: Entry[] = []
+  /** Lo que el código sacó de la compra base y el modelo no había anunciado. */
+  const separated: string[] = []
   for (const item of Array.isArray(raw?.entries) ? raw.entries : []) {
     const amount = Number(item?.amount)
     if (!Number.isFinite(amount) || amount <= 0) continue
@@ -494,16 +526,57 @@ function normalize(raw: any): { reply: string; entries: Entry[] } {
       }
     }
 
-    entries.push({
-      kind,
-      amount: Math.round(amount),
-      category,
-      note: String(item?.note ?? '').slice(0, 200),
-      occurredAt,
-    })
+    const note = String(item?.note ?? '').slice(0, 200)
+    const basket: BasketItem[] = Array.isArray(item?.items)
+      ? item.items.map((p: any) => ({ name: String(p?.name ?? ''), amount: Number(p?.amount) }))
+      : []
+
+    // El modelo lee la factura; quién es antojo y quién es mercado lo decide
+    // el código, que no cambia de opinión entre una foto y la siguiente.
+    if (kind === 'expense' && basket.length > 0) {
+      const groups = splitBasket(basket, amount, category)
+      // Un solo grupo = no había nada que separar: se queda con su nota tal cual.
+      const single = groups.length === 1
+      for (const group of groups) {
+        entries.push({
+          kind,
+          amount: group.amount,
+          category: group.category,
+          note: single ? note : noteForGroup(note, group.category, group.names),
+          occurredAt,
+        })
+        if (group.category !== category) {
+          const cat = categoryOf(group.category)
+          separated.push(`${cat.emoji} ${formatMoney(group.amount, currency)} en *${cat.label}*`)
+        }
+      }
+      continue
+    }
+
+    entries.push({ kind, amount: Math.round(amount), category, note, occurredAt })
+  }
+
+  // Si el desglose sacó cosas de la compra base, hay que decirlo: si no, el
+  // chat confirma un mercado de 200mil y el resumen muestra otra cosa.
+  if (separated.length > 0) {
+    const shown = separated.slice(0, 3)
+    const list =
+      shown.length > 1 ? `${shown.slice(0, -1).join(', ')} y ${shown[shown.length - 1]}` : shown[0]
+    reply = `${reply} Ojo: separé ${list}, que no van en la misma bolsa. 😉`
   }
 
   return { reply, entries: entries.slice(0, 10) }
+}
+
+/**
+ * La nota de cada pedazo de una compra partida. Sin esto quedarían tres
+ * movimientos con el mismo texto y no habría cómo saber qué era cada uno.
+ */
+function noteForGroup(note: string, category: CategoryId, names: string[]): string {
+  const label = categoryOf(category).label
+  const head = note || label
+  const detail = names.slice(0, 4).join(', ')
+  return (detail ? `${head} · ${label}: ${detail}` : `${head} · ${label}`).slice(0, 200)
 }
 
 // ---- Diagnóstico -----------------------------------------------------------

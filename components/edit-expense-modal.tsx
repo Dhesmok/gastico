@@ -44,6 +44,15 @@ export function EditExpenseModal({
     }
   }, [expense])
 
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   if (!isOpen || !expense) return null
 
   const categories = kind === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
@@ -68,6 +77,7 @@ export function EditExpenseModal({
       <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
         <button
           onClick={onClose}
+          aria-label="Cerrar modal"
           className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" />

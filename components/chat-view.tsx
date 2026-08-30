@@ -183,6 +183,7 @@ export function ChatView({
           <button
             onClick={() => fileRef.current?.click()}
             title="Tomar o subir la foto de una factura"
+            aria-label="Tomar o subir la foto de una factura"
             className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:text-primary hover:shadow-md active:scale-95"
           >
             <Camera className="size-5" />
@@ -449,6 +450,7 @@ function ExpenseChip({
       <button
         onClick={() => onEdit(expense)}
         title="Editar o corregir este movimiento"
+        aria-label="Editar o corregir este movimiento"
         className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
       >
         <Edit2 className="size-3.5" />
@@ -456,6 +458,7 @@ function ExpenseChip({
       <button
         onClick={() => onDelete(expense.id)}
         title="Borrar este movimiento"
+        aria-label="Borrar este movimiento"
         className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
       >
         <Trash2 className="size-3.5" />

@@ -183,6 +183,7 @@ export function ChatView({
           <button
             onClick={() => fileRef.current?.click()}
             title="Tomar o subir la foto de una factura"
+            aria-label="Tomar o subir la foto de una factura"
             className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:text-primary hover:shadow-md active:scale-95"
           >
             <Camera className="size-5" />
@@ -204,6 +205,7 @@ export function ChatView({
                 }
               }}
               rows={1}
+              aria-label="Mensaje de gasto"
               placeholder={
                 pendingFile ? 'Nota para la factura (opcional)…' : 'Cuéntame el gasto… ej: “mercado 120mil”'
               }
@@ -215,7 +217,7 @@ export function ChatView({
             onClick={submit}
             disabled={(!text.trim() && !pendingFile) || thinking}
             className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:shadow-none"
-            aria-label="Enviar"
+            aria-label="Enviar mensaje"
           >
             {thinking ? <Loader2 className="size-5 animate-spin" /> : <SendIcon />}
           </button>

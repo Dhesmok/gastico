@@ -47,8 +47,15 @@ export function TopBar({
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [])
 
   const current = ITEMS.find((i) => i.id === view)!
@@ -75,6 +82,7 @@ export function TopBar({
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={open}
+            aria-label={`Menú de navegación (${current.label})`}
             className="flex items-center gap-2 rounded-2xl border border-border bg-card/70 py-2 pl-3 pr-2.5 text-sm font-700 text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
             <current.icon className="size-4 text-primary" />

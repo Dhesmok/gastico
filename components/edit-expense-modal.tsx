@@ -44,6 +44,15 @@ export function EditExpenseModal({
     }
   }, [expense])
 
+  useEffect(() => {
+    if (!isOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen || !expense) return null
 
   const categories = kind === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
@@ -64,16 +73,24 @@ export function EditExpenseModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-expense-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    >
       <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
         <button
           onClick={onClose}
+          aria-label="Cerrar modal"
           className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" />
         </button>
 
-        <h3 className="font-display text-xl font-700 text-foreground">Corregir Movimiento</h3>
+        <h3 id="edit-expense-title" className="font-display text-xl font-700 text-foreground">
+          Corregir Movimiento
+        </h3>
         <p className="mb-4 text-xs text-muted-foreground">
           Modifica los detalles, cambia de gasto a ingreso o elimínalo
         </p>
@@ -115,10 +132,11 @@ export function EditExpenseModal({
 
           {/* Monto */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">
+            <label htmlFor="edit-amount" className="mb-1 block text-xs font-700 text-foreground">
               Monto ({currency})
             </label>
             <input
+              id="edit-amount"
               type="number"
               min="1"
               step="1"
@@ -132,8 +150,11 @@ export function EditExpenseModal({
 
           {/* Categoría */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">Categoría</label>
+            <label htmlFor="edit-category" className="mb-1 block text-xs font-700 text-foreground">
+              Categoría
+            </label>
             <select
+              id="edit-category"
               value={category}
               onChange={(e) => setCategory(e.target.value as CategoryId)}
               className="w-full rounded-2xl border border-border bg-background px-3 py-2.5 text-sm font-600 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -148,8 +169,11 @@ export function EditExpenseModal({
 
           {/* Descripción / Nota */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">Descripción / Nota</label>
+            <label htmlFor="edit-note" className="mb-1 block text-xs font-700 text-foreground">
+              Descripción / Nota
+            </label>
             <input
+              id="edit-note"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -161,8 +185,11 @@ export function EditExpenseModal({
 
           {/* Fecha */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">Fecha del movimiento</label>
+            <label htmlFor="edit-date" className="mb-1 block text-xs font-700 text-foreground">
+              Fecha del movimiento
+            </label>
             <input
+              id="edit-date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}

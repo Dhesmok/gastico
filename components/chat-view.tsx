@@ -114,14 +114,14 @@ export function ChatView({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-var(--app-header))] w-full max-w-2xl flex-col">
-      <div className="px-4 pt-4">
+    <div className="mx-auto flex h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl flex-col">
+      <div className="px-4 pt-3 sm:pt-4">
         <BudgetSummary spent={spent} income={income} room={room} compact />
       </div>
 
       <div
         ref={scrollRef}
-        className="no-scrollbar relative flex-1 overflow-y-auto px-4 py-4"
+        className="no-scrollbar relative flex-1 overflow-y-auto px-4 py-3 sm:py-4"
         style={bg.style}
       >
         <div className="flex flex-col gap-3">
@@ -145,7 +145,7 @@ export function ChatView({
         </div>
       </div>
 
-      <div className="glass pb-safe sticky bottom-0 z-20 border-t border-border/60 px-3.5 pt-2.5 sm:px-4">
+      <div className="glass sticky bottom-0 z-20 border-t border-border/70 px-3.5 py-2.5 sm:px-4 md:pb-safe">
         {pendingFile && (
           <div className="mb-2.5 flex items-center gap-3 rounded-2xl border border-border bg-card/90 p-2 shadow-xs backdrop-blur">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -407,16 +407,23 @@ function ReceiptThumb({
     <div
       onClick={() => url && onOpenImage?.(url)}
       className={cn(
-        'mb-2 overflow-hidden rounded-2xl bg-black/10 transition-transform',
-        url && 'cursor-pointer hover:opacity-90 active:scale-[0.98]',
+        'group relative mb-2 overflow-hidden rounded-2xl bg-black/10 transition-all duration-200',
+        url && 'cursor-pointer hover:opacity-95 active:scale-[0.98]',
       )}
       title={url ? 'Toca para ver la foto en pantalla completa' : undefined}
     >
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="Factura" className="max-h-56 w-full object-cover" />
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="Factura" className="max-h-40 sm:max-h-52 w-full object-cover" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-1.5 text-center">
+            <span className="rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-700 text-white backdrop-blur-xs">
+              Toca para ampliar 🔍
+            </span>
+          </div>
+        </>
       ) : (
-        <div className="flex h-24 items-center justify-center">
+        <div className="flex h-20 items-center justify-center">
           <Loader2 className="size-4 animate-spin opacity-60" />
         </div>
       )}

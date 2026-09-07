@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Edit2, Loader2, Sparkles, Trash2, X } from 'lucide-react'
+import { Camera, Edit2, Loader2, Sparkles, Tag, Trash2, Undo2, X } from 'lucide-react'
 import {
   categoryOf,
   formatMoney,
@@ -12,6 +12,7 @@ import {
   type Message,
   type Room,
 } from '@/lib/finance'
+import { stripRecurringTag } from '@/lib/recurring'
 import { getBackground } from '@/lib/backgrounds'
 import { receiptUrl } from '@/lib/room'
 import { BudgetSummary } from '@/components/budget-summary'
@@ -134,12 +135,13 @@ export function ChatView({
               entries={m.expenseId ? expenseGroupById.get(m.expenseId) : undefined}
               currency={room.currency}
               last={i === messages.length - 1}
+              onQuickCategory={setEditing}
               onEditExpense={onEditExpense}
               onDeleteExpense={onDeleteExpense}
               onOpenImage={setPreviewImage}
             />
           ))}
-          {thinking && <TypingBubble />}
+          {thinking && <TypingBubble isImage={Boolean(pendingFile)} />}
         </div>
       </div>
 
@@ -297,6 +299,7 @@ function MessageBubble({
   entries,
   currency,
   last,
+  onQuickCategory,
   onEditExpense,
   onDeleteExpense,
   onOpenImage,
@@ -308,6 +311,7 @@ function MessageBubble({
   entries?: Expense[]
   currency: string
   last: boolean
+  onQuickCategory: (expense: Expense) => void
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
   onOpenImage?: (url: string) => void
@@ -316,21 +320,23 @@ function MessageBubble({
 
   if (isBot) {
     return (
-      <div className={cn('flex max-w-[85%] items-end gap-2', last && 'animate-float-up')}>
+      <div className={cn('flex max-w-[90%] items-end gap-2', last && 'animate-float-up')}>
         <div className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
           <Sparkles className="size-4" />
         </div>
-        <div className="rounded-3xl rounded-bl-md bg-card/90 px-4 py-2.5 shadow-sm backdrop-blur">
-          <p className="text-sm leading-relaxed text-foreground">{renderText(message.text)}</p>
-          {entries?.map((expense) => (
-            <ExpenseChip
-              key={expense.id}
-              expense={expense}
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <div className="rounded-3xl rounded-bl-md bg-card/95 px-4 py-2.5 shadow-sm backdrop-blur border border-border/40">
+            <p className="text-sm leading-relaxed text-foreground">{renderText(message.text)}</p>
+          </div>
+          {entries && entries.length > 0 && (
+            <AccountingCard
+              entries={entries}
               currency={currency}
+              onQuickCategory={onQuickCategory}
               onEdit={onEditExpense}
               onDelete={onDeleteExpense}
             />
-          ))}
+          )}
         </div>
       </div>
     )
@@ -418,66 +424,145 @@ function ReceiptThumb({
   )
 }
 
-function ExpenseChip({
-  expense,
+function AccountingCard({
+  entries,
   currency,
+  onQuickCategory,
   onEdit,
   onDelete,
 }: {
-  expense: Expense
+  entries: Expense[]
   currency: string
+  onQuickCategory: (expense: Expense) => void
   onEdit: (expense: Expense) => void
   onDelete: (id: string) => void
 }) {
-  const cat = categoryOf(expense.category)
+  const [undoneIds, setUndoneIds] = useState<Set<string>>(new Set())
+
+  if (!entries || entries.length === 0) return null
+
+  const activeEntries = entries.filter((e) => !undoneIds.has(e.id))
+  if (activeEntries.length === 0) {
+    return (
+      <div className="mt-1 flex items-center gap-1.5 rounded-2xl border border-dashed border-border/80 bg-muted/40 px-3 py-2 text-xs text-muted-foreground italic">
+        <Undo2 className="size-3.5" />
+        <span>Movimiento deshecho</span>
+      </div>
+    )
+  }
+
+  const isGroup = activeEntries.length > 1
+  const totalAmount = activeEntries.reduce((sum, e) => sum + e.amount, 0)
+
   return (
-    <div className="mt-2 flex items-center gap-1.5">
-      <button
-        onClick={() => onEdit(expense)}
-        title="Cambiar la categoría"
-        className="inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-700 text-foreground transition-transform hover:-translate-y-0.5 active:scale-95"
-        style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)` }}
-      >
-        <span>{cat.emoji}</span>
-        <span>{cat.label}</span>
-        <span className="opacity-50">·</span>
-        <span>
-          {expense.kind === 'income' ? '+' : ''}
-          {formatMoney(expense.amount, currency)}
-        </span>
-      </button>
-      <button
-        onClick={() => onEdit(expense)}
-        title="Editar o corregir este movimiento"
-        className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-      >
-        <Edit2 className="size-3.5" />
-      </button>
-      <button
-        onClick={() => onDelete(expense.id)}
-        title="Borrar este movimiento"
-        className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-      >
-        <Trash2 className="size-3.5" />
-      </button>
+    <div className="mt-1 overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-xs">
+      {isGroup && (
+        <div className="flex items-center justify-between border-b border-border/40 bg-muted/40 px-3 py-1.5 text-xs">
+          <span className="font-700 text-muted-foreground">Compra desglosada</span>
+          <span className="font-display font-800 text-foreground">
+            Total: {formatMoney(totalAmount, currency)}
+          </span>
+        </div>
+      )}
+
+      <div className="divide-y divide-border/30">
+        {activeEntries.map((expense) => {
+          const cat = categoryOf(expense.category)
+          const cleanNote = stripRecurringTag(expense.note)
+
+          return (
+            <div key={expense.id} className="flex flex-col gap-1.5 p-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  onClick={() => onQuickCategory(expense)}
+                  className="flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-700 transition-transform active:scale-95 hover:opacity-90"
+                  style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 22%, transparent)` }}
+                  title="Toca para cambiar la categoría"
+                >
+                  <span>{cat.emoji}</span>
+                  <span className="text-foreground">{cat.label}</span>
+                </button>
+                <span className="font-display text-sm font-800 tabular-nums text-foreground">
+                  {expense.kind === 'income' ? '+' : ''}
+                  {formatMoney(expense.amount, currency)}
+                </span>
+              </div>
+
+              {cleanNote && cleanNote.toLowerCase() !== cat.label.toLowerCase() && (
+                <p className="text-xs font-500 text-muted-foreground px-0.5">{cleanNote}</p>
+              )}
+
+              <div className="flex items-center justify-end gap-1 pt-1">
+                <button
+                  onClick={() => onQuickCategory(expense)}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-600 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  title="Cambiar categoría con un toque"
+                >
+                  <Tag className="size-3" />
+                  <span>Categoría</span>
+                </button>
+                <button
+                  onClick={() => onEdit(expense)}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-600 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  title="Editar valor o nota"
+                >
+                  <Edit2 className="size-3" />
+                  <span>Editar</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setUndoneIds((prev) => new Set([...prev, expense.id]))
+                    onDelete(expense.id)
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95"
+                  title="Deshacer y borrar este movimiento"
+                >
+                  <Undo2 className="size-3" />
+                  <span>Deshacer</span>
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-function TypingBubble() {
+function TypingBubble({ isImage }: { isImage?: boolean }) {
+  const [stage, setStage] = useState(0)
+
+  useEffect(() => {
+    const timer1 = setTimeout(() => setStage(1), 1400)
+    const timer2 = setTimeout(() => setStage(2), 3200)
+    return () => {
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+    }
+  }, [])
+
+  const phrases = isImage
+    ? ['Optimizando foto...', 'Leyendo factura con IA...', 'Separando mercado y canastas...']
+    : ['Cuenti pensando...', 'Analizando montos y hábitos...', 'Guardando movimiento...']
+
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-end gap-2 animate-float-up">
       <div className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-        <Sparkles className="size-4" />
+        <Sparkles className="size-4 animate-pulse" />
       </div>
-      <div className="flex items-center gap-1 rounded-3xl rounded-bl-md bg-card/90 px-4 py-3.5 shadow-sm">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="size-2 rounded-full bg-muted-foreground"
-            style={{ animation: `typing-dot 1.2s ease-in-out ${i * 0.18}s infinite` }}
-          />
-        ))}
+      <div className="flex items-center gap-2.5 rounded-3xl rounded-bl-md bg-card/90 px-4 py-2.5 shadow-sm border border-border/40 backdrop-blur">
+        <div className="flex items-center gap-1">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="size-1.5 rounded-full bg-primary"
+              style={{ animation: `typing-dot 1.2s ease-in-out ${i * 0.18}s infinite` }}
+            />
+          ))}
+        </div>
+        <span className="text-xs font-600 text-muted-foreground transition-all duration-300">
+          {phrases[stage]}
+        </span>
       </div>
     </div>
   )

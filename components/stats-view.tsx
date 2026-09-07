@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Edit2, ListFilter, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Edit2, ListFilter, Trash2, X } from 'lucide-react'
 import {
   buildInsights,
   byCategory,
@@ -31,6 +31,7 @@ import {
 } from '@/lib/finance'
 import { BudgetSummary } from '@/components/budget-summary'
 import { CategorySheet } from '@/components/category-sheet'
+import { stripRecurringTag } from '@/lib/recurring'
 import { cn } from '@/lib/utils'
 
 type Filter = { category: CategoryId | null; nick: string | null }
@@ -131,12 +132,55 @@ export function StatsView({
     setShowList(true)
   }
 
+  function handleExportCsv() {
+    if (items.length === 0) return
+    const headers = ['Fecha', 'Tipo', 'Categoría', 'Naturaleza', 'Concepto', 'Monto', 'Moneda', 'Registrado por']
+    const rows = items.map((e) => {
+      const cat = categoryOf(e.category)
+      const cleanNote = stripRecurringTag(e.note).replace(/"/g, '""')
+      return [
+        `"${e.occurredAt.slice(0, 10)}"`,
+        `"${e.kind === 'income' ? 'Ingreso' : 'Gasto'}"`,
+        `"${cat.label.replace(/"/g, '""')}"`,
+        `"${cat.nature}"`,
+        `"${cleanNote}"`,
+        e.amount,
+        `"${room.currency}"`,
+        `"${(e.nick || '').replace(/"/g, '""')}"`,
+      ].join(',')
+    })
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const safeLabel = range.label.replace(/[^a-zA-Z0-9_-]/g, '_')
+    a.download = `Gastico_${safeLabel}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-5">
       <div className="flex flex-col gap-4 pb-8">
-        <div>
-          <h2 className="font-display text-2xl font-700 text-foreground">Estadísticas</h2>
-          <p className="text-sm text-muted-foreground">Cómo van las finanzas de la casa</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-2xl font-700 text-foreground">Estadísticas</h2>
+            <p className="text-sm text-muted-foreground">Cómo van las finanzas de la casa</p>
+          </div>
+          {items.length > 0 && (
+            <button
+              onClick={handleExportCsv}
+              className="flex items-center gap-1.5 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-xs font-700 text-foreground shadow-xs transition-all hover:bg-muted active:scale-95"
+              title="Descargar este periodo en formato CSV para Excel"
+            >
+              <Download className="size-3.5 text-primary" />
+              <span>Exportar CSV</span>
+            </button>
+          )}
         </div>
 
         {/* Selector de periodo */}
@@ -540,7 +584,7 @@ function MovementRow({
         {cat.emoji}
       </button>
       <button onClick={() => onEdit(expense)} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-600 text-foreground">{expense.note || cat.label}</p>
+        <p className="truncate text-sm font-600 text-foreground">{stripRecurringTag(expense.note) || cat.label}</p>
         <p className="truncate text-[11px] text-muted-foreground">
           {showDate &&
             `${new Date(expense.occurredAt).toLocaleDateString('es-CO', {

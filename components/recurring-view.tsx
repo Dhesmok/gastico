@@ -198,7 +198,7 @@ export function RecurringView({
         kind: 'expense',
         amount: item.amount,
         category: item.category,
-        note: `Pago de ${item.name}`,
+        note: `${item.name} [fijo:${item.id}]`,
         occurredAt: new Date().toISOString(),
       })
       notify(`¡Listo! Se registró el pago de ${item.name}.`)

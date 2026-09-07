@@ -16,3 +16,4 @@ node_modules
 # Generados por el build
 next-env.d.ts
 tsconfig.tsbuildinfo
+package-lock.json

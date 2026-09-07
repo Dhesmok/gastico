@@ -18,6 +18,7 @@ import {
   type CategoryId,
   type Expense,
 } from '@/lib/finance'
+import { stripRecurringTag } from '@/lib/recurring'
 import { cn } from '@/lib/utils'
 
 export function CategorySheet({
@@ -57,7 +58,7 @@ export function CategorySheet({
               ¿En qué va este movimiento?
             </p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {expense.note || current.label} · {formatMoney(expense.amount, currency)}
+              {stripRecurringTag(expense.note) || current.label} · {formatMoney(expense.amount, currency)}
             </p>
           </div>
           <button

@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { LoginScreen } from '@/components/login-screen'
 import { RoomGate } from '@/components/room-gate'
 import { TopBar, type View } from '@/components/top-bar'
+import { BottomNav } from '@/components/bottom-nav'
 import { ChatView } from '@/components/chat-view'
 import { StatsView } from '@/components/stats-view'
 import { RecurringView } from '@/components/recurring-view'
@@ -570,9 +571,17 @@ export default function Page() {
         onDelete={handleDeleteExpense}
       />
 
+      {/* Barra de navegación inferior fija para celular */}
+      <BottomNav
+        currentView={view}
+        onChangeView={setView}
+        overBudget={overBudget}
+        thinking={thinking}
+      />
+
       {toast && (
-        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-          <p className="glass-strong animate-pop-in max-w-md rounded-2xl border border-border/70 px-4 py-2.5 text-center text-xs font-600 leading-relaxed text-foreground shadow-lg">
+        <div className="fixed inset-x-0 bottom-20 md:bottom-12 z-50 flex justify-center px-4 pointer-events-none">
+          <p className="glass-strong pointer-events-auto animate-pop-in max-w-md rounded-2xl border border-border/80 px-4 py-2.5 text-center text-xs font-700 leading-relaxed text-foreground shadow-xl">
             {toast}
           </p>
         </div>

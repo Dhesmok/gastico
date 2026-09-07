@@ -1,4 +1,7 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+import fs from 'fs';
+import sharp from 'sharp';
+
+const svg = `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#6366F1" />
@@ -54,4 +57,45 @@
     <!-- Cheerful eye/sparkle on left -->
     <circle cx="184" cy="254" r="7" fill="#7C3AED" />
   </g>
-</svg>
+</svg>`;
+
+async function makeIcons() {
+  fs.writeFileSync('public/icon.svg', svg, 'utf8');
+  fs.writeFileSync('app/icon.svg', svg, 'utf8');
+  console.log('✓ public/icon.svg y app/icon.svg guardados');
+
+  const buf = Buffer.from(svg);
+  await sharp(buf).resize(512, 512).png().toFile('public/apple-icon.png');
+  fs.copyFileSync('public/apple-icon.png', 'app/apple-icon.png');
+  console.log('✓ public/apple-icon.png y app/apple-icon.png guardados (512x512)');
+
+  await sharp(buf).resize(192, 192).png().toFile('public/icon-192.png');
+  console.log('✓ public/icon-192.png guardado (192x192)');
+
+  await sharp(buf).resize(32, 32).png().toFile('public/icon-light-32x32.png');
+  await sharp(buf).resize(32, 32).png().toFile('public/icon-dark-32x32.png');
+  console.log('✓ public/icon-32x32 guardados');
+
+  const png32 = await sharp('public/icon-light-32x32.png').png().toBuffer();
+  const icoHeader = Buffer.alloc(6);
+  icoHeader.writeUInt16LE(0, 0);
+  icoHeader.writeUInt16LE(1, 2);
+  icoHeader.writeUInt16LE(1, 4);
+
+  const icoEntry = Buffer.alloc(16);
+  icoEntry.writeUInt8(32, 0);
+  icoEntry.writeUInt8(32, 1);
+  icoEntry.writeUInt8(0, 2);
+  icoEntry.writeUInt8(0, 3);
+  icoEntry.writeUInt16LE(1, 4);
+  icoEntry.writeUInt16LE(32, 6);
+  icoEntry.writeUInt32LE(png32.length, 8);
+  icoEntry.writeUInt32LE(22, 12);
+
+  const ico = Buffer.concat([icoHeader, icoEntry, png32]);
+  fs.writeFileSync('public/favicon.ico', ico);
+  fs.writeFileSync('app/favicon.ico', ico);
+  console.log('✓ favicon.ico guardado en public/ y app/');
+}
+
+makeIcons();

@@ -164,8 +164,8 @@ export function StatsView({
   }
 
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-5">
-      <div className="flex flex-col gap-4 pb-8">
+    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-4 sm:py-5">
+      <div className="flex flex-col gap-4 pb-12 sm:pb-8">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-display text-2xl font-700 text-foreground">Estadísticas</h2>
@@ -673,18 +673,18 @@ function MiniStat({
   tone?: 'bueno' | 'malo'
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/80 p-3 text-center shadow-sm">
+    <div className="flex flex-col justify-between rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/75 p-3 text-center shadow-xs backdrop-blur-xs transition-all hover:border-border">
       <p
         className={cn(
-          'font-display text-lg font-700',
+          'font-display text-lg font-800 tracking-tight',
           tone === 'malo' ? 'text-destructive' : 'text-foreground',
         )}
         style={tone === 'bueno' ? { color: GOOD_INK } : undefined}
       >
         {value}
       </p>
-      <p className="text-[11px] font-600 leading-tight text-muted-foreground">{label}</p>
-      {hint && <p className="mt-0.5 text-[10px] leading-tight text-muted-foreground/80">{hint}</p>}
+      <p className="text-[11px] font-700 leading-tight text-muted-foreground">{label}</p>
+      {hint && <p className="mt-0.5 text-[10px] font-500 leading-tight text-muted-foreground/75 truncate">{hint}</p>}
     </div>
   )
 }

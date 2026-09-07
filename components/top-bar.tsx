@@ -58,15 +58,15 @@ export function TopBar({
       : `${members.length} personas`
 
   return (
-    <header className="glass pt-safe sticky top-0 z-30 border-b border-border/60">
+    <header className="glass pt-safe sticky top-0 z-30 border-b border-border/80">
       <div className="mx-auto flex h-16 w-full max-w-2xl items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/30">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-violet-500 text-primary-foreground shadow-sm shadow-primary/30">
             <HeartHandshake className="size-5" />
           </div>
           <div className="min-w-0 leading-tight">
-            <p className="truncate font-display text-base font-700 text-foreground">{room.name}</p>
-            <p className="truncate text-[11px] text-muted-foreground">{roster}</p>
+            <p className="truncate font-display text-base font-800 text-foreground">{room.name}</p>
+            <p className="truncate text-[11px] font-600 text-muted-foreground">{roster}</p>
           </div>
         </div>
 
@@ -75,7 +75,7 @@ export function TopBar({
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={open}
-            className="flex items-center gap-2 rounded-2xl border border-border bg-card/70 py-2 pl-3 pr-2.5 text-sm font-700 text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            className="flex items-center gap-2 rounded-2xl border border-border/80 bg-card/80 py-2 pl-3 pr-2.5 text-sm font-700 text-foreground shadow-xs transition-all hover:bg-card hover:shadow-sm active:scale-95"
           >
             <current.icon className="size-4 text-primary" />
             <span className="hidden sm:inline">{current.label}</span>

@@ -94,8 +94,8 @@ export function SettingsView({
   }
 
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-5">
-      <div className="flex flex-col gap-4 pb-8">
+    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-4 sm:py-5">
+      <div className="flex flex-col gap-4 pb-12 sm:pb-8">
         <div>
           <h2 className="font-display text-2xl font-700 text-foreground">Configuración</h2>
           <p className="text-sm text-muted-foreground">Los cambios se guardan solos</p>

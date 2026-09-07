@@ -26,7 +26,13 @@ export const metadata: Metadata = {
     title: 'Gastico',
   },
   icons: {
-    icon: '/icon.svg',
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon-light-32x32.png', sizes: '32x32', media: '(prefers-color-scheme: light)' },
+      { url: '/icon-dark-32x32.png', sizes: '32x32', media: '(prefers-color-scheme: dark)' },
+    ],
+    shortcut: '/favicon.ico',
     apple: '/apple-icon.png',
   },
 }
@@ -37,7 +43,7 @@ export const viewport: Viewport = {
   // que en el celular no quede una franja clara encima de la app oscura.
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f7f6fc' },
-    { media: '(prefers-color-scheme: dark)', color: '#22212b' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d0c14' },
   ],
   // La app ocupa hasta detrás de la barra de gestos; el padding lo pone el CSS.
   viewportFit: 'cover',

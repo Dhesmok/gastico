@@ -173,7 +173,7 @@ export function ChatView({
           </div>
         )}
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-2">
           <input
             ref={fileRef}
             type="file"
@@ -320,23 +320,27 @@ function MessageBubble({
 
   if (isBot) {
     return (
-      <div className={cn('flex max-w-[90%] items-end gap-2', last && 'animate-float-up')}>
+      <div className={cn('flex max-w-[92%] sm:max-w-[85%] items-end gap-2', last && 'animate-float-up')}>
         <div className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
           <Sparkles className="size-4" />
         </div>
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <div className="rounded-3xl rounded-bl-md bg-card/95 px-4 py-2.5 shadow-sm backdrop-blur border border-border/40">
-            <p className="text-sm leading-relaxed text-foreground">{renderText(message.text)}</p>
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <div className="overflow-hidden rounded-3xl rounded-bl-md border border-border/70 bg-card/95 shadow-sm backdrop-blur">
+            <div className="px-4 py-2.5">
+              <p className="text-sm leading-relaxed text-foreground">{renderText(message.text)}</p>
+            </div>
+            {entries && entries.length > 0 && (
+              <div className="border-t border-border/40 bg-muted/25">
+                <AccountingCard
+                  entries={entries}
+                  currency={currency}
+                  onQuickCategory={onQuickCategory}
+                  onEdit={onEditExpense}
+                  onDelete={onDeleteExpense}
+                />
+              </div>
+            )}
           </div>
-          {entries && entries.length > 0 && (
-            <AccountingCard
-              entries={entries}
-              currency={currency}
-              onQuickCategory={onQuickCategory}
-              onEdit={onEditExpense}
-              onDelete={onDeleteExpense}
-            />
-          )}
         </div>
       </div>
     )
@@ -451,9 +455,9 @@ function AccountingCard({
   const activeEntries = entries.filter((e) => !undoneIds.has(e.id))
   if (activeEntries.length === 0) {
     return (
-      <div className="mt-1 flex items-center gap-1.5 rounded-2xl border border-dashed border-border/80 bg-muted/40 px-3 py-2 text-xs text-muted-foreground italic">
+      <div className="flex items-center gap-1.5 px-3.5 py-2 text-xs text-muted-foreground italic">
         <Undo2 className="size-3.5" />
-        <span>Movimiento deshecho</span>
+        <span>Movimiento deshecho y eliminado</span>
       </div>
     )
   }
@@ -462,9 +466,9 @@ function AccountingCard({
   const totalAmount = activeEntries.reduce((sum, e) => sum + e.amount, 0)
 
   return (
-    <div className="mt-1 overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-xs">
+    <div className="w-full">
       {isGroup && (
-        <div className="flex items-center justify-between border-b border-border/40 bg-muted/40 px-3 py-1.5 text-xs">
+        <div className="flex items-center justify-between border-b border-border/40 bg-muted/40 px-3.5 py-1.5 text-xs">
           <span className="font-700 text-muted-foreground">Compra desglosada</span>
           <span className="font-display font-800 text-foreground">
             Total: {formatMoney(totalAmount, currency)}
@@ -478,42 +482,46 @@ function AccountingCard({
           const cleanNote = stripRecurringTag(expense.note)
 
           return (
-            <div key={expense.id} className="flex flex-col gap-1.5 p-2.5">
+            <div key={expense.id} className="flex flex-col gap-2 p-3">
+              {/* Fila 1: Categoría interactiva y Monto */}
               <div className="flex items-center justify-between gap-2">
                 <button
                   onClick={() => onQuickCategory(expense)}
-                  className="flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-700 transition-transform active:scale-95 hover:opacity-90"
-                  style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 22%, transparent)` }}
+                  className="group flex items-center gap-1.5 rounded-xl border border-border/50 px-2.5 py-1 text-xs font-700 transition-all hover:scale-102 active:scale-95"
+                  style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)` }}
                   title="Toca para cambiar la categoría"
                 >
-                  <span>{cat.emoji}</span>
+                  <span className="text-sm">{cat.emoji}</span>
                   <span className="text-foreground">{cat.label}</span>
+                  <span className="text-[10px] text-muted-foreground transition-transform group-hover:translate-y-0.5">▾</span>
                 </button>
-                <span className="font-display text-sm font-800 tabular-nums text-foreground">
+                <span className="font-display text-base font-800 tabular-nums text-foreground">
                   {expense.kind === 'income' ? '+' : ''}
                   {formatMoney(expense.amount, currency)}
                 </span>
               </div>
 
+              {/* Fila 2: Detalle o nota */}
               {cleanNote && cleanNote.toLowerCase() !== cat.label.toLowerCase() && (
                 <p className="text-xs font-500 text-muted-foreground px-0.5">{cleanNote}</p>
               )}
 
-              <div className="flex items-center justify-end gap-1 pt-1">
+              {/* Fila 3: Acciones compactas que nunca colisionan */}
+              <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1">
                 <button
                   onClick={() => onQuickCategory(expense)}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-600 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  title="Cambiar categoría con un toque"
+                  className="inline-flex items-center gap-1 rounded-xl border border-border/60 bg-card px-2.5 py-1 text-[11px] font-700 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground active:scale-95"
+                  title="Cambiar categoría"
                 >
-                  <Tag className="size-3" />
+                  <Tag className="size-3 text-primary" />
                   <span>Categoría</span>
                 </button>
                 <button
                   onClick={() => onEdit(expense)}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-600 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="inline-flex items-center gap-1 rounded-xl border border-border/60 bg-card px-2.5 py-1 text-[11px] font-700 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground active:scale-95"
                   title="Editar valor o nota"
                 >
-                  <Edit2 className="size-3" />
+                  <Edit2 className="size-3 text-primary" />
                   <span>Editar</span>
                 </button>
                 <button
@@ -521,7 +529,7 @@ function AccountingCard({
                     setUndoneIds((prev) => new Set([...prev, expense.id]))
                     onDelete(expense.id)
                   }}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95"
+                  className="inline-flex items-center gap-1 rounded-xl border border-border/60 bg-card px-2.5 py-1 text-[11px] font-700 text-muted-foreground transition-all hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-95"
                   title="Deshacer y borrar este movimiento"
                 >
                   <Undo2 className="size-3" />

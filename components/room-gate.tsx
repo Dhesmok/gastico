@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DoorOpen, HeartHandshake, KeyRound, Loader2, LogOut, Plus, Sparkles } from 'lucide-react'
+import { ChevronRight, DoorOpen, HeartHandshake, KeyRound, Loader2, LogOut, Plus, Sparkles } from 'lucide-react'
 import { createRoom, formatCode, joinRoom, myRooms } from '@/lib/room'
 import { cn } from '@/lib/utils'
 
@@ -23,9 +23,14 @@ export function RoomGate({
   const [error, setError] = useState<string | null>(null)
   const [known, setKnown] = useState<{ id: string; name: string; code: string }[]>([])
 
-  // Si este usuario ya pertenece a alguna sala, ofrecerla de un toque.
+  // Si este usuario ya pertenece a alguna sala, ofrecerla de un toque (deduplicada).
   useEffect(() => {
-    myRooms().then(setKnown).catch(() => setKnown([]))
+    myRooms()
+      .then((rooms) => {
+        const unique = Array.from(new Map(rooms.map((r) => [r.id, r])).values())
+        setKnown(unique)
+      })
+      .catch(() => setKnown([]))
   }, [])
 
   async function submit() {
@@ -58,60 +63,66 @@ export function RoomGate({
   }
 
   return (
-    <main className="relative flex min-h-svh items-center justify-center overflow-hidden px-5 py-10">
+    <main className="relative flex min-h-svh items-center justify-center overflow-hidden px-4 py-8 sm:px-5 sm:py-10">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-24 -top-24 size-96 rounded-full bg-primary/30 blur-3xl" />
         <div className="absolute -bottom-32 -right-16 size-[28rem] rounded-full bg-accent/30 blur-3xl" />
         <div className="absolute left-1/2 top-1/3 size-72 -translate-x-1/2 rounded-full bg-chart-3/25 blur-3xl" />
       </div>
 
-      <div className="glass-strong w-full max-w-md animate-pop-in rounded-4xl border border-white/40 p-7 shadow-2xl shadow-primary/10 sm:p-9">
+      <div className="glass-strong w-full max-w-md animate-pop-in rounded-3xl border border-border/80 bg-card/95 p-5 shadow-2xl shadow-primary/10 sm:rounded-4xl sm:border-white/40 sm:p-9">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="animate-bob mb-4 flex size-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <HeartHandshake className="size-8" />
+          <div className="animate-bob mb-4 flex size-14 sm:size-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+            <HeartHandshake className="size-7 sm:size-8" />
           </div>
-          <h1 className="font-display text-3xl font-700 tracking-tight text-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-700 tracking-tight text-foreground">
             Cuentas Claras
           </h1>
-          <p className="mt-2 text-pretty text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-2 text-pretty text-xs sm:text-sm leading-relaxed text-muted-foreground">
             Creen una sala, compártanse el ID y la contraseña, y lleven los gastos del mes
             chateando.
           </p>
         </div>
 
         {known.length > 0 && (
-              <div className="mb-5">
-                <p className="mb-2 text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
-                  Tus salas
-                </p>
-                <div className="flex flex-col gap-2">
-                  {known.map((room) => (
-                    <button
-                      key={room.id}
-                      onClick={() => onReady(room.id)}
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                        <DoorOpen className="size-4.5" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-700 text-foreground">
-                          {room.name}
-                        </span>
-                        <span className="block font-mono text-[11px] text-muted-foreground">
-                          {formatCode(room.code)}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <div className="my-4 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-border" />
-                  <span className="text-[11px] font-600 text-muted-foreground">o</span>
-                  <span className="h-px flex-1 bg-border" />
-                </div>
-              </div>
-            )}
+          <div className="mb-5">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[11px] font-700 uppercase tracking-wider text-muted-foreground">
+                Tus salas guardadas
+              </p>
+              <span className="text-[11px] font-600 text-primary">
+                {known.length} {known.length === 1 ? 'sala' : 'salas'}
+              </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {known.map((room) => (
+                <button
+                  key={room.id}
+                  onClick={() => onReady(room.id)}
+                  className="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 p-3 text-left transition-all hover:border-primary/40 hover:bg-card hover:shadow-md active:scale-[0.99]"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary transition-transform group-hover:scale-105">
+                    <DoorOpen className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-700 text-foreground">
+                      {room.name}
+                    </span>
+                    <span className="block font-mono text-xs text-muted-foreground">
+                      {formatCode(room.code)}
+                    </span>
+                  </span>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                </button>
+              ))}
+            </div>
+            <div className="my-5 flex items-center gap-3">
+              <span className="h-px flex-1 bg-border/80" />
+              <span className="text-[10px] font-700 uppercase tracking-wider text-muted-foreground/70">o entra a otra</span>
+              <span className="h-px flex-1 bg-border/80" />
+            </div>
+          </div>
+        )}
 
             <div className="mb-4 grid grid-cols-2 gap-1.5 rounded-2xl bg-muted/70 p-1.5">
               {(

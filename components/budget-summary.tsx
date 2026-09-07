@@ -36,6 +36,68 @@ export function BudgetSummary({
   const overIncome = budgetIncome > 0 && spent > budgetIncome
   const remaining = budgetIncome - spent
 
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-2xl border px-3.5 py-2 shadow-xs transition-all duration-300 backdrop-blur-md',
+          overIncome
+            ? 'border-destructive/40 bg-gradient-to-r from-destructive/10 via-card/95 to-destructive/5'
+            : overCap
+              ? 'border-chart-3/40 bg-gradient-to-r from-chart-3/10 via-card/95 to-chart-3/5'
+              : 'border-border/80 bg-gradient-to-r from-card/95 via-card/90 to-primary/[0.03]',
+        )}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-[11px] font-700 uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+              Gastado
+            </span>
+            <span className="truncate font-display text-base font-800 tracking-tight text-foreground">
+              {formatMoney(spent, room.currency)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] font-700 uppercase tracking-wider text-muted-foreground">
+              {overIncome ? 'Excedido' : 'Disponible'}
+            </span>
+            <span
+              className={cn(
+                'font-display text-sm font-800 tabular-nums',
+                overIncome ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
+              )}
+            >
+              {overIncome && '-'}
+              {formatMoney(Math.abs(remaining), room.currency)}
+            </span>
+          </div>
+        </div>
+
+        {cap > 0 && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/80">
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-700 ease-out',
+                  overIncome
+                    ? 'bg-destructive'
+                    : overCap
+                      ? 'bg-chart-3'
+                      : 'bg-primary',
+                )}
+                style={{ width: `${Math.max(3, capPct)}%` }}
+              />
+            </div>
+            <span className={cn('text-[10px] font-700 tabular-nums', overCap ? 'text-destructive font-800' : 'text-muted-foreground')}>
+              {Math.round(capPct)}% tope
+            </span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(

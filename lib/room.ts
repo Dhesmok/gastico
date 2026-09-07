@@ -88,10 +88,14 @@ export async function myRooms(): Promise<{ id: string; name: string; code: strin
     .from('room_members')
     .select('room_id, rooms(id, name, code)')
   if (error) return []
-  return (data ?? [])
-    .map((r: Row) => r.rooms)
-    .filter(Boolean)
-    .map((r: Row) => ({ id: r.id, name: r.name, code: r.code }))
+  const unique = new Map<string, { id: string; name: string; code: string }>()
+  for (const row of data ?? []) {
+    const r = row.rooms as Row
+    if (r?.id && !unique.has(r.id)) {
+      unique.set(r.id, { id: r.id, name: r.name, code: r.code })
+    }
+  }
+  return Array.from(unique.values())
 }
 
 // ---- Carga inicial ---------------------------------------------------------

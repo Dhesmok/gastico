@@ -5,6 +5,8 @@ import {
   BarChart3,
   CalendarClock,
   ChevronDown,
+  Copy,
+  Check,
   DoorOpen,
   HeartHandshake,
   LogOut,
@@ -12,6 +14,7 @@ import {
   Settings,
 } from 'lucide-react'
 import type { Member, Room } from '@/lib/finance'
+import { formatCode } from '@/lib/room'
 import { cn } from '@/lib/utils'
 
 export type View = 'chat' | 'stats' | 'recurring' | 'settings'
@@ -41,6 +44,7 @@ export function TopBar({
   overBudget: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -50,6 +54,12 @@ export function TopBar({
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
+
+  function copyCode() {
+    navigator.clipboard.writeText(room.code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const current = ITEMS.find((i) => i.id === view)!
   const roster =
@@ -71,14 +81,32 @@ export function TopBar({
         </div>
 
         <div ref={ref} className="relative shrink-0">
+          {/* Versión móvil: pastilla de sala clara */}
           <button
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={open}
-            className="flex items-center gap-2 rounded-2xl border border-border/80 bg-card/80 py-2 pl-3 pr-2.5 text-sm font-700 text-foreground shadow-xs transition-all hover:bg-card hover:shadow-sm active:scale-95"
+            className="flex md:hidden items-center gap-1.5 rounded-2xl border border-border/80 bg-card/80 py-1.5 pl-2.5 pr-2 text-xs font-700 text-foreground shadow-xs transition-all hover:bg-card active:scale-95"
+            title="Opciones de sala"
+          >
+            <DoorOpen className="size-3.5 text-primary" />
+            <span className="font-mono text-[11px] font-700 text-muted-foreground">
+              {formatCode(room.code)}
+            </span>
+            <ChevronDown
+              className={cn('size-3.5 text-muted-foreground transition-transform', open && 'rotate-180')}
+            />
+          </button>
+
+          {/* Versión escritorio: selector de vista */}
+          <button
+            onClick={() => setOpen((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            className="hidden md:flex items-center gap-2 rounded-2xl border border-border/80 bg-card/80 py-2 pl-3 pr-2.5 text-sm font-700 text-foreground shadow-xs transition-all hover:bg-card hover:shadow-sm active:scale-95"
           >
             <current.icon className="size-4 text-primary" />
-            <span className="hidden sm:inline">{current.label}</span>
+            <span>{current.label}</span>
             {overBudget && (
               <span
                 className="size-2 rounded-full bg-destructive"
@@ -93,40 +121,64 @@ export function TopBar({
           {open && (
             <div
               role="menu"
-              className="glass-strong absolute right-0 top-full z-40 mt-2 w-56 origin-top-right animate-pop-in overflow-hidden rounded-3xl border border-border/70 p-2 shadow-xl"
+              className="glass-strong absolute right-0 top-full z-40 mt-2 w-60 origin-top-right animate-pop-in overflow-hidden rounded-3xl border border-border/70 p-2 shadow-xl"
             >
-              {ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  role="menuitem"
-                  onClick={() => {
-                    onChangeView(item.id)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    'flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 transition-colors',
-                    view === item.id ? 'bg-primary/12 text-primary' : 'text-foreground hover:bg-muted',
-                  )}
-                >
-                  <item.icon className="size-4" />
-                  {item.label}
-                  {item.id === 'stats' && overBudget && (
-                    <span className="ml-auto rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-700 text-destructive">
-                      alerta
-                    </span>
-                  )}
-                </button>
-              ))}
+              {/* Vistas solo en pantallas medianas / escritorio */}
+              <div className="hidden md:block">
+                {ITEMS.map((item) => (
+                  <button
+                    key={item.id}
+                    role="menuitem"
+                    onClick={() => {
+                      onChangeView(item.id)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-600 transition-colors',
+                      view === item.id ? 'bg-primary/12 text-primary' : 'text-foreground hover:bg-muted',
+                    )}
+                  >
+                    <item.icon className="size-4" />
+                    {item.label}
+                    {item.id === 'stats' && overBudget && (
+                      <span className="ml-auto rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-700 text-destructive">
+                        alerta
+                      </span>
+                    )}
+                  </button>
+                ))}
+                <div className="my-1.5 h-px bg-border/70" />
+              </div>
+
+              {/* Acciones de la sala (móvil y escritorio) */}
+              <div className="px-2 py-1.5 text-left">
+                <p className="text-[10px] font-700 uppercase tracking-wider text-muted-foreground">
+                  Código de sala
+                </p>
+                <div className="mt-1 flex items-center justify-between gap-2 rounded-xl bg-muted/60 px-2.5 py-1.5 font-mono text-xs font-700 text-foreground">
+                  <span>{formatCode(room.code)}</span>
+                  <button
+                    onClick={copyCode}
+                    className="flex items-center gap-1 text-[11px] font-700 text-primary hover:underline"
+                    title="Copiar código de la sala"
+                  >
+                    {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+                    <span>{copied ? 'Copiado' : 'Copiar'}</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="my-1.5 h-px bg-border/70" />
+
               <button
                 role="menuitem"
                 onClick={() => {
                   setOpen(false)
                   onExit()
                 }}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 text-foreground transition-colors hover:bg-muted"
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-600 text-foreground transition-colors hover:bg-muted"
               >
-                <DoorOpen className="size-4" />
+                <DoorOpen className="size-4 text-muted-foreground" />
                 Cambiar de sala
               </button>
               <button
@@ -135,7 +187,7 @@ export function TopBar({
                   setOpen(false)
                   onSignOut()
                 }}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut className="size-4" />
                 Cerrar sesión

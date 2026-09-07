@@ -61,13 +61,11 @@ const svg = `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xml
 
 async function makeIcons() {
   fs.writeFileSync('public/icon.svg', svg, 'utf8');
-  fs.writeFileSync('app/icon.svg', svg, 'utf8');
-  console.log('✓ public/icon.svg y app/icon.svg guardados');
+  console.log('✓ public/icon.svg guardado');
 
   const buf = Buffer.from(svg);
   await sharp(buf).resize(512, 512).png().toFile('public/apple-icon.png');
-  fs.copyFileSync('public/apple-icon.png', 'app/apple-icon.png');
-  console.log('✓ public/apple-icon.png y app/apple-icon.png guardados (512x512)');
+  console.log('✓ public/apple-icon.png guardado (512x512)');
 
   await sharp(buf).resize(192, 192).png().toFile('public/icon-192.png');
   console.log('✓ public/icon-192.png guardado (192x192)');
@@ -94,8 +92,7 @@ async function makeIcons() {
 
   const ico = Buffer.concat([icoHeader, icoEntry, png32]);
   fs.writeFileSync('public/favicon.ico', ico);
-  fs.writeFileSync('app/favicon.ico', ico);
-  console.log('✓ favicon.ico guardado en public/ y app/');
+  console.log('✓ favicon.ico guardado en public/');
 }
 
 makeIcons();

@@ -252,7 +252,9 @@ export default function Page() {
       if (!roomId || !userId || !me) return
       setThinking(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `temp-${crypto.randomUUID()}`
+        : `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       setMessages((prev) => [
         ...prev,
         {
@@ -288,7 +290,9 @@ export default function Page() {
       if (!roomId || !userId || !me || !room) return
       setThinking(true)
 
-      const tempId = `temp-${Date.now()}`
+      const tempId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `temp-${crypto.randomUUID()}`
+        : `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       let previewUrl: string | null = null
 
       try {
@@ -397,10 +401,10 @@ export default function Page() {
       if (!roomId || !userId || !me) return
       const created = await insertExpenses(roomId, userId, me.nick, [entry])
       if (created.length > 0) {
-        setExpenses((prev) => [created[0], ...prev])
+        mergeExpense(created[0])
       }
     },
-    [me, roomId, userId],
+    [me, mergeExpense, roomId, userId],
   )
 
   // ---- Ajustes -------------------------------------------------------------

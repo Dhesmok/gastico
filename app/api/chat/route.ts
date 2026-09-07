@@ -11,6 +11,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import {
+  CATEGORY_LIST,
   buildCategoryMemory,
   byCategory,
   categoryOf,
@@ -170,13 +171,28 @@ export async function POST(request: Request) {
     console.error(`[chat] Gemini falló (${problem.failure}), usando parser local:`, error)
   }
 
-  // Escritura de los movimientos detectados.
+  // Escritura de los movimientos detectados (con validación y sanitización estricta).
+  const validCategories = new Set(CATEGORY_LIST.map((c) => c.id))
+  const sanitizedEntries = entries
+    .map((e) => {
+      const amount = Math.round(Math.abs(Number(e.amount) || 0))
+      const kind = e.kind === 'income' ? 'income' : 'expense'
+      const category = validCategories.has(e.category) ? e.category : 'otros'
+      const note = String(e.note || '').trim().slice(0, 150) || (kind === 'income' ? 'Ingreso' : 'Gasto')
+      let occurredAt = e.occurredAt
+      if (!occurredAt || Number.isNaN(Date.parse(occurredAt))) {
+        occurredAt = new Date().toISOString()
+      }
+      return { kind, amount, category, note, occurredAt }
+    })
+    .filter((e) => e.amount > 0)
+
   let inserted: any[] = []
-  if (entries.length > 0) {
+  if (sanitizedEntries.length > 0) {
     const { data, error } = await supabase
       .from('expenses')
       .insert(
-        entries.map((e) => ({
+        sanitizedEntries.map((e) => ({
           room_id: roomId,
           user_id: userId,
           nick,
@@ -184,7 +200,7 @@ export async function POST(request: Request) {
           amount: e.amount,
           category: e.category,
           note: e.note,
-          occurred_at: e.occurredAt ?? new Date().toISOString(),
+          occurred_at: e.occurredAt,
           receipt_path: receiptPath ?? null,
         })),
       )

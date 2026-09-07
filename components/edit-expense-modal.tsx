@@ -9,6 +9,7 @@ import {
   type Expense,
   type Kind,
 } from '@/lib/finance'
+import { stripRecurringTag } from '@/lib/recurring'
 import { cn } from '@/lib/utils'
 
 export function EditExpenseModal({
@@ -38,7 +39,7 @@ export function EditExpenseModal({
       setKind(expense.kind)
       setAmount(String(expense.amount))
       setCategory(expense.category)
-      setNote(expense.note)
+      setNote(stripRecurringTag(expense.note))
       setDate(expense.occurredAt.slice(0, 10))
       setConfirmDelete(false)
     }
@@ -53,11 +54,15 @@ export function EditExpenseModal({
     const num = Math.round(Number(amount))
     if (!Number.isFinite(num) || num <= 0) return
 
+    const tagMatch = expense!.note.match(/\[fijo:[^\]]+\]/)
+    const trimmed = note.trim()
+    const finalNote = tagMatch && !trimmed.includes(tagMatch[0]) ? `${trimmed} ${tagMatch[0]}`.trim() : trimmed
+
     onSave(expense!.id, {
       kind,
       amount: num,
       category,
-      note: note.trim(),
+      note: finalNote,
       occurredAt: date ? new Date(`${date}T12:00:00`).toISOString() : expense!.occurredAt,
     })
     onClose()

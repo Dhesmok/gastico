@@ -28,6 +28,13 @@ export type PreparedImage = {
 }
 
 export async function prepareReceipt(file: File): Promise<PreparedImage> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo seleccionado no es una imagen válida')
+  }
+  if (file.size > 25 * 1024 * 1024) {
+    throw new Error('La foto es demasiado grande (máximo 25 MB)')
+  }
+
   const bitmap = await loadBitmap(file)
 
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))

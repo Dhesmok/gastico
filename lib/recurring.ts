@@ -175,9 +175,16 @@ export type RecurringStatus = {
   isToday: boolean
 }
 
+/** Elimina la etiqueta técnica [fijo:...] de la nota para mostrarla limpia al usuario. */
+export function stripRecurringTag(note: string): string {
+  return note.replace(/\[fijo:[^\]]+\]/g, '').trim()
+}
+
 /**
- * Calcula el estado de cada gasto fijo en el mes actual: si ya existe un
- * movimiento con la nota o el monto que coincide, se marca como pagado.
+ * Calcula el estado de cada gasto fijo en el mes actual:
+ * 1. Prioridad 1: Coincidencia determinista con etiqueta [fijo:<id>].
+ * 2. Prioridad 2: Coincidencia por nombre exacto y misma categoría.
+ * No se usan búsquedas parciales (evita que 'gasolina' active 'gas').
  */
 export function getRecurringStatus(
   items: RecurringExpense[],
@@ -191,12 +198,17 @@ export function getRecurringStatus(
     .filter((i) => i.active)
     .map((item) => {
       const normalizedName = item.name.trim().toLowerCase()
+      const tag = `[fijo:${item.id}]`
+
       const match = monthExpenses.find((e) => {
         if (e.kind !== 'expense') return false
-        const noteMatch = e.note.toLowerCase().includes(normalizedName)
-        const catAndAmountMatch =
-          e.category === item.category && Math.abs(e.amount - item.amount) < 5
-        return noteMatch || catAndAmountMatch
+        // 1. Coincidencia unívoca por etiqueta técnica
+        if (e.note.includes(tag)) return true
+
+        // 2. Coincidencia por nombre exacto (sin etiquetas) y misma categoría
+        const cleanNote = stripRecurringTag(e.note).toLowerCase()
+        const isExactName = cleanNote === normalizedName
+        return isExactName && e.category === item.category
       })
 
       const targetDay = Math.min(item.dueDay, daysInMonth)
@@ -216,3 +228,4 @@ export function getRecurringStatus(
       return a.item.dueDay - b.item.dueDay
     })
 }
+

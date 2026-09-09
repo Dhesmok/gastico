@@ -45,6 +45,17 @@ export function EditExpenseModal({
     }
   }, [expense])
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen || !expense) return null
 
   const categories = kind === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
@@ -69,16 +80,29 @@ export function EditExpenseModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-expense-title"
+        className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Cerrar"
           className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" />
         </button>
 
-        <h3 className="font-display text-xl font-700 text-foreground">Corregir Movimiento</h3>
+        <h3 id="edit-expense-title" className="font-display text-xl font-700 text-foreground">
+          Corregir Movimiento
+        </h3>
         <p className="mb-4 text-xs text-muted-foreground">
           Modifica los detalles, cambia de gasto a ingreso o elimínalo
         </p>

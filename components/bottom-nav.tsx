@@ -37,6 +37,8 @@ export function BottomNav({
             <button
               key={tab.id}
               onClick={() => onChangeView(tab.id)}
+              aria-label={tab.label}
+              aria-current={active ? 'page' : undefined}
               className={cn(
                 'group relative flex flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-all duration-200 active:scale-90',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',

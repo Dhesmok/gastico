@@ -184,6 +184,7 @@ export function ChatView({
           />
           <button
             onClick={() => fileRef.current?.click()}
+            aria-label="Tomar o subir la foto de una factura"
             title="Tomar o subir la foto de una factura"
             className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:text-primary hover:shadow-md active:scale-95"
           >
@@ -206,6 +207,7 @@ export function ChatView({
                 }
               }}
               rows={1}
+              aria-label="Mensaje o nota de gasto"
               placeholder={
                 pendingFile ? 'Nota para la factura (opcional)…' : 'Cuéntame el gasto… ej: “mercado 120mil”'
               }

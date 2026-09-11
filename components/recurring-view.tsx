@@ -354,6 +354,7 @@ export function RecurringView({
                         onClick={() => handleOpenEdit(item)}
                         className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         title="Editar gasto fijo"
+                        aria-label={`Editar gasto fijo: ${item.name}`}
                       >
                         <Edit2 className="size-3.5" />
                       </button>
@@ -361,6 +362,7 @@ export function RecurringView({
                         onClick={() => handleDelete(item.id)}
                         className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                         title="Eliminar gasto fijo"
+                        aria-label={`Eliminar gasto fijo: ${item.name}`}
                       >
                         <Trash2 className="size-3.5" />
                       </button>
@@ -379,6 +381,7 @@ export function RecurringView({
           <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
             <button
               onClick={() => setModalOpen(false)}
+              aria-label="Cerrar modal"
               className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />

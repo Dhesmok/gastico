@@ -86,6 +86,7 @@ export function TopBar({
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={open}
+            aria-label="Opciones de sala"
             className="flex md:hidden items-center gap-1.5 rounded-2xl border border-border/80 bg-card/80 py-1.5 pl-2.5 pr-2 text-xs font-700 text-foreground shadow-xs transition-all hover:bg-card active:scale-95"
             title="Opciones de sala"
           >

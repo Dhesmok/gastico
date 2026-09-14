@@ -185,6 +185,7 @@ export function ChatView({
           <button
             onClick={() => fileRef.current?.click()}
             title="Tomar o subir la foto de una factura"
+            aria-label="Tomar o subir la foto de una factura"
             className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:text-primary hover:shadow-md active:scale-95"
           >
             <Camera className="size-5" />
@@ -209,6 +210,7 @@ export function ChatView({
               placeholder={
                 pendingFile ? 'Nota para la factura (opcional)…' : 'Cuéntame el gasto… ej: “mercado 120mil”'
               }
+              aria-label="Mensaje o nota sobre el gasto"
               className="max-h-28 min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-snug text-foreground outline-none placeholder:text-xs placeholder:text-muted-foreground sm:placeholder:text-sm"
             />
           </div>
@@ -490,6 +492,7 @@ function AccountingCard({
                   className="group flex items-center gap-1.5 rounded-xl border border-border/50 px-2.5 py-1 text-xs font-700 transition-all hover:scale-102 active:scale-95"
                   style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)` }}
                   title="Toca para cambiar la categoría"
+                  aria-label={`Cambiar categoría: ${cat.label}`}
                 >
                   <span className="text-sm">{cat.emoji}</span>
                   <span className="text-foreground">{cat.label}</span>

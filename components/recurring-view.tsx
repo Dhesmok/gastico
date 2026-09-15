@@ -103,6 +103,15 @@ export function RecurringView({
   const [category, setCategory] = useState<CategoryId>('servicios')
   const [dueDay, setDueDay] = useState('5')
 
+  useEffect(() => {
+    if (!modalOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModalOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [modalOpen])
+
   const currentMonthExpenses = useMemo(() => {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
@@ -352,6 +361,7 @@ export function RecurringView({
                       )}
                       <button
                         onClick={() => handleOpenEdit(item)}
+                        aria-label="Editar gasto fijo"
                         className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         title="Editar gasto fijo"
                       >
@@ -359,6 +369,7 @@ export function RecurringView({
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
+                        aria-label="Eliminar gasto fijo"
                         className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                         title="Eliminar gasto fijo"
                       >
@@ -379,6 +390,7 @@ export function RecurringView({
           <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
             <button
               onClick={() => setModalOpen(false)}
+              aria-label="Cerrar modal"
               className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" />

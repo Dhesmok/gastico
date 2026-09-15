@@ -78,7 +78,7 @@ export function EditExpenseModal({
           <X className="size-4" />
         </button>
 
-        <h3 className="font-display text-xl font-700 text-foreground">Corregir Movimiento</h3>
+        <h3 className="font-display text-lg font-600 text-foreground">Corregir Movimiento</h3>
         <p className="mb-4 text-xs text-muted-foreground">
           Modifica los detalles, cambia de gasto a ingreso o elimínalo
         </p>
@@ -93,7 +93,7 @@ export function EditExpenseModal({
                 if (!EXPENSE_CATEGORIES.some((c) => c.id === category)) setCategory('mercado')
               }}
               className={cn(
-                'rounded-xl py-2 text-xs font-700 transition-all',
+                'rounded-xl py-2 text-xs font-500 transition-all',
                 kind === 'expense'
                   ? 'bg-destructive/15 text-destructive shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
@@ -108,7 +108,7 @@ export function EditExpenseModal({
                 if (!INCOME_CATEGORIES.some((c) => c.id === category)) setCategory('nomina')
               }}
               className={cn(
-                'rounded-xl py-2 text-xs font-700 transition-all',
+                'rounded-xl py-2 text-xs font-500 transition-all',
                 kind === 'income'
                   ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
@@ -120,7 +120,7 @@ export function EditExpenseModal({
 
           {/* Monto */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">
+            <label className="mb-1 block text-xs font-500 text-foreground">
               Monto ({currency})
             </label>
             <input
@@ -130,14 +130,14 @@ export function EditExpenseModal({
               required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 font-display text-lg font-700 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 amount text-lg text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               placeholder="0"
             />
           </div>
 
           {/* Categoría */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">Categoría</label>
+            <label className="mb-1 block text-xs font-500 text-foreground">Categoría</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as CategoryId)}
@@ -153,7 +153,7 @@ export function EditExpenseModal({
 
           {/* Descripción / Nota */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">Descripción / Nota</label>
+            <label className="mb-1 block text-xs font-500 text-foreground">Descripción / Nota</label>
             <input
               type="text"
               value={note}
@@ -166,7 +166,7 @@ export function EditExpenseModal({
 
           {/* Fecha */}
           <div>
-            <label className="mb-1 block text-xs font-700 text-foreground">Fecha del movimiento</label>
+            <label className="mb-1 block text-xs font-500 text-foreground">Fecha del movimiento</label>
             <input
               type="date"
               value={date}
@@ -179,7 +179,7 @@ export function EditExpenseModal({
           <div className="mt-2 flex flex-col gap-2">
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-display text-sm font-700 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-display text-sm font-600 text-primary-foreground shadow-lg shadow-primary/20 transition-colors"
             >
               <Check className="size-4" /> Guardar Cambios
             </button>
@@ -192,14 +192,14 @@ export function EditExpenseModal({
                     onDelete(expense.id)
                     onClose()
                   }}
-                  className="flex-1 rounded-2xl bg-destructive py-2 text-xs font-700 text-destructive-foreground transition-all"
+                  className="flex-1 rounded-2xl bg-destructive py-2 text-xs font-500 text-destructive-foreground transition-all"
                 >
                   Sí, borrar definitivamente
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(false)}
-                  className="rounded-2xl border border-border bg-muted px-4 py-2 text-xs font-700 text-foreground"
+                  className="rounded-2xl border border-border bg-muted px-4 py-2 text-xs font-500 text-foreground"
                 >
                   Cancelar
                 </button>

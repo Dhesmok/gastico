@@ -581,7 +581,7 @@ export default function Page() {
 
       {toast && (
         <div className="fixed inset-x-0 bottom-20 md:bottom-12 z-50 flex justify-center px-4 pointer-events-none">
-          <p className="glass-strong pointer-events-auto animate-pop-in max-w-md rounded-2xl border border-border/80 px-4 py-2.5 text-center text-xs font-700 leading-relaxed text-foreground shadow-xl">
+          <p className="glass-strong pointer-events-auto animate-pop-in max-w-md rounded-2xl border border-border/80 px-4 py-2.5 text-center text-xs font-500 leading-relaxed text-foreground shadow-lg">
             {toast}
           </p>
         </div>

@@ -215,43 +215,34 @@ export function RecurringView({
         {/* Encabezado */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-2xl font-700 text-foreground">Gastos Fijos</h2>
-            <p className="text-sm text-muted-foreground">
-              Arriendo, servicios y pagos del mes con sus fechas límite
-            </p>
+            <h2 className="font-display text-xl font-600 text-foreground">Gastos fijos</h2>
+            <p className="label">Los pagos del mes y sus fechas límite</p>
           </div>
           <button
             onClick={handleOpenCreate}
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-2xl bg-primary px-3.5 py-2.5 font-display text-xs font-700 text-primary-foreground shadow-sm shadow-primary/30 transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-95"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-4 py-2 font-display text-sm font-600 text-primary-foreground transition-colors active:opacity-70"
           >
             <Plus className="size-4" />
             <span>Nuevo fijo</span>
           </button>
         </div>
 
-        {/* Tarjeta de Resumen Mensual */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-border/70 bg-card/80 p-3.5 shadow-sm">
-            <p className="text-[11px] font-700 uppercase tracking-wider text-muted-foreground">
-              Total Fijos
-            </p>
-            <p className="mt-1 font-display text-base font-700 text-foreground">
+        {/* Resumen del mes: tres cifras en la misma tarjeta, separadas por una
+            línea. Antes eran tres cajas de colores distintos peleando entre sí. */}
+        <div className="surface grid grid-cols-3 divide-x divide-border">
+          <div className="px-3 py-3">
+            <p className="label">Total</p>
+            <p className="amount mt-0.5 text-foreground">
               {formatMoney(totalMonthly, room.currency)}
             </p>
           </div>
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 shadow-sm">
-            <p className="text-[11px] font-700 uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Pagados
-            </p>
-            <p className="mt-1 font-display text-base font-700 text-emerald-600 dark:text-emerald-400">
-              {formatMoney(totalPaid, room.currency)}
-            </p>
+          <div className="px-3 py-3">
+            <p className="label">Pagados</p>
+            <p className="amount mt-0.5 text-positive">{formatMoney(totalPaid, room.currency)}</p>
           </div>
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3.5 shadow-sm">
-            <p className="text-[11px] font-700 uppercase tracking-wider text-amber-600 dark:text-amber-400">
-              Pendientes
-            </p>
-            <p className="mt-1 font-display text-base font-700 text-amber-600 dark:text-amber-400">
+          <div className="px-3 py-3">
+            <p className="label">Pendientes</p>
+            <p className="amount mt-0.5 text-foreground">
               {formatMoney(totalPending, room.currency)}
             </p>
           </div>
@@ -260,15 +251,17 @@ export function RecurringView({
         {/* Lista de Gastos Fijos */}
         <div className="flex flex-col gap-3">
           {statuses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/80 bg-card/40 p-8 text-center">
-              <CalendarClock className="mb-2 size-10 text-muted-foreground/40" />
-              <p className="font-display text-base font-700 text-foreground">No tienes gastos fijos aún</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Añade el arriendo, el internet, la luz o Netflix con su día de pago para no olvidarlos.
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border p-8 text-center">
+              <CalendarClock className="mb-2 size-8 text-muted-foreground/40" />
+              <p className="font-display text-[15px] font-600 text-foreground">
+                No tienes gastos fijos aún
+              </p>
+              <p className="label mt-1 max-w-xs">
+                Añade el arriendo, el internet o la luz con su día de pago para no olvidarlos.
               </p>
               <button
                 onClick={handleOpenCreate}
-                className="mt-4 flex items-center gap-1.5 rounded-2xl bg-primary px-4 py-2 font-display text-xs font-700 text-primary-foreground transition-all hover:-translate-y-0.5"
+                className="mt-4 flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 font-display text-sm font-600 text-primary-foreground transition-colors"
               >
                 <Plus className="size-4" /> Añadir el primero
               </button>
@@ -276,75 +269,58 @@ export function RecurringView({
           ) : (
             statuses.map(({ item, paid, daysRemaining, isOverdue, isToday }) => {
               const cat = categoryOf(item.category)
+              // El estado va en una línea de texto con su punto de color. Antes
+              // cada tarjeta se teñía entera y la lista parecía un semáforo.
+              const estado = paid
+                ? { text: 'Pagado este mes', color: 'var(--positive)', Icon: CheckCircle2 }
+                : isToday
+                  ? { text: 'Vence hoy', color: 'var(--chart-3)', Icon: Clock }
+                  : isOverdue
+                    ? {
+                        text: `Venció hace ${Math.abs(daysRemaining)} días`,
+                        color: 'var(--destructive)',
+                        Icon: AlertCircle,
+                      }
+                    : {
+                        text: `Vence en ${daysRemaining} días`,
+                        color: 'var(--muted-foreground)',
+                        Icon: Calendar,
+                      }
+
               return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    'relative flex flex-col justify-between gap-3 rounded-3xl border p-4 shadow-sm transition-all',
-                    paid
-                      ? 'border-border/50 bg-card/40 opacity-80'
-                      : isOverdue
-                        ? 'border-destructive/30 bg-destructive/5'
-                        : isToday
-                          ? 'border-primary/40 bg-primary/5'
-                          : 'border-border/80 bg-card',
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-sm"
-                        style={{
-                          backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)`,
-                        }}
-                      >
-                        {cat.emoji}
-                      </span>
-                      <div>
-                        <h4 className="font-display text-base font-700 text-foreground">
+                <div key={item.id} className={cn('surface p-4', paid && 'opacity-65')}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="text-xl leading-none">{cat.emoji}</span>
+                      <div className="min-w-0">
+                        <h4 className="truncate font-display text-[15px] font-600 text-foreground">
                           {item.name}
                         </h4>
-                        <p className="text-xs text-muted-foreground">{cat.label}</p>
+                        <p className="label truncate">
+                          {cat.label} · día {item.dueDay} de cada mes
+                        </p>
                       </div>
                     </div>
-
-                    <div className="text-right">
-                      <p className="font-display text-base font-700 text-foreground">
-                        {formatMoney(item.amount, room.currency)}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">Día {item.dueDay} de cada mes</p>
-                    </div>
+                    <p className="amount shrink-0 text-foreground">
+                      {formatMoney(item.amount, room.currency)}
+                    </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                    {/* Badge de Estado */}
-                    <div>
-                      {paid ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-700 text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="size-3.5" /> Pagado este mes
-                        </span>
-                      ) : isToday ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-700 text-amber-600 dark:text-amber-400 animate-pulse">
-                          <Clock className="size-3.5" /> ¡Vence hoy!
-                        </span>
-                      ) : isOverdue ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2.5 py-1 text-xs font-700 text-destructive">
-                          <AlertCircle className="size-3.5" /> Venció hace {Math.abs(daysRemaining)} días
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-600 text-muted-foreground">
-                          <Calendar className="size-3.5" /> Vence en {daysRemaining} días
-                        </span>
-                      )}
-                    </div>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+                    <span
+                      className="flex min-w-0 items-center gap-1.5 text-xs font-500"
+                      style={{ color: estado.color }}
+                    >
+                      <estado.Icon className="size-3.5 shrink-0" />
+                      <span className="truncate">{estado.text}</span>
+                    </span>
 
-                    {/* Botones de acción */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1">
                       {!paid && (
                         <button
                           onClick={() => handlePay(item)}
                           disabled={payingId === item.id}
-                          className="flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-700 text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                          className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-600 text-primary-foreground transition-colors disabled:opacity-50"
                         >
                           <CalendarCheck className="size-3.5" />
                           <span>{payingId === item.id ? 'Registrando…' : 'Pagar'}</span>
@@ -352,14 +328,14 @@ export function RecurringView({
                       )}
                       <button
                         onClick={() => handleOpenEdit(item)}
-                        className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         title="Editar gasto fijo"
                       >
                         <Edit2 className="size-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                         title="Eliminar gasto fijo"
                       >
                         <Trash2 className="size-3.5" />
@@ -384,7 +360,7 @@ export function RecurringView({
               <X className="size-4" />
             </button>
 
-            <h3 className="font-display text-xl font-700 text-foreground">
+            <h3 className="font-display text-lg font-600 text-foreground">
               {editingItem ? 'Editar Gasto Fijo' : 'Nuevo Gasto Fijo'}
             </h3>
             <p className="mb-4 text-xs text-muted-foreground">
@@ -393,7 +369,7 @@ export function RecurringView({
 
             <form onSubmit={handleSave} className="flex flex-col gap-4">
               <div>
-                <label className="mb-1 block text-xs font-700 text-foreground">
+                <label className="mb-1 block text-xs font-500 text-foreground">
                   Nombre del gasto fijo
                 </label>
                 <input
@@ -407,7 +383,7 @@ export function RecurringView({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-700 text-foreground">
+                <label className="mb-1 block text-xs font-500 text-foreground">
                   Monto mensual ({room.currency})
                 </label>
                 <input
@@ -418,13 +394,13 @@ export function RecurringView({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 font-display text-lg font-700 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 amount text-lg text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-700 text-foreground">Categoría</label>
+                  <label className="mb-1 block text-xs font-500 text-foreground">Categoría</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as CategoryId)}
@@ -439,7 +415,7 @@ export function RecurringView({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-700 text-foreground">
+                  <label className="mb-1 block text-xs font-500 text-foreground">
                     Día límite de pago
                   </label>
                   <input
@@ -450,7 +426,7 @@ export function RecurringView({
                     value={dueDay}
                     onChange={(e) => setDueDay(e.target.value)}
                     placeholder="Día (1-31)"
-                    className="w-full rounded-2xl border border-border bg-background px-3 py-2.5 text-sm font-700 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-2xl border border-border bg-background px-3 py-2.5 text-sm font-600 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -459,13 +435,13 @@ export function RecurringView({
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 rounded-2xl border border-border bg-muted py-2.5 text-xs font-700 text-foreground transition-colors"
+                  className="flex-1 rounded-2xl border border-border bg-muted py-2.5 text-xs font-500 text-foreground transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-2xl bg-primary py-2.5 font-display text-xs font-700 text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5"
+                  className="flex-1 rounded-xl bg-primary py-2.5 font-display text-sm font-600 text-primary-foreground transition-colors"
                 >
                   {editingItem ? 'Guardar Cambios' : 'Añadir Gasto Fijo'}
                 </button>

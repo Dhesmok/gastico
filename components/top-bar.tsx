@@ -68,15 +68,17 @@ export function TopBar({
       : `${members.length} personas`
 
   return (
-    <header className="glass pt-safe sticky top-0 z-30 border-b border-border/80">
-      <div className="mx-auto flex h-16 w-full max-w-2xl items-center justify-between gap-3 px-4">
+    <header className="glass pt-safe sticky top-0 z-30 border-b border-border">
+      <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-violet-500 text-primary-foreground shadow-sm shadow-primary/30">
-            <HeartHandshake className="size-5" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <HeartHandshake className="size-4.5" />
           </div>
           <div className="min-w-0 leading-tight">
-            <p className="truncate font-display text-base font-800 text-foreground">{room.name}</p>
-            <p className="truncate text-[11px] font-600 text-muted-foreground">{roster}</p>
+            <p className="truncate font-display text-[15px] font-600 text-foreground">
+              {room.name}
+            </p>
+            <p className="label truncate">{roster}</p>
           </div>
         </div>
 
@@ -86,15 +88,17 @@ export function TopBar({
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={open}
-            className="flex md:hidden items-center gap-1.5 rounded-2xl border border-border/80 bg-card/80 py-1.5 pl-2.5 pr-2 text-xs font-700 text-foreground shadow-xs transition-all hover:bg-card active:scale-95"
+            className="flex items-center gap-1.5 rounded-full bg-muted py-1.5 pl-3 pr-2 text-foreground transition-colors hover:bg-secondary active:opacity-70 md:hidden"
             title="Opciones de sala"
           >
-            <DoorOpen className="size-3.5 text-primary" />
-            <span className="font-mono text-[11px] font-700 text-muted-foreground">
+            <span className="font-mono text-[11px] font-500 text-muted-foreground">
               {formatCode(room.code)}
             </span>
             <ChevronDown
-              className={cn('size-3.5 text-muted-foreground transition-transform', open && 'rotate-180')}
+              className={cn(
+                'size-3.5 text-muted-foreground transition-transform',
+                open && 'rotate-180',
+              )}
             />
           </button>
 
@@ -103,25 +107,28 @@ export function TopBar({
             onClick={() => setOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={open}
-            className="hidden md:flex items-center gap-2 rounded-2xl border border-border/80 bg-card/80 py-2 pl-3 pr-2.5 text-sm font-700 text-foreground shadow-xs transition-all hover:bg-card hover:shadow-sm active:scale-95"
+            className="hidden items-center gap-2 rounded-full bg-muted py-1.5 pl-3 pr-2.5 text-sm font-500 text-foreground transition-colors hover:bg-secondary md:flex"
           >
-            <current.icon className="size-4 text-primary" />
+            <current.icon className="size-4 text-muted-foreground" />
             <span>{current.label}</span>
             {overBudget && (
               <span
-                className="size-2 rounded-full bg-destructive"
+                className="size-1.5 rounded-full bg-destructive"
                 aria-label="Alerta de presupuesto"
               />
             )}
             <ChevronDown
-              className={cn('size-4 text-muted-foreground transition-transform', open && 'rotate-180')}
+              className={cn(
+                'size-4 text-muted-foreground transition-transform',
+                open && 'rotate-180',
+              )}
             />
           </button>
 
           {open && (
             <div
               role="menu"
-              className="glass-strong absolute right-0 top-full z-40 mt-2 w-60 origin-top-right animate-pop-in overflow-hidden rounded-3xl border border-border/70 p-2 shadow-xl"
+              className="glass-strong animate-pop-in absolute right-0 top-full z-40 mt-2 w-60 origin-top-right overflow-hidden rounded-2xl border border-border p-1.5 shadow-lg"
             >
               {/* Vistas solo en pantallas medianas / escritorio */}
               <div className="hidden md:block">
@@ -134,41 +141,41 @@ export function TopBar({
                       setOpen(false)
                     }}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-600 transition-colors',
-                      view === item.id ? 'bg-primary/12 text-primary' : 'text-foreground hover:bg-muted',
+                      'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors',
+                      view === item.id
+                        ? 'bg-muted font-600 text-primary'
+                        : 'font-500 text-foreground hover:bg-muted',
                     )}
                   >
                     <item.icon className="size-4" />
                     {item.label}
                     {item.id === 'stats' && overBudget && (
-                      <span className="ml-auto rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-700 text-destructive">
-                        alerta
-                      </span>
+                      <span className="ml-auto size-1.5 rounded-full bg-destructive" />
                     )}
                   </button>
                 ))}
-                <div className="my-1.5 h-px bg-border/70" />
+                <div className="my-1.5 h-px bg-border" />
               </div>
 
               {/* Acciones de la sala (móvil y escritorio) */}
-              <div className="px-2 py-1.5 text-left">
-                <p className="text-[10px] font-700 uppercase tracking-wider text-muted-foreground">
-                  Código de sala
-                </p>
-                <div className="mt-1 flex items-center justify-between gap-2 rounded-xl bg-muted/60 px-2.5 py-1.5 font-mono text-xs font-700 text-foreground">
-                  <span>{formatCode(room.code)}</span>
+              <div className="px-3 py-1.5 text-left">
+                <p className="label">Código de sala</p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <span className="font-mono text-sm font-500 text-foreground">
+                    {formatCode(room.code)}
+                  </span>
                   <button
                     onClick={copyCode}
-                    className="flex items-center gap-1 text-[11px] font-700 text-primary hover:underline"
+                    className="flex items-center gap-1 text-xs font-500 text-primary"
                     title="Copiar código de la sala"
                   >
-                    {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+                    {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
                     <span>{copied ? 'Copiado' : 'Copiar'}</span>
                   </button>
                 </div>
               </div>
 
-              <div className="my-1.5 h-px bg-border/70" />
+              <div className="my-1.5 h-px bg-border" />
 
               <button
                 role="menuitem"
@@ -176,7 +183,7 @@ export function TopBar({
                   setOpen(false)
                   onExit()
                 }}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-600 text-foreground transition-colors hover:bg-muted"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-500 text-foreground transition-colors hover:bg-muted"
               >
                 <DoorOpen className="size-4 text-muted-foreground" />
                 Cambiar de sala
@@ -187,7 +194,7 @@ export function TopBar({
                   setOpen(false)
                   onSignOut()
                 }}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-600 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-500 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut className="size-4" />
                 Cerrar sesión

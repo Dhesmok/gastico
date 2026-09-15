@@ -97,31 +97,31 @@ export function SettingsView({
     <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-4 sm:py-5">
       <div className="flex flex-col gap-4 pb-12 sm:pb-8">
         <div>
-          <h2 className="font-display text-2xl font-700 text-foreground">Configuración</h2>
-          <p className="text-sm text-muted-foreground">Los cambios se guardan solos</p>
+          <h2 className="font-display text-xl font-600 text-foreground">Configuración</h2>
+          <p className="label">Los cambios se guardan solos</p>
         </div>
 
         {/* Invitación a la sala */}
-        <section className="rounded-3xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
+        <section className="surface p-4">
           <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <DoorOpen className="size-5" />
+            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <DoorOpen className="size-4.5" />
             </span>
             <div>
-              <h3 className="font-display text-base font-700 text-foreground">Invitar a la sala</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-display text-[15px] font-600 text-foreground">Invitar a la sala</h3>
+              <p className="label">
                 Con el ID y la contraseña, cualquiera entra desde su celular
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3">
-            <span className="flex-1 font-mono text-lg font-700 tracking-widest text-foreground">
+            <span className="flex-1 font-mono text-lg font-600 tracking-widest text-foreground">
               {formatCode(room.code)}
             </span>
             <button
               onClick={copyInvite}
-              className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-700 text-primary-foreground transition-all hover:-translate-y-0.5"
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-sm font-600 text-primary-foreground transition-colors"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? 'Copiado' : 'Copiar'}
@@ -149,7 +149,7 @@ export function SettingsView({
             <button
               onClick={savePassword}
               disabled={newPassword.length < 4}
-              className="flex h-11 items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 text-xs font-700 text-foreground shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
+              className="flex h-11 items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground transition-colors hover:bg-muted disabled:opacity-40"
             >
               <KeyRound className="size-3.5" />
               Guardar
@@ -159,7 +159,7 @@ export function SettingsView({
 
         {/* Nómina y tope */}
         <MoneyCard
-          icon={<Wallet className="size-5" />}
+          icon={<Wallet className="size-4.5" />}
           title="Nómina del mes"
           hint="Cuánto esperan que entre al mes entre todos. Si registran la nómina por el chat, esa manda; los ingresos extra se suman aparte."
           value={room.monthlyIncome}
@@ -168,41 +168,40 @@ export function SettingsView({
         />
 
         <MoneyCard
-          icon={<Target className="size-5" />}
+          icon={<Target className="size-4.5" />}
           title="Tope de gasto"
           hint="El límite mensual que se ponen. Al pasarlo, Cuenti les manda una alertica."
           value={room.spendingCap}
           currency={room.currency}
           onChange={(v) => onChange({ spendingCap: v })}
-          accent
         />
 
         {/* Quiénes están */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <section className="surface p-4">
           <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-              <Users className="size-5" />
+            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <Users className="size-4.5" />
             </span>
             <div>
-              <h3 className="font-display text-base font-700 text-foreground">En esta sala</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-display text-[15px] font-600 text-foreground">En esta sala</h3>
+              <p className="label">
                 {members.length} {members.length === 1 ? 'persona' : 'personas'}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
             {members.map((m) => (
-              <div key={m.userId} className="flex items-center gap-3 rounded-2xl bg-muted/60 px-3 py-2.5">
+              <div key={m.userId} className="flex items-center gap-3 border-b border-border py-2.5 last:border-0">
                 <span
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-700 text-white"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-600 text-white"
                   style={{ backgroundColor: m.color }}
                 >
                   {m.nick.slice(0, 1).toUpperCase()}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-700 text-foreground">{m.nick}</span>
+                <span className="min-w-0 flex-1 truncate font-500 text-foreground">{m.nick}</span>
                 {m.userId === me.userId && (
-                  <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-[11px] font-700 text-primary">
+                  <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-[11px] font-500 text-primary">
                     tú
                   </span>
                 )}
@@ -222,14 +221,14 @@ export function SettingsView({
         </section>
 
         {/* Facturas */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <section className="surface p-4">
           <div className="mb-1 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-              <Receipt className="size-5" />
+            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <Receipt className="size-4.5" />
             </span>
             <div>
-              <h3 className="font-display text-base font-700 text-foreground">Fotos de facturas</h3>
-              <p className="text-xs text-muted-foreground">Para no llenar el almacenamiento gratis</p>
+              <h3 className="font-display text-[15px] font-600 text-foreground">Fotos de facturas</h3>
+              <p className="label">Para no llenar el almacenamiento gratis</p>
             </div>
           </div>
 
@@ -243,7 +242,7 @@ export function SettingsView({
 
           {room.keepReceipts && (
             <div className="mt-3">
-              <p className="mb-2 text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
+              <p className="mb-2 label">
                 Borrar fotos después de
               </p>
               <div className="flex flex-wrap gap-2">
@@ -252,7 +251,7 @@ export function SettingsView({
                     key={months}
                     onClick={() => onChange({ receiptRetentionMonths: months })}
                     className={cn(
-                      'rounded-full border px-3 py-1.5 text-xs font-700 transition-colors',
+                      'rounded-full border px-3 py-1.5 text-xs font-500 transition-colors',
                       room.receiptRetentionMonths === months
                         ? 'border-primary bg-primary/12 text-primary'
                         : 'border-border bg-card text-foreground hover:bg-muted',
@@ -262,7 +261,7 @@ export function SettingsView({
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              <p className="label mt-2 leading-relaxed">
                 Se borra sólo la imagen: el monto, la categoría y la nota se quedan para siempre.
               </p>
             </div>
@@ -271,18 +270,18 @@ export function SettingsView({
         </section>
 
         {/* Apariencia */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <section className="surface p-4">
           <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-              <ImageIcon className="size-5" />
+            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <ImageIcon className="size-4.5" />
             </span>
             <div>
-              <h3 className="font-display text-base font-700 text-foreground">Apariencia</h3>
-              <p className="text-xs text-muted-foreground">Que dé gusto entrar a anotar gastos</p>
+              <h3 className="font-display text-[15px] font-600 text-foreground">Apariencia</h3>
+              <p className="label">Que dé gusto entrar a anotar gastos</p>
             </div>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-1.5 rounded-2xl bg-muted/70 p-1.5">
+          <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
             {(
               [
                 { id: 'light' as Theme, label: 'Claro', icon: Sun },
@@ -296,9 +295,9 @@ export function SettingsView({
                   applyTheme(option.id)
                 }}
                 className={cn(
-                  'flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-700 transition-all',
+                  'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-600 transition-colors',
                   theme === option.id
-                    ? 'bg-card text-primary shadow-sm'
+                    ? 'bg-card text-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -308,7 +307,7 @@ export function SettingsView({
             ))}
           </div>
 
-          <p className="mb-2 text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
+          <p className="mb-2 label">
             Fondo del chat
           </p>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -318,7 +317,7 @@ export function SettingsView({
                 <button
                   key={bg.id}
                   onClick={() => onChange({ chatBackground: bg.id })}
-                  className="group flex flex-col items-center gap-1.5 transition-transform hover:-translate-y-0.5"
+                  className="group flex flex-col items-center gap-1.5 transition-transform "
                 >
                   <span
                     className={cn(
@@ -363,14 +362,14 @@ export function SettingsView({
         </section>
 
         {/* Mi cuenta */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <section className="surface p-4">
           <div className="mb-1 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <Lock className="size-5" />
             </span>
             <div>
-              <h3 className="font-display text-base font-700 text-foreground">Mi cuenta</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-display text-[15px] font-600 text-foreground">Mi cuenta</h3>
+              <p className="label">
                 La contraseña con la que entras a la app
               </p>
             </div>
@@ -389,21 +388,21 @@ export function SettingsView({
             <button
               onClick={saveMyPassword}
               disabled={myPassword.length < 6}
-              className="flex h-11 items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 text-xs font-700 text-foreground shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
+              className="flex h-11 items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground transition-colors hover:bg-muted disabled:opacity-40"
             >
               <KeyRound className="size-3.5" />
               Guardar
             </button>
           </div>
 
-          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="label mt-2 leading-relaxed">
             Ojo: esta es distinta a la contraseña de la sala. Esta es sólo tuya; la de la sala es la
             que compartes para que alguien entre.
           </p>
 
           <button
             onClick={onSignOut}
-            className="mt-3 flex items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 py-2 text-xs font-700 text-muted-foreground transition-colors hover:text-destructive"
+            className="mt-3 flex items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 py-2 text-xs font-500 text-muted-foreground transition-colors hover:text-destructive"
           >
             <LogOut className="size-3.5" />
             Cerrar sesión
@@ -411,8 +410,8 @@ export function SettingsView({
         </section>
 
         {/* Salir */}
-        <section className="rounded-3xl border border-destructive/30 bg-destructive/5 p-4">
-          <h3 className="font-display text-base font-700 text-foreground">Salirme de la sala</h3>
+        <section className="surface border-destructive/30 p-4">
+          <h3 className="font-display text-[15px] font-600 text-foreground">Salirme de la sala</h3>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             Dejas de ver estas cuentas en este dispositivo. Los gastos y el historial se quedan para
             los demás; puedes volver con el ID y la contraseña.
@@ -421,13 +420,13 @@ export function SettingsView({
             <div className="mt-3 flex gap-2">
               <button
                 onClick={onLeaveRoom}
-                className="flex-1 rounded-2xl bg-destructive px-3 py-2.5 text-xs font-700 text-white transition-all hover:-translate-y-0.5"
+                className="flex-1 rounded-xl bg-destructive px-3 py-2.5 text-sm font-600 text-white transition-colors"
               >
                 Sí, salirme
               </button>
               <button
                 onClick={() => setConfirmLeave(false)}
-                className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-xs font-700 text-foreground"
+                className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-xs font-500 text-foreground"
               >
                 Mejor no
               </button>
@@ -435,7 +434,7 @@ export function SettingsView({
           ) : (
             <button
               onClick={() => setConfirmLeave(true)}
-              className="mt-3 rounded-2xl border border-destructive/40 bg-card px-3.5 py-2 text-xs font-700 text-destructive transition-colors hover:bg-destructive/10"
+              className="mt-3 rounded-2xl border border-destructive/40 bg-card px-3.5 py-2 text-xs font-500 text-destructive transition-colors hover:bg-destructive/10"
             >
               Salirme de la sala
             </button>
@@ -455,7 +454,6 @@ function MoneyCard({
   value,
   currency,
   onChange,
-  accent = false,
 }: {
   icon: React.ReactNode
   title: string
@@ -463,7 +461,6 @@ function MoneyCard({
   value: number
   currency: string
   onChange: (v: number) => void
-  accent?: boolean
 }) {
   const [draft, setDraft] = useState(String(value))
   useEffect(() => setDraft(String(value)), [value])
@@ -475,26 +472,21 @@ function MoneyCard({
   }
 
   return (
-    <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+    <section className="surface p-4">
       <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            'flex size-9 items-center justify-center rounded-2xl',
-            accent ? 'bg-chart-3/20 text-chart-3' : 'bg-primary/12 text-primary',
-          )}
-        >
+        <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
           {icon}
         </span>
-        <h3 className="font-display text-base font-700 text-foreground">{title}</h3>
-        <span className="ml-auto font-display text-lg font-700 text-foreground">
+        <h3 className="font-display text-[15px] font-600 text-foreground">{title}</h3>
+        <span className="amount ml-auto text-lg text-foreground">
           {formatMoney(value, currency)}
         </span>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{hint}</p>
+      <p className="label mt-2 leading-relaxed">{hint}</p>
 
-      <div className="mt-3 flex items-center gap-2 rounded-2xl border border-border bg-background px-3 focus-within:ring-2 focus-within:ring-primary/30">
-        <span className="text-sm font-700 text-muted-foreground">$</span>
+      <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-background px-3 focus-within:border-primary/60">
+        <span className="text-sm font-500 text-muted-foreground">$</span>
         <input
           type="number"
           inputMode="numeric"
@@ -515,7 +507,7 @@ function MoneyCard({
           <button
             key={step}
             onClick={() => commit(value + step)}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-700 text-foreground transition-colors hover:bg-muted"
+            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-500 text-foreground transition-colors hover:bg-muted"
           >
             +{step >= 1000000 ? `${step / 1000000}M` : `${step / 1000}K`}
           </button>
@@ -523,7 +515,7 @@ function MoneyCard({
         {value > 0 && (
           <button
             onClick={() => commit(0)}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-700 text-muted-foreground transition-colors hover:bg-muted"
+            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-500 text-muted-foreground transition-colors hover:bg-muted"
           >
             Limpiar
           </button>
@@ -559,7 +551,7 @@ function TextField({
 
   return (
     <label className={cn('block', className)}>
-      <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
+      <span className="mb-1.5 flex items-center gap-1.5 label">
         {icon}
         {label}
       </span>
@@ -576,7 +568,7 @@ function TextField({
         onKeyDown={(e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
         }}
-        className="h-11 w-full rounded-2xl border border-border bg-card px-3.5 text-sm font-600 text-foreground shadow-sm outline-none focus:ring-2 focus:ring-primary/30"
+        className="h-11 w-full rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground outline-none focus:border-primary/60"
       />
     </label>
   )
@@ -601,16 +593,16 @@ function Toggle({
     <button
       onClick={() => onChange(!checked)}
       className={cn(
-        'flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-3 py-2.5 text-left transition-colors hover:bg-muted',
+        'flex w-full items-center gap-3 rounded-xl bg-muted/60 px-3 py-2.5 text-left transition-colors hover:bg-muted',
         className,
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-sm font-700 text-foreground">
+        <p className="flex items-center gap-1.5 text-sm font-600 text-foreground">
           {icon}
           {label}
         </p>
-        {hint && <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{hint}</p>}
+        {hint && <p className="label mt-0.5 leading-relaxed">{hint}</p>}
       </div>
       <span
         className={cn(

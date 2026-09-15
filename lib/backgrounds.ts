@@ -18,7 +18,7 @@ export type ChatBackground = {
 // ---------------------------------------------------------------------------
 
 /** Dos luces difuminadas en las esquinas: la base de casi todos. */
-function glow(a: string, b: string, intensidadA = 18, intensidadB = 16): React.CSSProperties {
+function glow(a: string, b: string, intensidadA = 9, intensidadB = 8): React.CSSProperties {
   return {
     backgroundColor: 'var(--background)',
     backgroundImage: [
@@ -40,14 +40,14 @@ export const CHAT_BACKGROUNDS: ChatBackground[] = [
   {
     id: 'mint',
     label: 'Menta',
-    style: glow('var(--accent)', 'var(--chart-5)', 22, 16),
+    style: glow('var(--accent)', 'var(--chart-5)', 11, 8),
     swatch:
       'linear-gradient(150deg, color-mix(in oklch, var(--accent) 55%, transparent), color-mix(in oklch, var(--chart-5) 40%, transparent), var(--background))',
   },
   {
     id: 'sunset',
     label: 'Atardecer',
-    style: glow('var(--chart-4)', 'var(--chart-3)', 20, 20),
+    style: glow('var(--chart-4)', 'var(--chart-3)', 10, 10),
     swatch:
       'linear-gradient(150deg, color-mix(in oklch, var(--chart-4) 55%, transparent), color-mix(in oklch, var(--chart-3) 55%, transparent), var(--background))',
   },
@@ -56,7 +56,7 @@ export const CHAT_BACKGROUNDS: ChatBackground[] = [
     label: 'Puntitos',
     style: {
       backgroundColor: 'var(--background)',
-      backgroundImage: `radial-gradient(color-mix(in oklch, var(--primary) 20%, transparent) 1.5px, transparent 1.5px)`,
+      backgroundImage: `radial-gradient(color-mix(in oklch, var(--primary) 12%, transparent) 1.5px, transparent 1.5px)`,
       backgroundSize: '18px 18px',
       backgroundAttachment: 'local',
     },

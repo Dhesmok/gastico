@@ -51,10 +51,15 @@ export function CategorySheet({
         aria-label="Cerrar"
       />
 
-      <div className="animate-pop-in relative max-h-[85svh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-border bg-card p-4 shadow-2xl sm:rounded-3xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="category-sheet-title"
+        className="animate-pop-in relative max-h-[85svh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-border bg-card p-4 shadow-2xl sm:rounded-3xl"
+      >
         <div className="mb-3 flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <p className="font-display text-[15px] font-600 text-foreground">
+            <p id="category-sheet-title" className="font-display text-[15px] font-600 text-foreground">
               ¿En qué va este movimiento?
             </p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -115,6 +120,7 @@ function Group({
             <button
               key={cat.id}
               onClick={() => onPick(cat.id)}
+              aria-pressed={active}
               className={cn(
                 'flex flex-col items-center gap-1 rounded-2xl border px-2 py-2.5 text-center transition-colors',
                 active ? 'border-primary bg-primary/10' : 'border-border bg-background',

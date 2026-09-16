@@ -75,7 +75,7 @@ export function RoomGate({
           <div className="animate-bob mb-4 flex size-14 sm:size-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
             <HeartHandshake className="size-7 sm:size-8" />
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-700 tracking-tight text-foreground">
+          <h1 className="font-display text-2xl sm:text-3xl font-600 tracking-tight text-foreground">
             Cuentas Claras
           </h1>
           <p className="mt-2 text-pretty text-xs sm:text-sm leading-relaxed text-muted-foreground">
@@ -87,7 +87,7 @@ export function RoomGate({
         {known.length > 0 && (
           <div className="mb-5">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[11px] font-700 uppercase tracking-wider text-muted-foreground">
+              <p className="label">
                 Tus salas guardadas
               </p>
               <span className="text-[11px] font-600 text-primary">
@@ -99,13 +99,13 @@ export function RoomGate({
                 <button
                   key={room.id}
                   onClick={() => onReady(room.id)}
-                  className="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 p-3 text-left transition-all hover:border-primary/40 hover:bg-card hover:shadow-md active:scale-[0.99]"
+                  className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary transition-transform group-hover:scale-105">
                     <DoorOpen className="size-5" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-700 text-foreground">
+                    <span className="block truncate text-sm font-600 text-foreground">
                       {room.name}
                     </span>
                     <span className="block font-mono text-xs text-muted-foreground">
@@ -118,13 +118,13 @@ export function RoomGate({
             </div>
             <div className="my-5 flex items-center gap-3">
               <span className="h-px flex-1 bg-border/80" />
-              <span className="text-[10px] font-700 uppercase tracking-wider text-muted-foreground/70">o entra a otra</span>
+              <span className="label">o entra a otra</span>
               <span className="h-px flex-1 bg-border/80" />
             </div>
           </div>
         )}
 
-            <div className="mb-4 grid grid-cols-2 gap-1.5 rounded-2xl bg-muted/70 p-1.5">
+            <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
               {(
                 [
                   { id: 'create' as Mode, label: 'Crear sala', icon: Plus },
@@ -138,9 +138,9 @@ export function RoomGate({
                     setError(null)
                   }}
                   className={cn(
-                    'flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-700 transition-all',
+                    'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-600 transition-colors',
                     mode === tab.id
-                      ? 'bg-card text-primary shadow-sm'
+                      ? 'bg-card text-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
@@ -190,7 +190,7 @@ export function RoomGate({
             </div>
 
             {error && (
-              <p className="mt-3 rounded-2xl bg-destructive/10 px-3 py-2 text-xs font-600 leading-relaxed text-destructive">
+              <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-500 leading-relaxed text-destructive">
                 {error}
               </p>
             )}
@@ -198,7 +198,7 @@ export function RoomGate({
             <button
               onClick={submit}
               disabled={busy}
-              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-700 text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 disabled:opacity-60"
+              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-600 text-primary-foreground transition-colors hover:brightness-110 disabled:opacity-60"
             >
               {busy ? (
                 <>
@@ -210,7 +210,7 @@ export function RoomGate({
               )}
             </button>
 
-            <div className="mt-5 flex items-start gap-2 rounded-2xl bg-secondary/60 px-4 py-3 text-xs leading-relaxed text-secondary-foreground">
+            <div className="mt-5 flex items-start gap-2 rounded-xl bg-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
               <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>
                 {mode === 'create'
@@ -221,7 +221,7 @@ export function RoomGate({
 
             <button
               onClick={onSignOut}
-              className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-700 text-muted-foreground transition-colors hover:text-destructive"
+              className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-500 text-muted-foreground transition-colors hover:text-destructive"
             >
               <LogOut className="size-3.5" />
               Cerrar sesión
@@ -252,7 +252,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
+      <span className="mb-1.5 block label">
         {label}
       </span>
       <input
@@ -265,7 +265,7 @@ function Field({
           if (e.key === 'Enter' && onEnter) onEnter()
         }}
         className={cn(
-          'h-12 w-full rounded-2xl border border-border bg-card px-3.5 text-sm font-600 text-foreground shadow-sm outline-none transition-shadow placeholder:font-400 placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30',
+          'h-12 w-full rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground outline-none transition-colors placeholder:font-400 placeholder:text-muted-foreground focus:border-primary/60',
           mono && 'font-mono tracking-widest',
         )}
       />

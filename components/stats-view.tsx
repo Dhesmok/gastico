@@ -166,25 +166,25 @@ export function StatsView({
   return (
     <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-4 sm:py-5">
       <div className="flex flex-col gap-4 pb-12 sm:pb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-2xl font-700 text-foreground">Estadísticas</h2>
-            <p className="text-sm text-muted-foreground">Cómo van las finanzas de la casa</p>
+            <h2 className="font-display text-xl font-600 text-foreground">Estadísticas</h2>
+            <p className="label">Cómo van las finanzas de la casa</p>
           </div>
           {items.length > 0 && (
             <button
               onClick={handleExportCsv}
-              className="flex items-center gap-1.5 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-xs font-700 text-foreground shadow-xs transition-all hover:bg-muted active:scale-95"
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-500 text-foreground transition-colors hover:bg-secondary"
               title="Descargar este periodo en formato CSV para Excel"
             >
-              <Download className="size-3.5 text-primary" />
-              <span>Exportar CSV</span>
+              <Download className="size-3.5" />
+              <span>CSV</span>
             </button>
           )}
         </div>
 
         {/* Selector de periodo */}
-        <div className="no-scrollbar flex gap-1.5 overflow-x-auto rounded-2xl bg-muted/70 p-1.5">
+        <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-full bg-muted p-1">
           {PERIODS.map((p) => (
             <button
               key={p.id}
@@ -193,10 +193,10 @@ export function StatsView({
                 setOffset(0)
               }}
               className={cn(
-                'shrink-0 rounded-xl px-3.5 py-2 text-sm font-700 transition-all',
+                'shrink-0 rounded-full px-3.5 py-1.5 text-sm transition-colors',
                 period === p.id
-                  ? 'bg-card text-primary shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
+                  ? 'bg-card font-600 text-foreground'
+                  : 'font-500 text-muted-foreground',
               )}
             >
               <span className="sm:hidden">{p.short}</span>
@@ -219,19 +219,19 @@ export function StatsView({
             />
           </div>
         ) : (
-          <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/80 px-2 py-1.5 shadow-sm">
+          <div className="flex items-center justify-between">
             <button
               onClick={() => setOffset((o) => o - 1)}
-              className="flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Periodo anterior"
             >
               <ChevronLeft className="size-4.5" />
             </button>
-            <p className="font-display text-sm font-700 text-foreground">{range.label}</p>
+            <p className="font-display text-sm font-600 text-foreground">{range.label}</p>
             <button
               onClick={() => setOffset((o) => Math.min(0, o + 1))}
               disabled={offset >= 0}
-              className="flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+              className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
               aria-label="Periodo siguiente"
             >
               <ChevronRight className="size-4.5" />
@@ -280,9 +280,9 @@ export function StatsView({
 
         {/* En qué se les va */}
         {natures.length > 0 && (
-          <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
-            <h3 className="font-display text-base font-700 text-foreground">En qué se les va</h3>
-            <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
+          <section className="surface p-4">
+            <h3 className="font-display text-[15px] font-600 text-foreground">En qué se les va</h3>
+            <p className="label mb-3 mt-0.5">
               Lo que toca, lo que se disfruta y lo que se guarda
             </p>
 
@@ -305,13 +305,13 @@ export function StatsView({
                     style={{ backgroundColor: n.color }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-700 text-foreground">
+                    <p className="text-sm font-500 text-foreground">
                       {n.emoji} {n.label}
-                      <span className="ml-1.5 font-600 text-muted-foreground">
+                      <span className="label ml-1.5">
                         {Math.round(n.share * 100)}% · {formatMoney(n.total, room.currency)}
                       </span>
                     </p>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">{n.hint}</p>
+                    <p className="label leading-relaxed">{n.hint}</p>
                   </div>
                 </div>
               ))}
@@ -320,9 +320,9 @@ export function StatsView({
         )}
 
         {/* Por categoría */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
-          <h3 className="font-display text-base font-700 text-foreground">Por categoría</h3>
-          <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
+        <section className="surface p-4">
+          <h3 className="font-display text-[15px] font-600 text-foreground">Por categoría</h3>
+          <p className="label mb-3 mt-0.5">
             Toca una para ver esos movimientos
           </p>
           {cats.length === 0 ? (
@@ -338,24 +338,22 @@ export function StatsView({
                     filter.category === category.id && 'bg-muted/70',
                   )}
                 >
-                  <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-                    <span className="min-w-0 truncate font-600 text-foreground">
+                  <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
+                    <span className="min-w-0 truncate font-500 text-foreground">
                       {category.emoji} {category.label}
-                      <span className="ml-1.5 text-[11px] font-600 text-muted-foreground">
+                      <span className="label ml-1.5">
                         {count} {count === 1 ? 'mov.' : 'movs.'}
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
                       <Delta value={catChange} />
-                      <span className="font-700 text-muted-foreground">
+                      <span className="amount text-sm text-foreground">
                         {formatMoney(total, room.currency)}
-                        <span className="ml-1.5 text-[11px] opacity-70">
-                          {Math.round(share * 100)}%
-                        </span>
                       </span>
+                      <span className="label tabular-nums">{Math.round(share * 100)}%</span>
                     </span>
                   </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full transition-all duration-700 ease-out"
                       style={{
@@ -372,8 +370,8 @@ export function StatsView({
 
         {/* Quién gastó qué */}
         {people.length > 0 && (
-          <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
-            <h3 className="mb-3 font-display text-base font-700 text-foreground">
+          <section className="surface p-4">
+            <h3 className="mb-3 font-display text-[15px] font-600 text-foreground">
               Quién registró qué
             </h3>
             <div className="flex h-4 w-full gap-[2px] overflow-hidden rounded-full">
@@ -401,8 +399,8 @@ export function StatsView({
                     style={{ backgroundColor: p.color }}
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-700 text-foreground">{p.nick}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-sm font-500 text-foreground">{p.nick}</p>
+                    <p className="label">
                       {formatMoney(p.total, room.currency)} ·{' '}
                       {Math.round((p.total / peopleTotal) * 100)}%
                     </p>
@@ -414,9 +412,9 @@ export function StatsView({
         )}
 
         {/* Tendencia */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <section className="surface p-4">
           <div className="mb-4 flex items-baseline justify-between gap-2">
-            <h3 className="font-display text-base font-700 text-foreground">Tendencia</h3>
+            <h3 className="font-display text-[15px] font-600 text-foreground">Tendencia</h3>
             {peak && (
               <p className="truncate text-[11px] text-muted-foreground">
                 Día más caro:{' '}
@@ -470,12 +468,12 @@ export function StatsView({
 
         {/* Los más grandes */}
         {top.length > 1 && (
-          <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
-            <h3 className="font-display text-base font-700 text-foreground">Los más grandes</h3>
-            <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
+          <section className="surface p-4">
+            <h3 className="font-display text-[15px] font-600 text-foreground">Los más grandes</h3>
+            <p className="label mb-3 mt-0.5">
               Suelen explicar el periodo entero
             </p>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col">
               {top.map((e) => (
                 <MovementRow
                   key={e.id}
@@ -490,16 +488,16 @@ export function StatsView({
         )}
 
         {/* Detalle */}
-        <section className="rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <section className="surface p-4">
           <button
             onClick={() => setShowList((s) => !s)}
             className="flex w-full items-center justify-between text-left"
           >
-            <h3 className="flex items-center gap-2 font-display text-base font-700 text-foreground">
+            <h3 className="flex items-center gap-2 font-display text-[15px] font-600 text-foreground">
               <ListFilter className="size-4 text-primary" />
               Detalle de movimientos
             </h3>
-            <span className="text-xs font-700 text-primary">
+            <span className="text-xs font-500 text-primary">
               {showList ? 'Ocultar' : `Ver ${items.length}`}
             </span>
           </button>
@@ -525,7 +523,7 @@ export function StatsView({
           )}
 
           {showList && (
-            <div className="mt-3 flex flex-col gap-1.5">
+            <div className="mt-2 flex flex-col">
               {filtered.length === 0 && <Empty text="Nada registrado con ese filtro." />}
               {filtered.map((e) => (
                 <MovementRow
@@ -574,56 +572,62 @@ function MovementRow({
 }) {
   const cat = categoryOf(expense.category)
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-muted/50 px-3 py-2.5">
+    <div className="group flex items-center gap-3 border-b border-border py-2.5 last:border-0">
       <button
         onClick={() => onEdit(expense)}
         title="Cambiar la categoría"
-        className="flex size-9 shrink-0 items-center justify-center rounded-xl text-base transition-transform hover:-translate-y-0.5"
-        style={{ backgroundColor: `color-mix(in oklch, ${cat.color} 20%, transparent)` }}
+        className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
       >
-        {cat.emoji}
-      </button>
-      <button onClick={() => onEdit(expense)} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-600 text-foreground">{stripRecurringTag(expense.note) || cat.label}</p>
-        <p className="truncate text-[11px] text-muted-foreground">
-          {showDate &&
-            `${new Date(expense.occurredAt).toLocaleDateString('es-CO', {
-              day: '2-digit',
-              month: 'short',
-            })} · `}
-          {cat.label} · {expense.nick}
-        </p>
+        <span className="text-base leading-none">{cat.emoji}</span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-500 text-foreground">
+            {stripRecurringTag(expense.note) || cat.label}
+          </span>
+          <span className="label block truncate">
+            {showDate &&
+              `${new Date(expense.occurredAt).toLocaleDateString('es-CO', {
+                day: '2-digit',
+                month: 'short',
+              })} · `}
+            {cat.label} · {expense.nick}
+          </span>
+        </span>
       </button>
       <span
-        className="shrink-0 font-display text-sm font-700 text-foreground"
-        style={expense.kind === 'income' ? { color: 'var(--cat-nomina)' } : undefined}
+        className="amount shrink-0 text-sm text-foreground"
+        style={expense.kind === 'income' ? { color: 'var(--positive)' } : undefined}
       >
         {expense.kind === 'income' ? '+' : ''}
         {formatMoney(expense.amount, currency)}
       </span>
       <button
         onClick={() => onDelete(expense.id)}
-        className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+        className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
         aria-label="Borrar movimiento"
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-3.5" />
       </button>
     </div>
   )
 }
 
 function InsightCard({ insight }: { insight: Insight }) {
-  const tone = {
-    alerta: 'border-destructive/40 bg-destructive/8 text-foreground',
-    ojo: 'border-chart-3/50 bg-chart-3/10 text-foreground',
-    bien: 'border-chart-5/45 bg-chart-5/12 text-foreground',
-    dato: 'border-border/70 bg-card/80 text-foreground',
+  // El tono se marca con una línea de color al costado, no tiñendo la tarjeta
+  // entera: así tres avisos seguidos no parecen un semáforo roto.
+  const accent = {
+    alerta: 'var(--destructive)',
+    ojo: 'var(--chart-3)',
+    bien: 'var(--chart-5)',
+    dato: 'var(--border)',
   }[insight.tone]
 
   return (
-    <div className={cn('flex items-start gap-2.5 rounded-2xl border px-3.5 py-2.5 shadow-sm', tone)}>
-      <span className="text-base leading-tight">{insight.emoji}</span>
-      <p className="text-xs font-600 leading-relaxed">{insight.text}</p>
+    <div
+      className="flex items-start gap-2.5 rounded-lg border-l-2 bg-muted/60 px-3 py-2.5"
+      style={{ borderLeftColor: accent }}
+    >
+      <span className="text-sm leading-tight">{insight.emoji}</span>
+      <p className="text-xs leading-relaxed text-foreground">{insight.text}</p>
     </div>
   )
 }
@@ -635,8 +639,8 @@ function Delta({ value }: { value: number | null }) {
   return (
     <span
       className={cn(
-        'rounded-full px-1.5 py-0.5 text-[10px] font-700',
-        up ? 'bg-destructive/12 text-destructive' : 'bg-chart-5/18',
+        'text-[10px] font-500 tabular-nums',
+        up ? 'text-destructive' : '',
       )}
       style={up ? undefined : { color: GOOD_INK }}
       title={`${up ? 'Más' : 'Menos'} que el periodo anterior`}
@@ -650,7 +654,7 @@ function FilterChip({ label, onClear }: { label: string; onClear: () => void }) 
   return (
     <button
       onClick={onClear}
-      className="flex items-center gap-1 rounded-full bg-primary/12 px-2.5 py-1 text-[11px] font-700 text-primary transition-colors hover:bg-primary/20"
+      className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-500 text-primary transition-colors hover:bg-primary/20"
     >
       {label}
       <X className="size-3" />
@@ -673,18 +677,18 @@ function MiniStat({
   tone?: 'bueno' | 'malo'
 }) {
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/75 p-3 text-center shadow-xs backdrop-blur-xs transition-all hover:border-border">
+    <div className="surface flex flex-col justify-between p-3">
       <p
         className={cn(
-          'font-display text-lg font-800 tracking-tight',
+          'amount text-lg',
           tone === 'malo' ? 'text-destructive' : 'text-foreground',
         )}
         style={tone === 'bueno' ? { color: GOOD_INK } : undefined}
       >
         {value}
       </p>
-      <p className="text-[11px] font-700 leading-tight text-muted-foreground">{label}</p>
-      {hint && <p className="mt-0.5 text-[10px] font-500 leading-tight text-muted-foreground/75 truncate">{hint}</p>}
+      <p className="label mt-0.5 leading-tight">{label}</p>
+      {hint && <p className="label truncate opacity-70">{hint}</p>}
     </div>
   )
 }
@@ -700,14 +704,12 @@ function DateField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
+      <span className="label mb-1.5 block">{label}</span>
       <input
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-600 text-foreground shadow-sm outline-none focus:ring-2 focus:ring-primary/30"
+        className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm font-500 text-foreground outline-none focus:border-primary/60"
       />
     </label>
   )

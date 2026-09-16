@@ -27,6 +27,7 @@
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-positive: var(--positive);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -58,42 +59,43 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Alto real de la barra superior. Las pantallas restan esto para ocupar
      justo lo que queda, sin desbordarse ni dejar hueco. */
-  --app-header: calc(4rem + var(--safe-top));
-  --app-bottom-nav: calc(4rem + var(--safe-bottom));
+  --app-header: calc(3.5rem + var(--safe-top));
+  --app-bottom-nav: calc(3.5rem + var(--safe-bottom));
 
-  /* Base fría y muy clara: deja respirar y hace que las tarjetas blancas
-     resalten. */
-  --background: oklch(0.985 0.006 285);
-  --foreground: oklch(0.24 0.035 285);
+  /* Base casi neutra. El color entra sólo donde hay que tocar o decidir; el
+     resto del lienzo se queda callado para que los números manden. */
+  --background: oklch(0.985 0.003 285);
+  --foreground: oklch(0.26 0.02 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.035 285);
+  --card-foreground: oklch(0.26 0.02 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.035 285);
+  --popover-foreground: oklch(0.26 0.02 285);
 
-  /* Índigo vibrante moderno: legible y enérgico */
-  --primary: oklch(0.58 0.22 285);
+  /* Un solo acento: violeta. Es la señal de "esto se toca". */
+  --primary: oklch(0.55 0.19 285);
   --primary-foreground: oklch(0.99 0.005 285);
-  --secondary: oklch(0.95 0.02 285);
-  --secondary-foreground: oklch(0.35 0.07 285);
-  --muted: oklch(0.955 0.012 285);
-  --muted-foreground: oklch(0.5 0.03 285);
+  --secondary: oklch(0.955 0.01 285);
+  --secondary-foreground: oklch(0.35 0.05 285);
+  --muted: oklch(0.965 0.006 285);
+  --muted-foreground: oklch(0.545 0.018 285);
 
-  /* Menta para lo positivo */
-  --accent: oklch(0.8 0.12 180);
-  --accent-foreground: oklch(0.28 0.06 195);
+  /* Verde sobrio para lo positivo (saldo a favor, pagado). */
+  --accent: oklch(0.72 0.11 165);
+  --accent-foreground: oklch(0.3 0.05 165);
+  --positive: oklch(0.52 0.12 160);
 
-  --destructive: oklch(0.6 0.22 25);
-  --border: oklch(0.91 0.012 285);
-  --input: oklch(0.92 0.012 285);
-  --ring: oklch(0.58 0.22 285);
+  --destructive: oklch(0.58 0.19 25);
+  --border: oklch(0.925 0.005 285);
+  --input: oklch(0.93 0.005 285);
+  --ring: oklch(0.55 0.19 285);
 
-  --chart-1: oklch(0.6 0.22 285);
-  --chart-2: oklch(0.75 0.13 195);
-  --chart-3: oklch(0.8 0.14 75);
-  --chart-4: oklch(0.68 0.16 330);
-  --chart-5: oklch(0.72 0.14 155);
+  --chart-1: oklch(0.58 0.17 285);
+  --chart-2: oklch(0.7 0.1 195);
+  --chart-3: oklch(0.75 0.12 75);
+  --chart-4: oklch(0.66 0.13 330);
+  --chart-5: oklch(0.68 0.11 155);
 
-  --radius: 1.15rem;
+  --radius: 0.95rem;
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.24 0.035 285);
@@ -104,54 +106,57 @@
   --sidebar-border: oklch(0.91 0.012 285);
   --sidebar-ring: oklch(0.58 0.22 285);
 
-  /* Un color propio por categoría */
-  --cat-mercado: oklch(0.7 0.15 150);
-  --cat-casa: oklch(0.64 0.14 265);
-  --cat-servicios: oklch(0.68 0.13 230);
-  --cat-calle: oklch(0.76 0.15 62);
-  --cat-transporte: oklch(0.72 0.13 200);
-  --cat-salud: oklch(0.68 0.16 350);
-  --cat-lujos: oklch(0.66 0.17 310);
-  --cat-ocio: oklch(0.78 0.14 100);
-  --cat-mascotas: oklch(0.7 0.13 45);
-  --cat-educacion: oklch(0.62 0.12 172);
-  --cat-ahorro: oklch(0.58 0.1 255);
-  --cat-otros: oklch(0.64 0.02 285);
-  --cat-nomina: oklch(0.68 0.15 160);
-  --cat-extra: oklch(0.74 0.14 130);
+  /* Un color propio por categoría. Ya no pinta pastillas enteras: sirve para
+     puntos, barras y acentos pequeños, así que va saturado pero se usa poco. */
+  --cat-mercado: oklch(0.66 0.13 150);
+  --cat-casa: oklch(0.6 0.12 265);
+  --cat-servicios: oklch(0.63 0.11 230);
+  --cat-calle: oklch(0.7 0.13 62);
+  --cat-transporte: oklch(0.66 0.11 200);
+  --cat-salud: oklch(0.64 0.14 350);
+  --cat-lujos: oklch(0.62 0.15 310);
+  --cat-ocio: oklch(0.7 0.12 100);
+  --cat-mascotas: oklch(0.66 0.12 45);
+  --cat-educacion: oklch(0.6 0.1 172);
+  --cat-ahorro: oklch(0.56 0.09 255);
+  --cat-otros: oklch(0.62 0.015 285);
+  --cat-nomina: oklch(0.62 0.13 160);
+  --cat-extra: oklch(0.68 0.12 130);
 }
 
 .dark {
   color-scheme: dark;
 
-  /* Fondo profundo medianoche (OLED-friendly) para eliminar el aspecto lavado */
-  --background: oklch(0.125 0.02 285);
-  --foreground: oklch(0.97 0.01 285);
-  --card: oklch(0.18 0.025 285);
-  --card-foreground: oklch(0.97 0.01 285);
-  --popover: oklch(0.18 0.025 285);
-  --popover-foreground: oklch(0.97 0.01 285);
+  /* Noche tranquila: fondo profundo, tarjetas apenas un paso más claras y
+     bordes casi invisibles. La jerarquía la da la luz, no los marcos. */
+  --background: oklch(0.155 0.012 285);
+  --foreground: oklch(0.95 0.006 285);
+  --card: oklch(0.198 0.014 285);
+  --card-foreground: oklch(0.95 0.006 285);
+  --popover: oklch(0.21 0.014 285);
+  --popover-foreground: oklch(0.95 0.006 285);
 
-  --primary: oklch(0.68 0.22 285);
+  --primary: oklch(0.68 0.17 285);
   --primary-foreground: oklch(0.99 0.005 285);
-  --secondary: oklch(0.24 0.028 285);
-  --secondary-foreground: oklch(0.97 0.01 285);
-  --muted: oklch(0.21 0.022 285);
-  --muted-foreground: oklch(0.68 0.025 285);
+  --secondary: oklch(0.25 0.016 285);
+  --secondary-foreground: oklch(0.95 0.006 285);
+  --muted: oklch(0.235 0.013 285);
+  --muted-foreground: oklch(0.67 0.014 285);
 
-  --accent: oklch(0.75 0.13 180);
-  --accent-foreground: oklch(0.18 0.03 195);
+  --accent: oklch(0.7 0.11 165);
+  --accent-foreground: oklch(0.18 0.03 165);
+  --positive: oklch(0.78 0.12 162);
 
-  --destructive: oklch(0.65 0.22 25);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.68 0.22 285);
+  --destructive: oklch(0.66 0.18 25);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.68 0.17 285);
 
-  --chart-1: oklch(0.7 0.2 285);
-  --chart-2: oklch(0.78 0.13 195);
-  --chart-3: oklch(0.84 0.14 75);
-  --chart-4: oklch(0.76 0.16 330);
-  --chart-5: oklch(0.78 0.14 155);
+  --chart-1: oklch(0.68 0.16 285);
+  --chart-2: oklch(0.74 0.1 195);
+  --chart-3: oklch(0.8 0.12 75);
+  --chart-4: oklch(0.72 0.13 330);
+  --chart-5: oklch(0.74 0.11 155);
 
   --sidebar: oklch(0.18 0.025 285);
   --sidebar-foreground: oklch(0.97 0.01 285);
@@ -162,20 +167,20 @@
   --sidebar-border: oklch(1 0 0 / 9%);
   --sidebar-ring: oklch(0.68 0.22 285);
 
-  --cat-mercado: oklch(0.78 0.14 150);
-  --cat-casa: oklch(0.75 0.13 265);
-  --cat-servicios: oklch(0.78 0.12 230);
-  --cat-calle: oklch(0.82 0.13 62);
-  --cat-transporte: oklch(0.8 0.12 200);
-  --cat-salud: oklch(0.78 0.14 350);
-  --cat-lujos: oklch(0.77 0.14 310);
-  --cat-ocio: oklch(0.84 0.13 100);
-  --cat-mascotas: oklch(0.8 0.12 45);
-  --cat-educacion: oklch(0.75 0.11 172);
-  --cat-ahorro: oklch(0.72 0.09 255);
-  --cat-otros: oklch(0.74 0.02 285);
-  --cat-nomina: oklch(0.78 0.13 160);
-  --cat-extra: oklch(0.82 0.12 130);
+  --cat-mercado: oklch(0.74 0.12 150);
+  --cat-casa: oklch(0.72 0.11 265);
+  --cat-servicios: oklch(0.74 0.1 230);
+  --cat-calle: oklch(0.78 0.11 62);
+  --cat-transporte: oklch(0.76 0.1 200);
+  --cat-salud: oklch(0.74 0.12 350);
+  --cat-lujos: oklch(0.73 0.12 310);
+  --cat-ocio: oklch(0.8 0.11 100);
+  --cat-mascotas: oklch(0.76 0.1 45);
+  --cat-educacion: oklch(0.72 0.09 172);
+  --cat-ahorro: oklch(0.7 0.08 255);
+  --cat-otros: oklch(0.72 0.015 285);
+  --cat-nomina: oklch(0.74 0.11 160);
+  --cat-extra: oklch(0.78 0.1 130);
 }
 
 @layer base {
@@ -208,15 +213,46 @@
   }
 
   .glass {
-    background-color: color-mix(in oklch, var(--card) 72%, transparent);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    background-color: color-mix(in oklch, var(--background) 82%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .glass-strong {
-    background-color: color-mix(in oklch, var(--card) 86%, transparent);
-    backdrop-filter: blur(22px) saturate(1.5);
-    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    background-color: color-mix(in oklch, var(--popover) 92%, transparent);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* ---------------------------------------------------------------------
+     Las tres piezas con las que está armada toda la app. Tenerlas aquí, y no
+     repetidas en cada pantalla, es lo que hace que una tarjeta de ajustes y
+     una de estadísticas se vean de la misma familia.
+     --------------------------------------------------------------------- */
+
+  /* Una tarjeta: fondo sólido, línea de pelo y nada de sombra. La jerarquía
+     la da el espacio en blanco, no el relieve. */
+  .surface {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+  }
+
+  /* El texto de apoyo: etiquetas, pistas, unidades. Discreto a propósito. */
+  .label {
+    font-size: 0.75rem;
+    line-height: 1.1rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  /* Números: siempre en la tipografía de títulos y con cifras de ancho fijo,
+     para que al actualizarse no bailen. */
+  .amount {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 
   /* Deja libre la barra de gestos del celular. */
@@ -291,6 +327,34 @@
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Para lo que se despliega dentro de una fila (las acciones de un
+   movimiento): crece desde arriba en vez de aparecer de golpe. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+.animate-reveal {
+  animation: reveal 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 .animate-pop-in {
   animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

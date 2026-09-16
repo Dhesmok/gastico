@@ -27,9 +27,9 @@ export function BottomNav({
   return (
     <nav
       aria-label="Navegación principal móvil"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/90 backdrop-blur-xl md:hidden pb-safe"
+      className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border md:hidden"
     >
-      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
+      <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-2">
         {TABS.map((tab) => {
           const active = currentView === tab.id
           const Icon = tab.icon
@@ -37,42 +37,30 @@ export function BottomNav({
             <button
               key={tab.id}
               onClick={() => onChangeView(tab.id)}
+              aria-current={active ? 'page' : undefined}
               className={cn(
-                'group relative flex flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-all duration-200 active:scale-90',
-                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+                // El estado activo se dice con color, no con una pastilla de
+                // fondo: cuatro pastillas seguidas cargaban la barra entera.
+                'relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors active:opacity-70',
+                active ? 'text-primary' : 'text-muted-foreground',
               )}
             >
-              <div
-                className={cn(
-                  'relative flex items-center justify-center rounded-2xl px-4 py-1 transition-all duration-200',
-                  active ? 'bg-primary/15 text-primary shadow-xs' : 'group-hover:bg-muted/50',
-                )}
-              >
-                <Icon
-                  className={cn(
-                    'size-5 transition-transform duration-200',
-                    active ? 'scale-110 stroke-[2.4]' : 'stroke-[1.8]',
-                  )}
-                />
+              <span className="relative">
+                <Icon className={cn('size-5', active ? 'stroke-[2.2]' : 'stroke-[1.7]')} />
                 {tab.id === 'chat' && thinking && (
-                  <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
+                  <span className="absolute -right-1 -top-0.5 flex size-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                    <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
+                    <span className="relative inline-flex size-2 rounded-full bg-primary" />
                   </span>
                 )}
                 {tab.id === 'stats' && overBudget && (
                   <span
-                    className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-destructive ring-2 ring-background"
+                    className="absolute -right-1 -top-0.5 size-1.5 rounded-full bg-destructive"
                     aria-label="Presupuesto excedido"
                   />
                 )}
-              </div>
-              <span
-                className={cn(
-                  'text-[10px] tracking-tight transition-all duration-200',
-                  active ? 'font-800 text-primary' : 'font-600 text-muted-foreground',
-                )}
-              >
+              </span>
+              <span className={cn('text-[10px]', active ? 'font-600' : 'font-500')}>
                 {tab.label}
               </span>
             </button>

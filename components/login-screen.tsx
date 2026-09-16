@@ -45,7 +45,7 @@ export function LoginScreen({
           <div className="animate-bob mb-4 flex size-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
             <HeartHandshake className="size-8" />
           </div>
-          <h1 className="font-display text-3xl font-700 tracking-tight text-foreground">
+          <h1 className="font-display text-3xl font-600 tracking-tight text-foreground">
             Cuentas Claras
           </h1>
           <p className="mt-2 text-pretty text-sm leading-relaxed text-muted-foreground">
@@ -55,7 +55,7 @@ export function LoginScreen({
 
         {configError ? (
           <div className="rounded-3xl border border-destructive/40 bg-destructive/10 p-4 text-sm leading-relaxed text-destructive">
-            <p className="font-700">Falta configuración</p>
+            <p className="font-600">Falta configuración</p>
             <p className="mt-1">{configError}</p>
           </div>
         ) : (
@@ -83,7 +83,7 @@ export function LoginScreen({
             </div>
 
             {error && (
-              <p className="mt-3 rounded-2xl bg-destructive/10 px-3 py-2 text-xs font-600 leading-relaxed text-destructive">
+              <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-500 leading-relaxed text-destructive">
                 {error}
               </p>
             )}
@@ -91,7 +91,7 @@ export function LoginScreen({
             <button
               onClick={submit}
               disabled={busy}
-              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-700 text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 disabled:opacity-60"
+              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-600 text-primary-foreground transition-colors hover:brightness-110 disabled:opacity-60"
             >
               {busy ? (
                 <>
@@ -102,7 +102,7 @@ export function LoginScreen({
               )}
             </button>
 
-            <div className="mt-6 flex items-start gap-2 rounded-2xl bg-secondary/60 px-4 py-3 text-xs leading-relaxed text-secondary-foreground">
+            <div className="mt-6 flex items-start gap-2 rounded-xl bg-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
               <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>
                 No hay registro ni correos: los usuarios se crean a mano. Después de entrar, creas
@@ -137,7 +137,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-700 uppercase tracking-wide text-muted-foreground">
+      <span className="mb-1.5 flex items-center gap-1.5 label">
         {icon}
         {label}
       </span>
@@ -152,7 +152,7 @@ function Field({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && onEnter) onEnter()
         }}
-        className="h-12 w-full rounded-2xl border border-border bg-card px-3.5 text-sm font-600 text-foreground shadow-sm outline-none transition-shadow placeholder:font-400 placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+        className="h-12 w-full rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground outline-none transition-colors placeholder:font-400 placeholder:text-muted-foreground focus:border-primary/60"
       />
     </label>
   )

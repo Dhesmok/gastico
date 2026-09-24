@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ArrowUp,
   Camera,
   Edit2,
   Loader2,
@@ -25,8 +26,9 @@ import {
 import { stripRecurringTag } from '@/lib/recurring'
 import { getBackground } from '@/lib/backgrounds'
 import { receiptUrl } from '@/lib/room'
-import { BudgetSummary } from '@/components/budget-summary'
+import { BudgetHero, BudgetStrip, budgetVerdict } from '@/components/budget-summary'
 import { CategorySheet } from '@/components/category-sheet'
+import { Sheet } from '@/components/sheet'
 import { cn } from '@/lib/utils'
 
 export function ChatView({
@@ -43,6 +45,7 @@ export function ChatView({
   onEditExpense,
   onDeleteExpense,
   onUpdateExpense,
+  onOpenStats,
 }: {
   room: Room
   members: Member[]
@@ -57,8 +60,10 @@ export function ChatView({
   onEditExpense: (expense: Expense) => void
   onDeleteExpense: (id: string) => void
   onUpdateExpense?: (id: string, patch: Partial<Expense>) => void
+  onOpenStats?: () => void
 }) {
   const [text, setText] = useState('')
+  const [budgetOpen, setBudgetOpen] = useState(false)
   const [editing, setEditing] = useState<Expense | null>(null)
   const [pendingFile, setPendingFile] = useState<{ file: File; url: string } | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -123,57 +128,62 @@ export function ChatView({
     setPendingFile({ file, url: URL.createObjectURL(file) })
   }
 
+  const verdict = budgetVerdict({ spent, income, room })
+
   return (
-    <div className="mx-auto flex h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl flex-col">
-      <div className="px-4 pb-1 pt-2">
-        <BudgetSummary spent={spent} income={income} room={room} compact />
+    <div className="mx-auto flex h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] w-full max-w-2xl flex-col md:h-[calc(100svh-var(--app-header))]">
+      <div className="px-4 pb-2 pt-1">
+        <BudgetStrip spent={spent} income={income} room={room} onOpen={() => setBudgetOpen(true)} />
       </div>
 
       <div
-        ref={scrollRef}
-        className="no-scrollbar relative flex-1 overflow-y-auto px-4 py-3 sm:py-4"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-[1.75rem] border-t border-border"
         style={bg.style}
       >
-        <div className="flex flex-col gap-4">
-          {messages.length === 0 && <Welcome />}
+      <div ref={scrollRef} className="no-scrollbar relative flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex flex-col gap-3">
+          {messages.length === 0 && <Welcome onPick={setText} />}
           {messages.map((m, i) => (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              member={m.nick ? memberByNick.get(m.nick) : undefined}
-              isMine={m.userId === me.userId}
-              entries={m.expenseId ? expenseGroupById.get(m.expenseId) : undefined}
-              currency={room.currency}
-              last={i === messages.length - 1}
-              onQuickCategory={setEditing}
-              onEditExpense={onEditExpense}
-              onDeleteExpense={onDeleteExpense}
-              onOpenImage={setPreviewImage}
-            />
+            <div key={m.id} className="contents">
+              {dayChanged(messages[i - 1], m) && <DaySeparator iso={m.createdAt} />}
+              <MessageBubble
+                message={m}
+                member={m.nick ? memberByNick.get(m.nick) : undefined}
+                isMine={m.userId === me.userId}
+                grouped={sameAuthor(messages[i - 1], m)}
+                entries={m.expenseId ? expenseGroupById.get(m.expenseId) : undefined}
+                currency={room.currency}
+                last={i === messages.length - 1}
+                onQuickCategory={setEditing}
+                onEditExpense={onEditExpense}
+                onDeleteExpense={onDeleteExpense}
+                onOpenImage={setPreviewImage}
+              />
+            </div>
           ))}
           {thinking && <TypingBubble isImage={Boolean(pendingFile)} />}
         </div>
       </div>
 
-      <div className="glass sticky bottom-0 z-20 border-t border-border px-3 py-2.5 sm:px-4 md:pb-safe">
+      <div className="z-20 px-3 pb-2 pt-2 sm:px-4 md:pb-safe">
         {pendingFile && (
-          <div className="surface mb-2 flex items-center gap-3 p-2">
+          <div className="surface animate-reveal mb-2 flex items-center gap-3 p-2 pr-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={pendingFile.url}
               alt="Factura por enviar"
-              className="size-12 rounded-lg object-cover"
+              className="size-12 rounded-xl object-cover"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-600 text-foreground">Factura lista</p>
-              <p className="label">Puedes añadir una nota antes de mandarla.</p>
+              <p className="text-sm font-700 text-foreground">Factura lista</p>
+              <p className="label">Añade una nota si quieres y envíala.</p>
             </div>
             <button
               onClick={() => {
                 URL.revokeObjectURL(pendingFile.url)
                 setPendingFile(null)
               }}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Quitar la foto"
             >
               <X className="size-4" />
@@ -181,9 +191,8 @@ export function ChatView({
           </div>
         )}
 
-        {/* Una sola pieza: cámara, texto y enviar viven dentro del mismo campo,
-            en vez de tres botones sueltos peleando por atención. */}
-        <div className="flex items-end gap-1 rounded-[1.5rem] border border-border bg-card py-1 pl-1 pr-1 transition-colors focus-within:border-primary/60">
+        {/* Una sola pieza: cámara, texto y enviar viven dentro del mismo campo. */}
+        <div className="flex items-end gap-1 rounded-[1.75rem] border border-border bg-card p-1.5 shadow-[0_6px_24px_-12px_rgb(0_0_0/0.25)] transition-colors focus-within:border-foreground/30">
           <input
             ref={fileRef}
             type="file"
@@ -196,12 +205,13 @@ export function ChatView({
             onClick={() => fileRef.current?.click()}
             title="Tomar o subir la foto de una factura"
             aria-label="Adjuntar factura"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-secondary active:scale-95"
           >
-            <Camera className="size-5" />
+            <Camera className="size-[1.15rem]" />
           </button>
 
           <textarea
+            data-composer
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
@@ -216,22 +226,55 @@ export function ChatView({
               }
             }}
             rows={1}
-            placeholder={
-              pendingFile ? 'Nota para la factura (opcional)…' : 'Cuéntame el gasto…'
-            }
-            className="max-h-28 min-h-10 flex-1 resize-none self-center bg-transparent py-2.5 text-sm leading-snug text-foreground outline-none placeholder:text-muted-foreground"
+            enterKeyHint="send"
+            placeholder={pendingFile ? 'Nota para la factura…' : '¿Qué compraron?'}
+            className="max-h-28 min-h-10 flex-1 resize-none self-center bg-transparent px-1.5 py-2.5 text-base leading-snug text-foreground outline-none placeholder:text-muted-foreground"
           />
 
           <button
             onClick={submit}
+            // Evita que el botón le robe el foco al campo: si no, el teclado se
+            // cierra y se vuelve a abrir con cada mensaje.
+            onMouseDown={(e) => e.preventDefault()}
             disabled={(!text.trim() && !pendingFile) || thinking}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:bg-muted disabled:text-muted-foreground"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all active:scale-95 disabled:bg-muted disabled:text-muted-foreground"
             aria-label="Enviar"
           >
-            {thinking ? <Loader2 className="size-4.5 animate-spin" /> : <SendIcon />}
+            {thinking ? (
+              <Loader2 className="size-[1.15rem] animate-spin" />
+            ) : (
+              <ArrowUp className="size-5" strokeWidth={2.4} />
+            )}
           </button>
         </div>
       </div>
+
+      </div>
+
+      {budgetOpen && (
+        <Sheet title="Cómo van este mes" onClose={() => setBudgetOpen(false)}>
+          <BudgetHero spent={spent} income={income} room={room} />
+          <p
+            className={cn(
+              'mt-4 text-sm leading-relaxed',
+              verdict.tone === 'alerta' ? 'text-destructive' : 'text-foreground',
+            )}
+          >
+            {verdict.text}
+          </p>
+          {onOpenStats && (
+            <button
+              onClick={() => {
+                setBudgetOpen(false)
+                onOpenStats()
+              }}
+              className="mt-5 flex h-12 w-full items-center justify-center rounded-2xl bg-foreground text-sm font-700 text-background transition-opacity active:opacity-80"
+            >
+              Ver el resumen completo
+            </button>
+          )}
+        </Sheet>
+      )}
 
       {editing && (
         <CategorySheet
@@ -270,42 +313,72 @@ export function ChatView({
   )
 }
 
-function SendIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4.5" fill="none" aria-hidden>
-      <path
-        d="M4 12l16-8-6 16-2.5-6.5L4 12z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
 /** El ícono de Cuenti. Pequeño y en un tono suave: acompaña, no interrumpe. */
 function BotAvatar({ busy = false }: { busy?: boolean }) {
   return (
-    <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
-      <Sparkles className={cn('size-3.5', busy && 'animate-pulse')} />
+    <span className="ink mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
+      <Sparkles className={cn('size-3.5 text-highlight', busy && 'animate-pulse')} />
     </span>
   )
 }
 
-function Welcome() {
+const SUGGESTIONS = ['mercado en el D1 120mil', 'uber 18k', '¿cuánto llevamos este mes?']
+
+/** El saludo del chat vacío, con ejemplos que se tocan en vez de leerse. */
+function Welcome({ onPick }: { onPick: (text: string) => void }) {
   return (
-    <div className="flex max-w-[92%] gap-2.5 sm:max-w-[85%]">
-      <BotAvatar />
-      <div className="surface min-w-0 flex-1 rounded-tl-sm px-3.5 py-2.5">
-        <p className="text-sm leading-relaxed text-foreground">
-          ¡Hola! Soy Cuenti. Cuéntenme qué compraron —por ejemplo{' '}
-          <b className="font-600">“mercado 120mil”</b>— o mándenme la foto de una factura y yo la
-          anoto.
-        </p>
-        <p className="label mt-1.5">
-          También puedo responder: ¿cuánto llevamos en antojos?
-        </p>
+    <div className="flex flex-col items-center px-4 pb-4 pt-10 text-center">
+      <span className="ink flex size-14 items-center justify-center rounded-[1.25rem]">
+        <Sparkles className="size-6 text-highlight" />
+      </span>
+      <h2 className="mt-4 font-display text-2xl font-500 text-foreground">Hola, soy Cuenti</h2>
+      <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-muted-foreground">
+        Cuéntenme qué compraron o mándenme la foto de la factura. Yo lo anoto.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => onPick(s)}
+            className="rounded-full border border-border bg-card px-3.5 py-2 text-[13px] font-600 text-foreground transition-colors active:bg-muted"
+          >
+            {s}
+          </button>
+        ))}
       </div>
+    </div>
+  )
+}
+
+/** Los mensajes seguidos de la misma persona se juntan, como en WhatsApp. */
+function sameAuthor(prev: Message | undefined, m: Message) {
+  if (!prev) return false
+  if (prev.role !== m.role) return false
+  if (m.role === 'assistant') return false
+  return prev.userId === m.userId && !dayChanged(prev, m)
+}
+
+function dayChanged(prev: Message | undefined, m: Message) {
+  if (!prev) return true
+  return new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString()
+}
+
+function DaySeparator({ iso }: { iso: string }) {
+  const date = new Date(iso)
+  const today = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(today.getDate() - 1)
+  const label =
+    date.toDateString() === today.toDateString()
+      ? 'Hoy'
+      : date.toDateString() === yesterday.toDateString()
+        ? 'Ayer'
+        : date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
+  return (
+    <div className="flex justify-center py-1">
+      <span className="rounded-full bg-background/80 px-3 py-1 text-[11px] font-700 capitalize text-muted-foreground backdrop-blur">
+        {label}
+      </span>
     </div>
   )
 }
@@ -314,6 +387,7 @@ function MessageBubble({
   message,
   member,
   isMine,
+  grouped = false,
   entries,
   currency,
   last,
@@ -325,6 +399,8 @@ function MessageBubble({
   message: Message
   member?: Member
   isMine: boolean
+  /** Viene justo después de otro mensaje de la misma persona. */
+  grouped?: boolean
   /** Los movimientos que salieron de este mensaje: casi siempre uno, varios si se desglosó. */
   entries?: Expense[]
   currency: string
@@ -340,8 +416,8 @@ function MessageBubble({
     return (
       <div className={cn('flex max-w-[92%] gap-2.5 sm:max-w-[85%]', last && 'animate-float-up')}>
         <BotAvatar />
-        <div className="surface min-w-0 flex-1 rounded-tl-sm px-3.5 py-2.5">
-          <p className="text-sm leading-relaxed text-foreground">{renderText(message.text)}</p>
+        <div className="surface min-w-0 flex-1 rounded-[1.25rem] rounded-tl-md px-4 py-3">
+          <p className="text-[15px] leading-relaxed text-foreground">{renderText(message.text)}</p>
           {entries && entries.length > 0 && (
             <Ledger
               entries={entries}
@@ -364,28 +440,28 @@ function MessageBubble({
       className={cn(
         'flex max-w-[85%] gap-2.5',
         isMine && 'self-end',
+        grouped && '-mt-2',
         last && 'animate-float-up',
       )}
     >
       {/* Sólo se muestra quién escribió cuando no soy yo: mis mensajes ya se
           distinguen por el lado y el color, y una inicial más era ruido. */}
-      {!isMine && <Avatar initials={initials} color={color} />}
+      {!isMine &&
+        (grouped ? <span className="w-7 shrink-0" /> : <Avatar initials={initials} color={color} />)}
       <div
         className={cn(
-          'min-w-0 rounded-2xl px-3.5 py-2.5',
-          isMine
-            ? 'rounded-br-sm bg-primary text-primary-foreground'
-            : 'surface rounded-tl-sm text-foreground',
+          'min-w-0 rounded-[1.25rem] px-4 py-2.5',
+          isMine ? 'ink rounded-br-md' : 'surface rounded-tl-md text-foreground',
           message.pending && 'opacity-60',
         )}
       >
-        {!isMine && (
-          <p className="mb-0.5 text-xs font-600" style={{ color }}>
+        {!isMine && !grouped && (
+          <p className="mb-0.5 text-xs font-700" style={{ color }}>
             {message.nick}
           </p>
         )}
         <ReceiptThumb message={message} onOpenImage={onOpenImage} />
-        {message.text && <p className="text-sm leading-relaxed">{message.text}</p>}
+        {message.text && <p className="text-[15px] leading-relaxed">{message.text}</p>}
       </div>
     </div>
   )
@@ -475,7 +551,7 @@ function Ledger({
   const activeEntries = entries.filter((e) => !undoneIds.has(e.id))
   if (activeEntries.length === 0) {
     return (
-      <p className="label mt-2 border-t border-border pt-2">Movimiento deshecho y eliminado.</p>
+      <p className="label perforated mt-3 pt-2.5">Movimiento deshecho.</p>
     )
   }
 
@@ -483,14 +559,8 @@ function Ledger({
   const totalAmount = activeEntries.reduce((sum, e) => sum + e.amount, 0)
 
   return (
-    <div className="mt-2.5 border-t border-border pt-0.5">
-      {isGroup && (
-        <p className="label pt-1.5">
-          Se dividió en {activeEntries.length} · total {formatMoney(totalAmount, currency)}
-        </p>
-      )}
-
-      <div className="divide-y divide-border">
+    <div className="-mx-4 -mb-3 mt-3 rounded-b-[1.25rem] bg-muted/60 px-4 pb-1.5 pt-0.5">
+      <div className="divide-y divide-dashed divide-border">
         {activeEntries.map((expense) => {
           const cat = categoryOf(expense.category)
           const cleanNote = stripRecurringTag(expense.note)
@@ -505,8 +575,18 @@ function Ledger({
                   title="Toca para cambiar la categoría"
                   className="flex min-w-0 flex-1 items-center gap-2 text-left"
                 >
-                  <span className="text-base leading-none">{cat.emoji}</span>
-                  <span className="truncate text-sm font-600 text-foreground">{cat.label}</span>
+                  <span
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full text-sm leading-none"
+                    style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 18%, transparent)` }}
+                  >
+                    {cat.emoji}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-700 text-foreground">
+                      {cat.label}
+                    </span>
+                    {showNote && <span className="label block truncate">{cleanNote}</span>}
+                  </span>
                 </button>
 
                 <span
@@ -530,14 +610,12 @@ function Ledger({
                 </button>
               </div>
 
-              {showNote && <p className="label mt-0.5 truncate pl-6">{cleanNote}</p>}
-
               {open && (
                 <div
                   // Si la fila era la última visible, las acciones quedarían
                   // debajo del borde: se acercan solas.
                   ref={(el) => el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })}
-                  className="animate-reveal mt-1.5 flex flex-wrap gap-1 pl-6"
+                  className="animate-reveal mt-1.5 flex flex-wrap gap-1 pl-8"
                 >
                   <RowAction icon={Tag} label="Categoría" onClick={() => onQuickCategory(expense)} />
                   <RowAction icon={Edit2} label="Editar" onClick={() => onEdit(expense)} />
@@ -556,6 +634,12 @@ function Ledger({
           )
         })}
       </div>
+      {isGroup && (
+        <div className="perforated flex items-center justify-between py-2 text-sm">
+          <span className="label">Total · {activeEntries.length} movimientos</span>
+          <span className="amount text-foreground">{formatMoney(totalAmount, currency)}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -575,10 +659,8 @@ function RowAction({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-500 transition-colors',
-        danger
-          ? 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+        'inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-xs font-700 transition-colors',
+        danger ? 'text-destructive' : 'text-foreground',
       )}
     >
       <Icon className="size-3.5" />
@@ -606,12 +688,12 @@ function TypingBubble({ isImage }: { isImage?: boolean }) {
   return (
     <div className="animate-float-up flex gap-2.5">
       <BotAvatar busy />
-      <div className="surface flex items-center gap-2.5 rounded-tl-sm px-3.5 py-2.5">
+      <div className="surface flex items-center gap-2.5 rounded-[1.25rem] rounded-tl-md px-4 py-3">
         <div className="flex items-center gap-1">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="size-1.5 rounded-full bg-primary"
+              className="size-1.5 rounded-full bg-foreground"
               style={{ animation: `typing-dot 1.2s ease-in-out ${i * 0.18}s infinite` }}
             />
           ))}
@@ -625,7 +707,7 @@ function TypingBubble({ isImage }: { isImage?: boolean }) {
 function Avatar({ initials, color }: { initials: string; color: string }) {
   return (
     <span
-      className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-600 text-white"
+      className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-800 text-white"
       style={{ backgroundColor: color }}
     >
       {initials}

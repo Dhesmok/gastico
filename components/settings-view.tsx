@@ -1,23 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  Check,
-  Copy,
-  DoorOpen,
-  Image as ImageIcon,
-  KeyRound,
-  Laugh,
-  Lock,
-  LogOut,
-  Moon,
-  Receipt,
-  Sun,
-  Target,
-  UserRound,
-  Users,
-  Wallet,
-} from 'lucide-react'
+import { Check, ChevronRight, Copy, Moon, Sun } from 'lucide-react'
 import { formatMoney, type Member, type Room } from '@/lib/finance'
 import { CHAT_BACKGROUNDS } from '@/lib/backgrounds'
 import { changeRoomPassword, formatCode } from '@/lib/room'
@@ -50,6 +34,8 @@ export function SettingsView({
   const [theme, setTheme] = useState<Theme>('light')
   const [copied, setCopied] = useState(false)
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [openRow, setOpenRow] = useState<string | null>(null)
+  const toggle = (id: string) => setOpenRow((r) => (r === id ? null : id))
 
   useEffect(() => setTheme(currentTheme()), [])
   useEffect(() => setNick(me.nick), [me.nick])
@@ -93,353 +79,289 @@ export function SettingsView({
     }
   }
 
+  const background = CHAT_BACKGROUNDS.find((bg) => bg.id === room.chatBackground)
+
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-4 sm:py-5">
-      <div className="flex flex-col gap-4 pb-12 sm:pb-8">
-        <div>
-          <h2 className="font-display text-xl font-600 text-foreground">Configuración</h2>
-          <p className="label">Los cambios se guardan solos</p>
+    <div className="no-scrollbar pb-dock mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 pt-2">
+      <div className="flex flex-col gap-6">
+        {/* Quién soy y dónde estoy */}
+        <div className="flex items-center gap-4 px-1">
+          <span
+            className="flex size-14 shrink-0 items-center justify-center rounded-full font-display text-2xl font-500 text-white"
+            style={{ backgroundColor: me.color }}
+          >
+            {me.nick.slice(0, 1).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-display text-2xl font-500 text-foreground">{me.nick}</p>
+            <p className="label truncate">
+              En {room.name} con {members.filter((m) => m.userId !== me.userId).map((m) => m.nick).join(', ') || 'nadie más aún'}
+            </p>
+          </div>
         </div>
 
-        {/* Invitación a la sala */}
-        <section className="surface p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <DoorOpen className="size-4.5" />
-            </span>
-            <div>
-              <h3 className="font-display text-[15px] font-600 text-foreground">Invitar a la sala</h3>
-              <p className="label">
-                Con el ID y la contraseña, cualquiera entra desde su celular
+        <Group title="Presupuesto">
+          <Row
+            label="Nómina del mes"
+            value={room.monthlyIncome > 0 ? formatMoney(room.monthlyIncome, room.currency) : 'Sin definir'}
+            open={openRow === 'income'}
+            onToggle={() => toggle('income')}
+          >
+            <MoneyEditor
+              hint="Lo que esperan que entre al mes entre todos. Si registran la nómina por el chat, esa manda."
+              value={room.monthlyIncome}
+              currency={room.currency}
+              onChange={(v) => onChange({ monthlyIncome: v })}
+            />
+          </Row>
+          <Row
+            label="Tope de gasto"
+            value={room.spendingCap > 0 ? formatMoney(room.spendingCap, room.currency) : 'Sin definir'}
+            open={openRow === 'cap'}
+            onToggle={() => toggle('cap')}
+          >
+            <MoneyEditor
+              hint="El límite que se ponen al mes. Al pasarlo, Cuenti avisa."
+              value={room.spendingCap}
+              currency={room.currency}
+              onChange={(v) => onChange({ spendingCap: v })}
+            />
+          </Row>
+        </Group>
+
+        <Group title="Sala">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-600 text-foreground">ID para invitar</p>
+              <p className="font-mono text-sm font-600 tracking-widest text-muted-foreground">
+                {formatCode(room.code)}
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3">
-            <span className="flex-1 font-mono text-lg font-600 tracking-widest text-foreground">
-              {formatCode(room.code)}
-            </span>
             <button
               onClick={copyInvite}
-              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-sm font-600 text-primary-foreground transition-colors"
+              className="flex h-9 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-xs font-800 text-background active:opacity-80"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copied ? 'Copiado' : 'Copiar'}
             </button>
           </div>
-
-          <TextField
-            className="mt-3"
-            label="Nombre de la sala"
+          <Row
+            label="Nombre"
             value={room.name}
-            onCommit={(v) => onChange({ name: v || 'Nuestra sala' })}
-            maxLength={40}
-          />
-
-          <div className="mt-3 flex items-end gap-2">
+            open={openRow === 'name'}
+            onToggle={() => toggle('name')}
+          >
             <TextField
-              className="flex-1"
-              label="Cambiar contraseña"
+              label="Nombre de la sala"
+              value={room.name}
+              onCommit={(v) => onChange({ name: v || 'Nuestra sala' })}
+              maxLength={40}
+            />
+          </Row>
+          <Row
+            label="Contraseña de la sala"
+            value="••••"
+            open={openRow === 'roompass'}
+            onToggle={() => toggle('roompass')}
+          >
+            <PasswordEditor
               value={newPassword}
               onChange={setNewPassword}
-              type="password"
+              min={4}
               placeholder="nueva contraseña"
-              maxLength={64}
+              hint="Es la que compartes para que alguien entre a la sala."
+              onSave={savePassword}
             />
-            <button
-              onClick={savePassword}
-              disabled={newPassword.length < 4}
-              className="flex h-11 items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground transition-colors hover:bg-muted disabled:opacity-40"
-            >
-              <KeyRound className="size-3.5" />
-              Guardar
-            </button>
-          </div>
-        </section>
-
-        {/* Nómina y tope */}
-        <MoneyCard
-          icon={<Wallet className="size-4.5" />}
-          title="Nómina del mes"
-          hint="Cuánto esperan que entre al mes entre todos. Si registran la nómina por el chat, esa manda; los ingresos extra se suman aparte."
-          value={room.monthlyIncome}
-          currency={room.currency}
-          onChange={(v) => onChange({ monthlyIncome: v })}
-        />
-
-        <MoneyCard
-          icon={<Target className="size-4.5" />}
-          title="Tope de gasto"
-          hint="El límite mensual que se ponen. Al pasarlo, Cuenti les manda una alertica."
-          value={room.spendingCap}
-          currency={room.currency}
-          onChange={(v) => onChange({ spendingCap: v })}
-        />
-
-        {/* Quiénes están */}
-        <section className="surface p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <Users className="size-4.5" />
-            </span>
-            <div>
-              <h3 className="font-display text-[15px] font-600 text-foreground">En esta sala</h3>
-              <p className="label">
-                {members.length} {members.length === 1 ? 'persona' : 'personas'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col">
-            {members.map((m) => (
-              <div key={m.userId} className="flex items-center gap-3 border-b border-border py-2.5 last:border-0">
-                <span
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-600 text-white"
-                  style={{ backgroundColor: m.color }}
-                >
-                  {m.nick.slice(0, 1).toUpperCase()}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-500 text-foreground">{m.nick}</span>
-                {m.userId === me.userId && (
-                  <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-[11px] font-500 text-primary">
-                    tú
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <TextField
-            className="mt-3"
-            label="Tu apodo"
-            icon={<UserRound className="size-3.5" />}
-            value={nick}
-            onChange={setNick}
-            onCommit={(v) => v.trim() && onNickChange(v.trim())}
-            maxLength={20}
-          />
-        </section>
-
-        {/* Facturas */}
-        <section className="surface p-4">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <Receipt className="size-4.5" />
-            </span>
-            <div>
-              <h3 className="font-display text-[15px] font-600 text-foreground">Fotos de facturas</h3>
-              <p className="label">Para no llenar el almacenamiento gratis</p>
-            </div>
-          </div>
-
-          <Toggle
-            className="mt-3"
-            label="Guardar la foto después de leerla"
-            hint="Si lo apagas, la factura sólo pasa por la IA para sacar el total y no ocupa espacio."
-            checked={room.keepReceipts}
-            onChange={(v) => onChange({ keepReceipts: v })}
-          />
-
-          {room.keepReceipts && (
-            <div className="mt-3">
-              <p className="mb-2 label">
-                Borrar fotos después de
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {[3, 6, 12, 0].map((months) => (
-                  <button
-                    key={months}
-                    onClick={() => onChange({ receiptRetentionMonths: months })}
-                    className={cn(
-                      'rounded-full border px-3 py-1.5 text-xs font-500 transition-colors',
-                      room.receiptRetentionMonths === months
-                        ? 'border-primary bg-primary/12 text-primary'
-                        : 'border-border bg-card text-foreground hover:bg-muted',
-                    )}
+          </Row>
+          <Row
+            label="Personas"
+            value={String(members.length)}
+            open={openRow === 'people'}
+            onToggle={() => toggle('people')}
+          >
+            <div className="flex flex-col">
+              {members.map((m) => (
+                <div key={m.userId} className="flex items-center gap-3 py-2">
+                  <span
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-800 text-white"
+                    style={{ backgroundColor: m.color }}
                   >
-                    {months === 0 ? 'Nunca' : `${months} meses`}
-                  </button>
-                ))}
-              </div>
-              <p className="label mt-2 leading-relaxed">
-                Se borra sólo la imagen: el monto, la categoría y la nota se quedan para siempre.
-              </p>
+                    {m.nick.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-600 text-foreground">
+                    {m.nick}
+                  </span>
+                  {m.userId === me.userId && <span className="label">tú</span>}
+                </div>
+              ))}
             </div>
-          )}
+            <TextField
+              className="mt-2"
+              label="Tu apodo"
+              value={nick}
+              onChange={setNick}
+              onCommit={(v) => v.trim() && onNickChange(v.trim())}
+              maxLength={20}
+            />
+          </Row>
+        </Group>
 
-        </section>
-
-        {/* Apariencia */}
-        <section className="surface p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <ImageIcon className="size-4.5" />
-            </span>
-            <div>
-              <h3 className="font-display text-[15px] font-600 text-foreground">Apariencia</h3>
-              <p className="label">Que dé gusto entrar a anotar gastos</p>
-            </div>
-          </div>
-
-          <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
-            {(
-              [
-                { id: 'light' as Theme, label: 'Claro', icon: Sun },
-                { id: 'dark' as Theme, label: 'Oscuro', icon: Moon },
-              ]
-            ).map((option) => (
-              <button
-                key={option.id}
-                onClick={() => {
-                  setTheme(option.id)
-                  applyTheme(option.id)
-                }}
-                className={cn(
-                  'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-600 transition-colors',
-                  theme === option.id
-                    ? 'bg-card text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <option.icon className="size-4" />
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          <p className="mb-2 label">
-            Fondo del chat
-          </p>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-            {CHAT_BACKGROUNDS.map((bg) => {
-              const active = room.chatBackground === bg.id
-              return (
+        <Group title="Apariencia">
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <p className="flex-1 text-[15px] font-600 text-foreground">Tema</p>
+            <div className="flex gap-1 rounded-full bg-muted p-1">
+              {(
+                [
+                  { id: 'light' as Theme, label: 'Claro', icon: Sun },
+                  { id: 'dark' as Theme, label: 'Oscuro', icon: Moon },
+                ]
+              ).map((option) => (
                 <button
-                  key={bg.id}
-                  onClick={() => onChange({ chatBackground: bg.id })}
-                  className="group flex flex-col items-center gap-1.5 transition-transform "
+                  key={option.id}
+                  onClick={() => {
+                    setTheme(option.id)
+                    applyTheme(option.id)
+                  }}
+                  aria-label={option.label}
+                  aria-pressed={theme === option.id}
+                  className={cn(
+                    'flex size-8 items-center justify-center rounded-full transition-colors',
+                    theme === option.id ? 'ink' : 'text-muted-foreground',
+                  )}
                 >
-                  <span
-                    className={cn(
-                      'relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border-2 bg-cover bg-center shadow-sm transition-all',
-                      active ? 'border-primary ring-2 ring-primary/30' : 'border-border',
-                    )}
-                    style={{
-                      backgroundImage:
-                        bg.swatch.startsWith('url') || bg.swatch.includes('gradient')
-                          ? bg.swatch
-                          : undefined,
-                      backgroundColor: bg.swatch.startsWith('var') ? bg.swatch : undefined,
-                    }}
-                  >
-                    {active && (
-                      <span className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
-                        <Check className="size-3.5" />
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[11px] font-600',
-                      active ? 'text-primary' : 'text-muted-foreground',
-                    )}
-                  >
-                    {bg.label}
-                  </span>
+                  <option.icon className="size-4" />
                 </button>
-              )
-            })}
+              ))}
+            </div>
           </div>
-
-          <Toggle
-            className="mt-4"
+          <Row
+            label="Fondo del chat"
+            value={background?.label ?? ''}
+            open={openRow === 'bg'}
+            onToggle={() => toggle('bg')}
+          >
+            <div className="grid grid-cols-5 gap-2">
+              {CHAT_BACKGROUNDS.map((bg) => {
+                const active = room.chatBackground === bg.id
+                return (
+                  <button
+                    key={bg.id}
+                    onClick={() => onChange({ chatBackground: bg.id })}
+                    className="flex flex-col items-center gap-1.5"
+                    aria-label={bg.label}
+                  >
+                    <span
+                      className={cn(
+                        'relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border transition-all',
+                        active ? 'border-foreground ring-2 ring-foreground/20' : 'border-border',
+                      )}
+                      style={{
+                        backgroundImage: bg.swatch.includes('gradient') ? bg.swatch : undefined,
+                        backgroundColor: bg.swatch.startsWith('var') ? bg.swatch : undefined,
+                      }}
+                    >
+                      {active && (
+                        <span className="ink flex size-5 items-center justify-center rounded-full">
+                          <Check className="size-3" />
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-[11px] font-600 text-muted-foreground">{bg.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </Row>
+          <SwitchRow
             label="Cuenti con chistes"
-            hint="Apágalo si prefieres respuestas secas y al grano."
-            icon={<Laugh className="size-4" />}
             checked={room.humor}
             onChange={(v) => onChange({ humor: v })}
           />
-        </section>
+        </Group>
 
-        {/* Mi cuenta */}
-        <section className="surface p-4">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <Lock className="size-5" />
-            </span>
-            <div>
-              <h3 className="font-display text-[15px] font-600 text-foreground">Mi cuenta</h3>
-              <p className="label">
-                La contraseña con la que entras a la app
-              </p>
+        <Group
+          title="Fotos de facturas"
+          footer="Borrar la foto no borra el gasto: el monto y la nota se quedan."
+        >
+          <SwitchRow
+            label="Guardar la foto"
+            checked={room.keepReceipts}
+            onChange={(v) => onChange({ keepReceipts: v })}
+          />
+          {room.keepReceipts && (
+            <div className="flex items-center gap-3 px-4 py-2.5">
+              <p className="flex-1 text-[15px] font-600 text-foreground">Borrarlas después de</p>
+              <select
+                value={room.receiptRetentionMonths}
+                onChange={(e) => onChange({ receiptRetentionMonths: Number(e.target.value) })}
+                className="rounded-full bg-muted px-3 py-1.5 text-base font-700 text-foreground outline-none sm:text-sm"
+              >
+                {[3, 6, 12, 0].map((months) => (
+                  <option key={months} value={months}>
+                    {months === 0 ? 'Nunca' : `${months} meses`}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
+          )}
+        </Group>
 
-          <div className="mt-3 flex items-end gap-2">
-            <TextField
-              className="flex-1"
-              label="Cambiar mi contraseña"
+        <Group title="Mi cuenta">
+          <Row
+            label="Mi contraseña"
+            value="••••"
+            open={openRow === 'mypass'}
+            onToggle={() => toggle('mypass')}
+          >
+            <PasswordEditor
               value={myPassword}
               onChange={setMyPassword}
-              type="password"
+              min={6}
               placeholder="mínimo 6 caracteres"
-              maxLength={64}
+              hint="Es sólo tuya, para entrar a la app. No es la de la sala."
+              onSave={saveMyPassword}
             />
-            <button
-              onClick={saveMyPassword}
-              disabled={myPassword.length < 6}
-              className="flex h-11 items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground transition-colors hover:bg-muted disabled:opacity-40"
-            >
-              <KeyRound className="size-3.5" />
-              Guardar
-            </button>
-          </div>
-
-          <p className="label mt-2 leading-relaxed">
-            Ojo: esta es distinta a la contraseña de la sala. Esta es sólo tuya; la de la sala es la
-            que compartes para que alguien entre.
-          </p>
-
+          </Row>
           <button
             onClick={onSignOut}
-            className="mt-3 flex items-center gap-1.5 rounded-2xl border border-border bg-card px-3.5 py-2 text-xs font-500 text-muted-foreground transition-colors hover:text-destructive"
+            className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-600 text-foreground active:bg-muted"
           >
-            <LogOut className="size-3.5" />
             Cerrar sesión
           </button>
-        </section>
-
-        {/* Salir */}
-        <section className="surface border-destructive/30 p-4">
-          <h3 className="font-display text-[15px] font-600 text-foreground">Salirme de la sala</h3>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Dejas de ver estas cuentas en este dispositivo. Los gastos y el historial se quedan para
-            los demás; puedes volver con el ID y la contraseña.
-          </p>
           {confirmLeave ? (
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={onLeaveRoom}
-                className="flex-1 rounded-xl bg-destructive px-3 py-2.5 text-sm font-600 text-white transition-colors"
-              >
-                Sí, salirme
-              </button>
-              <button
-                onClick={() => setConfirmLeave(false)}
-                className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-xs font-500 text-foreground"
-              >
-                Mejor no
-              </button>
+            <div className="animate-reveal px-4 py-3">
+              <p className="label mb-3 leading-relaxed">
+                Dejas de ver estas cuentas. Los gastos se quedan para los demás y puedes volver con
+                el ID y la contraseña.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={onLeaveRoom}
+                  className="h-11 flex-1 rounded-2xl bg-destructive text-sm font-700 text-white"
+                >
+                  Sí, salirme
+                </button>
+                <button
+                  onClick={() => setConfirmLeave(false)}
+                  className="h-11 flex-1 rounded-2xl bg-muted text-sm font-700 text-foreground"
+                >
+                  Mejor no
+                </button>
+              </div>
             </div>
           ) : (
             <button
               onClick={() => setConfirmLeave(true)}
-              className="mt-3 rounded-2xl border border-destructive/40 bg-card px-3.5 py-2 text-xs font-500 text-destructive transition-colors hover:bg-destructive/10"
+              className="flex w-full items-center px-4 py-3.5 text-left text-[15px] font-600 text-destructive active:bg-muted"
             >
               Salirme de la sala
             </button>
           )}
-        </section>
+        </Group>
+
+        <p className="pb-2 text-center text-[11px] font-600 text-muted-foreground">
+          Los cambios se guardan solos · Gastico
+        </p>
       </div>
     </div>
   )
@@ -447,16 +369,101 @@ export function SettingsView({
 
 // ---- Piezas reutilizables --------------------------------------------------
 
-function MoneyCard({
-  icon,
+function Group({
   title,
+  footer,
+  children,
+}: {
+  title: string
+  footer?: string
+  children: React.ReactNode
+}) {
+  return (
+    <section>
+      <h3 className="eyebrow mb-2 px-1">{title}</h3>
+      <div className="surface divide-y divide-border overflow-hidden">{children}</div>
+      {footer && <p className="label mt-2 px-1 leading-relaxed">{footer}</p>}
+    </section>
+  )
+}
+
+/** Una fila de ajustes: muestra el valor y, al tocarla, el editor debajo. */
+function Row({
+  label,
+  value,
+  open,
+  onToggle,
+  children,
+}: {
+  label: string
+  value?: string
+  open: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-muted"
+      >
+        <span className="flex-1 text-[15px] font-600 text-foreground">{label}</span>
+        {value && (
+          <span className="max-w-[45%] truncate text-sm font-600 text-muted-foreground">{value}</span>
+        )}
+        <ChevronRight
+          className={cn(
+            'size-4 shrink-0 text-muted-foreground transition-transform duration-200',
+            open && 'rotate-90',
+          )}
+        />
+      </button>
+      {open && <div className="animate-reveal px-4 pb-4">{children}</div>}
+    </div>
+  )
+}
+
+function SwitchRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      role="switch"
+      aria-checked={checked}
+      className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-muted"
+    >
+      <span className="flex-1 text-[15px] font-600 text-foreground">{label}</span>
+      <span
+        className={cn(
+          'relative h-7 w-12 shrink-0 rounded-full transition-colors',
+          checked ? 'bg-foreground' : 'bg-foreground/15',
+        )}
+      >
+        <span
+          className={cn(
+            'absolute top-1 size-5 rounded-full shadow transition-all',
+            checked ? 'left-6 bg-highlight' : 'left-1 bg-card',
+          )}
+        />
+      </span>
+    </button>
+  )
+}
+
+function MoneyEditor({
   hint,
   value,
   currency,
   onChange,
 }: {
-  icon: React.ReactNode
-  title: string
   hint: string
   value: number
   currency: string
@@ -472,21 +479,9 @@ function MoneyCard({
   }
 
   return (
-    <section className="surface p-4">
-      <div className="flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-          {icon}
-        </span>
-        <h3 className="font-display text-[15px] font-600 text-foreground">{title}</h3>
-        <span className="amount ml-auto text-lg text-foreground">
-          {formatMoney(value, currency)}
-        </span>
-      </div>
-
-      <p className="label mt-2 leading-relaxed">{hint}</p>
-
-      <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-background px-3 focus-within:border-primary/60">
-        <span className="text-sm font-500 text-muted-foreground">$</span>
+    <div>
+      <div className="flex items-baseline gap-1 border-b-2 border-foreground/15 pb-1 focus-within:border-foreground">
+        <span className="hero-number text-2xl text-muted-foreground">$</span>
         <input
           type="number"
           inputMode="numeric"
@@ -497,17 +492,17 @@ function MoneyCard({
           onKeyDown={(e) => {
             if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
           }}
-          className="h-11 flex-1 bg-transparent text-sm font-600 text-foreground outline-none"
+          className="hero-number w-full bg-transparent text-3xl text-foreground outline-none"
         />
-        <span className="text-xs font-600 text-muted-foreground">{currency}</span>
+        <span className="text-xs font-700 text-muted-foreground">{currency}</span>
       </div>
 
-      <div className="mt-2.5 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {[100000, 500000, 1000000].map((step) => (
           <button
             key={step}
             onClick={() => commit(value + step)}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-500 text-foreground transition-colors hover:bg-muted"
+            className="rounded-full bg-muted px-3 py-1.5 text-xs font-700 text-foreground active:opacity-70"
           >
             +{step >= 1000000 ? `${step / 1000000}M` : `${step / 1000}K`}
           </button>
@@ -515,13 +510,56 @@ function MoneyCard({
         {value > 0 && (
           <button
             onClick={() => commit(0)}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-500 text-muted-foreground transition-colors hover:bg-muted"
+            className="rounded-full px-3 py-1.5 text-xs font-700 text-muted-foreground"
           >
-            Limpiar
+            Quitar
           </button>
         )}
       </div>
-    </section>
+      <p className="label mt-3 leading-relaxed">{hint}</p>
+    </div>
+  )
+}
+
+function PasswordEditor({
+  value,
+  onChange,
+  min,
+  placeholder,
+  hint,
+  onSave,
+}: {
+  value: string
+  onChange: (v: string) => void
+  min: number
+  placeholder: string
+  hint: string
+  onSave: () => void
+}) {
+  return (
+    <div>
+      <div className="flex gap-2">
+        <input
+          type="password"
+          value={value}
+          maxLength={64}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && value.length >= min) onSave()
+          }}
+          className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 text-base font-600 text-foreground outline-none sm:text-sm focus:border-foreground/40"
+        />
+        <button
+          onClick={onSave}
+          disabled={value.length < min}
+          className="h-11 shrink-0 rounded-2xl bg-foreground px-4 text-sm font-700 text-background disabled:opacity-30"
+        >
+          Guardar
+        </button>
+      </div>
+      <p className="label mt-2 leading-relaxed">{hint}</p>
+    </div>
   )
 }
 
@@ -530,20 +568,14 @@ function TextField({
   value,
   onChange,
   onCommit,
-  placeholder,
-  type = 'text',
   maxLength,
-  icon,
   className,
 }: {
   label: string
   value: string
   onChange?: (v: string) => void
   onCommit?: (v: string) => void
-  placeholder?: string
-  type?: string
   maxLength?: number
-  icon?: React.ReactNode
   className?: string
 }) {
   const [draft, setDraft] = useState(value)
@@ -551,15 +583,11 @@ function TextField({
 
   return (
     <label className={cn('block', className)}>
-      <span className="mb-1.5 flex items-center gap-1.5 label">
-        {icon}
-        {label}
-      </span>
+      <span className="eyebrow mb-1.5 block">{label}</span>
       <input
-        type={type}
+        type="text"
         value={draft}
         maxLength={maxLength}
-        placeholder={placeholder}
         onChange={(e) => {
           setDraft(e.target.value)
           onChange?.(e.target.value)
@@ -568,55 +596,8 @@ function TextField({
         onKeyDown={(e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
         }}
-        className="h-11 w-full rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground outline-none focus:border-primary/60"
+        className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-base font-600 text-foreground outline-none sm:text-sm focus:border-foreground/40"
       />
     </label>
-  )
-}
-
-function Toggle({
-  label,
-  hint,
-  checked,
-  onChange,
-  icon,
-  className,
-}: {
-  label: string
-  hint?: string
-  checked: boolean
-  onChange: (v: boolean) => void
-  icon?: React.ReactNode
-  className?: string
-}) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-xl bg-muted/60 px-3 py-2.5 text-left transition-colors hover:bg-muted',
-        className,
-      )}
-    >
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-sm font-600 text-foreground">
-          {icon}
-          {label}
-        </p>
-        {hint && <p className="label mt-0.5 leading-relaxed">{hint}</p>}
-      </div>
-      <span
-        className={cn(
-          'relative h-6 w-11 shrink-0 rounded-full transition-colors',
-          checked ? 'bg-primary' : 'bg-border',
-        )}
-      >
-        <span
-          className={cn(
-            'absolute top-0.5 size-5 rounded-full bg-white shadow transition-all',
-            checked ? 'left-[1.375rem]' : 'left-0.5',
-          )}
-        />
-      </span>
-    </button>
   )
 }

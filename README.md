@@ -47,7 +47,7 @@ local sigue registrando los gastos escritos.
 ## Las pantallas
 
 - **Chat** — anotar, preguntar, corregir. Arriba, cuánto llevan y cuánto queda.
-- **Estadísticas** — mensual, trimestral, semestral, anual o un rango a mano.
+- **Resumen** — lo primero es una sola cifra: cuánto llevan y cuánto les queda. Debajo, las categorías que más pesan; el resto se abre sólo si se toca. Mensual, trimestral, semestral, anual o un rango a mano.
   Compara con el periodo anterior, proyecta cómo va a cerrar el mes al ritmo
   actual, y parte el gasto en *necesario / gustos / ahorro*. Por categoría (con
   cuánto subió o bajó), por persona, tendencia con el promedio marcado, los

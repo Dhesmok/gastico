@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { LoginScreen } from '@/components/login-screen'
 import { RoomGate } from '@/components/room-gate'
-import { TopBar, type View } from '@/components/top-bar'
+import { Logo, TopBar, type View } from '@/components/top-bar'
 import { BottomNav } from '@/components/bottom-nav'
 import { ChatView } from '@/components/chat-view'
 import { StatsView } from '@/components/stats-view'
@@ -520,6 +520,7 @@ export default function Page() {
           onEditExpense={handleOpenEditExpense}
           onDeleteExpense={handleDeleteExpense}
           onUpdateExpense={handleUpdateExpense}
+          onOpenStats={() => setView('stats')}
         />
       )}
 
@@ -580,8 +581,8 @@ export default function Page() {
       />
 
       {toast && (
-        <div className="fixed inset-x-0 bottom-20 md:bottom-12 z-50 flex justify-center px-4 pointer-events-none">
-          <p className="glass-strong pointer-events-auto animate-pop-in max-w-md rounded-2xl border border-border/80 px-4 py-2.5 text-center text-xs font-500 leading-relaxed text-foreground shadow-lg">
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--app-bottom-nav)+0.5rem)] z-[60] flex justify-center px-4 md:bottom-8">
+          <p className="ink pointer-events-auto animate-pop-in max-w-md rounded-2xl px-4 py-3 text-center text-[13px] font-600 leading-relaxed shadow-xl">
             {toast}
           </p>
         </div>
@@ -592,9 +593,12 @@ export default function Page() {
 
 function FullScreenLoader({ label }: { label: string }) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-3 bg-background">
-      <Loader2 className="size-7 animate-spin text-primary" />
-      <p className="text-sm font-600 text-muted-foreground">{label}</p>
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background">
+      <Logo size="lg" />
+      <p className="flex items-center gap-2 text-sm font-600 text-muted-foreground">
+        <Loader2 className="size-4 animate-spin" />
+        {label}
+      </p>
     </main>
   )
 }

@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fredoka), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -28,6 +28,12 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-positive: var(--positive);
+  --color-warning: var(--warning);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -57,143 +63,159 @@
      que hay que dejarles su espacio a mano o el contenido queda tapado. */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Alto real de la barra superior. Las pantallas restan esto para ocupar
-     justo lo que queda, sin desbordarse ni dejar hueco. */
+  /* Alto real de la barra superior y del dock de abajo (con su margen). Las
+     pantallas restan esto para ocupar justo lo que queda. */
   --app-header: calc(3.5rem + var(--safe-top));
-  --app-bottom-nav: calc(3.5rem + var(--safe-bottom));
+  --app-bottom-nav: calc(4.75rem + var(--safe-bottom));
 
-  /* Base casi neutra. El color entra sólo donde hay que tocar o decidir; el
-     resto del lienzo se queda callado para que los números manden. */
-  --background: oklch(0.985 0.003 285);
-  --foreground: oklch(0.26 0.02 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.26 0.02 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.26 0.02 285);
+  /* Papel y tinta. La app se inspira en la libreta de cuentas y en el tiquete
+     de la tienda: fondo crema, texto casi negro y un solo color que grita. */
+  --background: oklch(0.967 0.012 85);
+  --foreground: oklch(0.22 0.018 60);
+  --card: oklch(0.992 0.006 85);
+  --card-foreground: oklch(0.22 0.018 60);
+  --popover: oklch(0.992 0.006 85);
+  --popover-foreground: oklch(0.22 0.018 60);
 
-  /* Un solo acento: violeta. Es la señal de "esto se toca". */
-  --primary: oklch(0.55 0.19 285);
-  --primary-foreground: oklch(0.99 0.005 285);
-  --secondary: oklch(0.955 0.01 285);
-  --secondary-foreground: oklch(0.35 0.05 285);
-  --muted: oklch(0.965 0.006 285);
-  --muted-foreground: oklch(0.545 0.018 285);
+  /* Tomate: la señal de "esto se toca". */
+  --primary: oklch(0.62 0.19 36);
+  --primary-foreground: oklch(0.99 0.01 85);
+  --secondary: oklch(0.935 0.016 85);
+  --secondary-foreground: oklch(0.3 0.02 60);
+  --muted: oklch(0.937 0.014 85);
+  --muted-foreground: oklch(0.5 0.02 65);
 
-  /* Verde sobrio para lo positivo (saldo a favor, pagado). */
-  --accent: oklch(0.72 0.11 165);
-  --accent-foreground: oklch(0.3 0.05 165);
-  --positive: oklch(0.52 0.12 160);
+  /* Tinta: las superficies oscuras (el resumen, mis mensajes, el dock). */
+  --ink: oklch(0.235 0.018 60);
+  --ink-foreground: oklch(0.96 0.014 85);
+  --ink-muted: oklch(0.72 0.02 80);
+  /* Resaltador lima: sólo sobre tinta, para la cifra buena. */
+  --highlight: oklch(0.9 0.17 120);
+  --highlight-foreground: oklch(0.25 0.05 120);
 
-  --destructive: oklch(0.58 0.19 25);
-  --border: oklch(0.925 0.005 285);
-  --input: oklch(0.93 0.005 285);
-  --ring: oklch(0.55 0.19 285);
+  --accent: oklch(0.9 0.17 120);
+  --accent-foreground: oklch(0.25 0.05 120);
+  --positive: oklch(0.52 0.13 148);
+  --warning: oklch(0.72 0.15 70);
 
-  --chart-1: oklch(0.58 0.17 285);
-  --chart-2: oklch(0.7 0.1 195);
-  --chart-3: oklch(0.75 0.12 75);
-  --chart-4: oklch(0.66 0.13 330);
-  --chart-5: oklch(0.68 0.11 155);
+  --destructive: oklch(0.56 0.2 25);
+  --border: oklch(0.89 0.014 80);
+  --input: oklch(0.89 0.014 80);
+  --ring: oklch(0.62 0.19 36);
 
-  --radius: 0.95rem;
+  --chart-1: oklch(0.62 0.19 36);
+  --chart-2: oklch(0.62 0.1 200);
+  --chart-3: oklch(0.72 0.15 70);
+  --chart-4: oklch(0.6 0.14 330);
+  --chart-5: oklch(0.6 0.13 148);
 
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.24 0.035 285);
-  --sidebar-primary: oklch(0.58 0.22 285);
-  --sidebar-primary-foreground: oklch(0.99 0.005 285);
-  --sidebar-accent: oklch(0.955 0.012 285);
-  --sidebar-accent-foreground: oklch(0.24 0.035 285);
-  --sidebar-border: oklch(0.91 0.012 285);
-  --sidebar-ring: oklch(0.58 0.22 285);
+  --radius: 1rem;
 
-  /* Un color propio por categoría. Ya no pinta pastillas enteras: sirve para
-     puntos, barras y acentos pequeños, así que va saturado pero se usa poco. */
-  --cat-mercado: oklch(0.66 0.13 150);
-  --cat-casa: oklch(0.6 0.12 265);
-  --cat-servicios: oklch(0.63 0.11 230);
-  --cat-calle: oklch(0.7 0.13 62);
-  --cat-transporte: oklch(0.66 0.11 200);
-  --cat-salud: oklch(0.64 0.14 350);
-  --cat-lujos: oklch(0.62 0.15 310);
-  --cat-ocio: oklch(0.7 0.12 100);
-  --cat-mascotas: oklch(0.66 0.12 45);
-  --cat-educacion: oklch(0.6 0.1 172);
-  --cat-ahorro: oklch(0.56 0.09 255);
-  --cat-otros: oklch(0.62 0.015 285);
-  --cat-nomina: oklch(0.62 0.13 160);
-  --cat-extra: oklch(0.68 0.12 130);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Un color propio por categoría, para puntos y barras finas. Tonos de
+     tierra que conviven con el papel en vez de pelear con él. */
+  --cat-mercado: oklch(0.62 0.13 148);
+  --cat-casa: oklch(0.55 0.1 255);
+  --cat-servicios: oklch(0.6 0.1 220);
+  --cat-calle: oklch(0.7 0.15 62);
+  --cat-transporte: oklch(0.62 0.1 195);
+  --cat-salud: oklch(0.62 0.15 5);
+  --cat-lujos: oklch(0.58 0.15 320);
+  --cat-ocio: oklch(0.72 0.14 100);
+  --cat-mascotas: oklch(0.62 0.12 45);
+  --cat-educacion: oklch(0.56 0.09 170);
+  --cat-ahorro: oklch(0.5 0.08 250);
+  --cat-otros: oklch(0.6 0.015 70);
+  --cat-nomina: oklch(0.58 0.13 148);
+  --cat-extra: oklch(0.68 0.13 125);
 }
 
 .dark {
   color-scheme: dark;
 
-  /* Noche tranquila: fondo profundo, tarjetas apenas un paso más claras y
-     bordes casi invisibles. La jerarquía la da la luz, no los marcos. */
-  --background: oklch(0.155 0.012 285);
-  --foreground: oklch(0.95 0.006 285);
-  --card: oklch(0.198 0.014 285);
-  --card-foreground: oklch(0.95 0.006 285);
-  --popover: oklch(0.21 0.014 285);
-  --popover-foreground: oklch(0.95 0.006 285);
+  /* La libreta de noche: carbón cálido, nunca negro puro. */
+  --background: oklch(0.165 0.008 60);
+  --foreground: oklch(0.94 0.014 85);
+  --card: oklch(0.205 0.009 60);
+  --card-foreground: oklch(0.94 0.014 85);
+  --popover: oklch(0.225 0.01 60);
+  --popover-foreground: oklch(0.94 0.014 85);
 
-  --primary: oklch(0.68 0.17 285);
-  --primary-foreground: oklch(0.99 0.005 285);
-  --secondary: oklch(0.25 0.016 285);
-  --secondary-foreground: oklch(0.95 0.006 285);
-  --muted: oklch(0.235 0.013 285);
-  --muted-foreground: oklch(0.67 0.014 285);
+  --primary: oklch(0.7 0.17 40);
+  --primary-foreground: oklch(0.18 0.02 40);
+  --secondary: oklch(0.25 0.01 60);
+  --secondary-foreground: oklch(0.94 0.014 85);
+  --muted: oklch(0.245 0.01 60);
+  --muted-foreground: oklch(0.68 0.015 75);
 
-  --accent: oklch(0.7 0.11 165);
-  --accent-foreground: oklch(0.18 0.03 165);
-  --positive: oklch(0.78 0.12 162);
+  --ink: oklch(0.32 0.014 60);
+  --ink-foreground: oklch(0.96 0.014 85);
+  --ink-muted: oklch(0.72 0.02 80);
+  --highlight: oklch(0.88 0.16 120);
+  --highlight-foreground: oklch(0.22 0.05 120);
 
-  --destructive: oklch(0.66 0.18 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.68 0.17 285);
+  --accent: oklch(0.88 0.16 120);
+  --accent-foreground: oklch(0.22 0.05 120);
+  --positive: oklch(0.78 0.14 145);
+  --warning: oklch(0.8 0.14 75);
 
-  --chart-1: oklch(0.68 0.16 285);
-  --chart-2: oklch(0.74 0.1 195);
-  --chart-3: oklch(0.8 0.12 75);
+  --destructive: oklch(0.68 0.18 25);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.7 0.17 40);
+
+  --chart-1: oklch(0.7 0.17 40);
+  --chart-2: oklch(0.72 0.1 200);
+  --chart-3: oklch(0.8 0.14 75);
   --chart-4: oklch(0.72 0.13 330);
-  --chart-5: oklch(0.74 0.11 155);
+  --chart-5: oklch(0.74 0.13 148);
 
-  --sidebar: oklch(0.18 0.025 285);
-  --sidebar-foreground: oklch(0.97 0.01 285);
-  --sidebar-primary: oklch(0.68 0.22 285);
-  --sidebar-primary-foreground: oklch(0.99 0.005 285);
-  --sidebar-accent: oklch(0.24 0.028 285);
-  --sidebar-accent-foreground: oklch(0.97 0.01 285);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.68 0.22 285);
-
-  --cat-mercado: oklch(0.74 0.12 150);
-  --cat-casa: oklch(0.72 0.11 265);
-  --cat-servicios: oklch(0.74 0.1 230);
-  --cat-calle: oklch(0.78 0.11 62);
-  --cat-transporte: oklch(0.76 0.1 200);
-  --cat-salud: oklch(0.74 0.12 350);
-  --cat-lujos: oklch(0.73 0.12 310);
-  --cat-ocio: oklch(0.8 0.11 100);
+  --cat-mercado: oklch(0.74 0.12 148);
+  --cat-casa: oklch(0.7 0.1 255);
+  --cat-servicios: oklch(0.74 0.09 220);
+  --cat-calle: oklch(0.8 0.13 65);
+  --cat-transporte: oklch(0.76 0.09 195);
+  --cat-salud: oklch(0.74 0.13 5);
+  --cat-lujos: oklch(0.72 0.12 320);
+  --cat-ocio: oklch(0.82 0.12 100);
   --cat-mascotas: oklch(0.76 0.1 45);
-  --cat-educacion: oklch(0.72 0.09 172);
-  --cat-ahorro: oklch(0.7 0.08 255);
-  --cat-otros: oklch(0.72 0.015 285);
-  --cat-nomina: oklch(0.74 0.11 160);
-  --cat-extra: oklch(0.78 0.1 130);
+  --cat-educacion: oklch(0.72 0.08 170);
+  --cat-ahorro: oklch(0.7 0.07 250);
+  --cat-otros: oklch(0.72 0.012 70);
+  --cat-nomina: oklch(0.76 0.12 148);
+  --cat-extra: oklch(0.8 0.12 125);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+  }
+  body {
+    @apply text-foreground;
     font-family: var(--font-sans);
     /* Sin el destello gris al tocar, y sin rebote al llegar al final: en el
        celular eso es lo que separa una web de algo que se siente app. */
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
   }
 
   /* Safari hace zoom al enfocar un campo con letra menor a 16px, y al volver
@@ -207,35 +229,45 @@
   }
 }
 
+/* Mientras se escribe en el chat, el dock se esconde: el teclado ya ocupa
+   media pantalla y la conversación necesita el resto. */
+:root:has([data-composer]:focus) {
+  --app-bottom-nav: 0px;
+}
+:root:has([data-composer]:focus) [data-dock] {
+  display: none;
+}
+
 @layer utilities {
   .font-display {
     font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
   }
 
   .glass {
-    background-color: color-mix(in oklch, var(--background) 82%, transparent);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background-color: color-mix(in srgb, var(--background) 85%, transparent);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
   }
 
   .glass-strong {
-    background-color: color-mix(in oklch, var(--popover) 92%, transparent);
+    background-color: color-mix(in srgb, var(--popover) 94%, transparent);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
   }
 
-  /* ---------------------------------------------------------------------
-     Las tres piezas con las que está armada toda la app. Tenerlas aquí, y no
-     repetidas en cada pantalla, es lo que hace que una tarjeta de ajustes y
-     una de estadísticas se vean de la misma familia.
-     --------------------------------------------------------------------- */
-
-  /* Una tarjeta: fondo sólido, línea de pelo y nada de sombra. La jerarquía
-     la da el espacio en blanco, no el relieve. */
+  /* Una tarjeta: papel un tono más claro que el fondo y una línea de pelo. */
   .surface {
     background-color: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
+  }
+
+  /* La superficie de tinta: lo más importante de cada pantalla va aquí. */
+  .ink {
+    background-color: var(--ink);
+    color: var(--ink-foreground);
   }
 
   /* El texto de apoyo: etiquetas, pistas, unidades. Discreto a propósito. */
@@ -246,13 +278,39 @@
     color: var(--muted-foreground);
   }
 
-  /* Números: siempre en la tipografía de títulos y con cifras de ancho fijo,
-     para que al actualizarse no bailen. */
+  /* Las etiquetas de sección, en versalitas como en una libreta contable. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  /* Cifras de lista: sans, gruesas y de ancho fijo para que no bailen. */
   .amount {
-    font-family: var(--font-display);
-    font-weight: 600;
+    font-family: var(--font-sans);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
+  }
+
+  /* La cifra protagonista de cada pantalla, en la serif. */
+  .hero-number {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  /* El borde picado del tiquete de la tienda. */
+  .perforated {
+    background-image: linear-gradient(to right, var(--border) 50%, transparent 50%);
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    background-position: top;
   }
 
   /* Deja libre la barra de gestos del celular. */
@@ -264,12 +322,31 @@
     padding-top: var(--safe-top);
   }
 
+  /* Lo que scrollea por debajo del dock flotante necesita ese espacio. */
+  .pb-dock {
+    padding-bottom: calc(var(--app-bottom-nav) + 1rem);
+  }
+  @media (min-width: 768px) {
+    .pb-dock {
+      padding-bottom: 2rem;
+    }
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
@@ -349,18 +426,49 @@
   }
 }
 
-.animate-fade-in {
+@utility animate-fade-in {
   animation: fade-in 0.2s ease-out both;
 }
-.animate-reveal {
+@utility animate-reveal {
   animation: reveal 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.animate-pop-in {
+@utility animate-pop-in {
   animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.animate-float-up {
+@utility animate-float-up {
   animation: float-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.animate-bob {
+@utility animate-bob {
   animation: bob 3s ease-in-out infinite;
+}
+@utility animate-sheet-up {
+  animation: sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+
+/* Pesos por número (font-500, font-700…). Tailwind no los trae así, y la app
+   entera los usa: sin esto todo salía con el mismo grosor. */
+@utility font-400 {
+  font-weight: 400;
+}
+@utility font-500 {
+  font-weight: 500;
+}
+@utility font-600 {
+  font-weight: 600;
+}
+@utility font-700 {
+  font-weight: 700;
+}
+@utility font-800 {
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

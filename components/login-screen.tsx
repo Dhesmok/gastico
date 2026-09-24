@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { HeartHandshake, Loader2, Lock, Sparkles, UserRound } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { Logo } from '@/components/top-bar'
+import { inputClass } from '@/components/sheet'
 import { signIn } from '@/lib/supabase/client'
 
 export function LoginScreen({
@@ -33,84 +35,98 @@ export function LoginScreen({
   }
 
   return (
-    <main className="relative flex min-h-svh items-center justify-center overflow-hidden px-5 py-10">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-24 -top-24 size-96 rounded-full bg-primary/30 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 size-[28rem] rounded-full bg-accent/30 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 size-72 -translate-x-1/2 rounded-full bg-chart-3/25 blur-3xl" />
-      </div>
-
-      <div className="glass-strong w-full max-w-md animate-pop-in rounded-4xl border border-white/40 p-7 shadow-2xl shadow-primary/10 sm:p-9">
-        <div className="mb-7 flex flex-col items-center text-center">
-          <div className="animate-bob mb-4 flex size-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <HeartHandshake className="size-8" />
+    <AuthShell
+      title={
+        <>
+          Las cuentas
+          <br />
+          <em className="text-primary">claras</em> de la casa.
+        </>
+      }
+      subtitle="Anoten los gastos chateando. Cuenti hace las cuentas."
+    >
+      {configError ? (
+        <div className="rounded-2xl bg-destructive/10 p-4 text-sm leading-relaxed text-destructive">
+          <p className="font-700">Falta configuración</p>
+          <p className="mt-1">{configError}</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-3">
+            <Field
+              label="Usuario"
+              value={usuario}
+              onChange={setUsuario}
+              placeholder="tu usuario"
+              autoComplete="username"
+              onEnter={submit}
+            />
+            <Field
+              label="Contraseña"
+              value={password}
+              onChange={setPassword}
+              type="password"
+              placeholder="tu contraseña"
+              autoComplete="current-password"
+              onEnter={submit}
+            />
           </div>
-          <h1 className="font-display text-3xl font-600 tracking-tight text-foreground">
-            Cuentas Claras
+
+          {error && (
+            <p className="mt-3 rounded-2xl bg-destructive/10 px-4 py-2.5 text-[13px] font-600 leading-relaxed text-destructive">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={submit}
+            disabled={busy}
+            className="mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-foreground text-[15px] font-700 text-background transition-opacity active:opacity-80 disabled:opacity-60"
+          >
+            {busy ? (
+              <>
+                <Loader2 className="size-4 animate-spin" /> Entrando…
+              </>
+            ) : (
+              'Entrar'
+            )}
+          </button>
+
+          <p className="label mt-5 text-center leading-relaxed">
+            Sin registro ni correos: los usuarios se crean a mano.
+          </p>
+        </>
+      )}
+    </AuthShell>
+  )
+}
+
+/**
+ * El marco de las pantallas de entrada: la marca y un título grande arriba, el
+ * formulario abajo, cerca del pulgar.
+ */
+export function AuthShell({
+  title,
+  subtitle,
+  children,
+}: {
+  title: React.ReactNode
+  subtitle: string
+  children: React.ReactNode
+}) {
+  return (
+    <main className="pt-safe relative flex min-h-svh flex-col bg-background">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-between gap-10 px-6 pb-[calc(var(--safe-bottom)+1.5rem)] pt-10 sm:justify-center">
+        <div className="animate-float-up">
+          <Logo size="lg" />
+          <h1 className="mt-8 font-display text-[2.6rem] font-400 leading-[1.05] tracking-tight text-foreground">
+            {title}
           </h1>
-          <p className="mt-2 text-pretty text-sm leading-relaxed text-muted-foreground">
-            El control de gastos del mes, para ustedes dos.
+          <p className="mt-3 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
+            {subtitle}
           </p>
         </div>
-
-        {configError ? (
-          <div className="rounded-3xl border border-destructive/40 bg-destructive/10 p-4 text-sm leading-relaxed text-destructive">
-            <p className="font-600">Falta configuración</p>
-            <p className="mt-1">{configError}</p>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3">
-              <Field
-                label="Usuario"
-                icon={<UserRound className="size-3.5" />}
-                value={usuario}
-                onChange={setUsuario}
-                placeholder="tu usuario"
-                autoComplete="username"
-                onEnter={submit}
-              />
-              <Field
-                label="Contraseña"
-                icon={<Lock className="size-3.5" />}
-                value={password}
-                onChange={setPassword}
-                type="password"
-                placeholder="tu contraseña"
-                autoComplete="current-password"
-                onEnter={submit}
-              />
-            </div>
-
-            {error && (
-              <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-500 leading-relaxed text-destructive">
-                {error}
-              </p>
-            )}
-
-            <button
-              onClick={submit}
-              disabled={busy}
-              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-600 text-primary-foreground transition-colors hover:brightness-110 disabled:opacity-60"
-            >
-              {busy ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" /> Entrando…
-                </>
-              ) : (
-                'Entrar'
-              )}
-            </button>
-
-            <div className="mt-6 flex items-start gap-2 rounded-xl bg-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-              <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
-              <span>
-                No hay registro ni correos: los usuarios se crean a mano. Después de entrar, creas
-                la sala o te unes a la de tu pareja con el ID y su contraseña. 🔒
-              </span>
-            </div>
-          </>
-        )}
+        <div className="animate-float-up [animation-delay:80ms]">{children}</div>
       </div>
     </main>
   )
@@ -122,7 +138,6 @@ function Field({
   onChange,
   placeholder,
   type = 'text',
-  icon,
   autoComplete,
   onEnter,
 }: {
@@ -131,16 +146,12 @@ function Field({
   onChange: (v: string) => void
   placeholder?: string
   type?: string
-  icon?: React.ReactNode
   autoComplete?: string
   onEnter?: () => void
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 flex items-center gap-1.5 label">
-        {icon}
-        {label}
-      </span>
+      <span className="eyebrow mb-1.5 block">{label}</span>
       <input
         type={type}
         value={value}
@@ -152,7 +163,7 @@ function Field({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && onEnter) onEnter()
         }}
-        className="h-12 w-full rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground outline-none transition-colors placeholder:font-400 placeholder:text-muted-foreground focus:border-primary/60"
+        className={inputClass}
       />
     </label>
   )

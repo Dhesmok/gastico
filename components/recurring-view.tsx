@@ -1,18 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import {
-  AlertCircle,
-  Calendar,
-  CalendarCheck,
-  CalendarClock,
-  CheckCircle2,
-  Clock,
-  Edit2,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react'
+import { Check, Loader2, Plus, Trash2 } from 'lucide-react'
 import {
   EXPENSE_CATEGORIES,
   categoryOf,
@@ -34,6 +23,7 @@ import {
   type RecurringStatus,
 } from '@/lib/recurring'
 import { getSupabase } from '@/lib/supabase/client'
+import { FieldLabel, Sheet, inputClass } from '@/components/sheet'
 import { cn } from '@/lib/utils'
 
 export function RecurringView({
@@ -63,6 +53,7 @@ export function RecurringView({
   const [payingId, setPayingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   // La lista es de la sala: se carga de Supabase y se mantiene al día sola,
   // así lo que anota uno le aparece al otro sin recargar.
@@ -135,6 +126,7 @@ export function RecurringView({
     setAmount('')
     setCategory('servicios')
     setDueDay('5')
+    setConfirmDelete(false)
     setModalOpen(true)
   }
 
@@ -144,6 +136,7 @@ export function RecurringView({
     setAmount(String(item.amount))
     setCategory(item.category)
     setDueDay(String(item.dueDay))
+    setConfirmDelete(false)
     setModalOpen(true)
   }
 
@@ -209,246 +202,274 @@ export function RecurringView({
     }
   }
 
+  const paidCount = statuses.filter((s) => s.paid).length
+  // Primero lo que falta pagar, ordenado por urgencia; lo pagado, al final.
+  const ordered = [...statuses].sort((a, b) => {
+    if (a.paid !== b.paid) return a.paid ? 1 : -1
+    return a.daysRemaining - b.daysRemaining
+  })
+
   return (
-    <div className="no-scrollbar mx-auto h-[calc(100svh-var(--app-header)-var(--app-bottom-nav))] md:h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 py-4 sm:py-5">
-      <div className="flex flex-col gap-4 pb-12 sm:pb-8">
-        {/* Encabezado */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-xl font-600 text-foreground">Gastos fijos</h2>
-            <p className="label">Los pagos del mes y sus fechas límite</p>
-          </div>
-          <button
-            onClick={handleOpenCreate}
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-4 py-2 font-display text-sm font-600 text-primary-foreground transition-colors active:opacity-70"
-          >
-            <Plus className="size-4" />
-            <span>Nuevo fijo</span>
-          </button>
-        </div>
-
-        {/* Resumen del mes: tres cifras en la misma tarjeta, separadas por una
-            línea. Antes eran tres cajas de colores distintos peleando entre sí. */}
-        <div className="surface grid grid-cols-3 divide-x divide-border">
-          <div className="px-3 py-3">
-            <p className="label">Total</p>
-            <p className="amount mt-0.5 text-foreground">
-              {formatMoney(totalMonthly, room.currency)}
+    <div className="no-scrollbar pb-dock mx-auto h-[calc(100svh-var(--app-header))] w-full max-w-2xl overflow-y-auto px-4 pt-2">
+      <div className="flex flex-col gap-5">
+        {/* Una sola cifra: lo que falta pagar este mes. */}
+        {statuses.length > 0 && (
+          <section className="ink rounded-[1.75rem] p-5">
+            <p className="eyebrow" style={{ color: 'var(--ink-muted)' }}>
+              {totalPending > 0 ? 'Falta pagar este mes' : 'Todo pagado este mes'}
             </p>
-          </div>
-          <div className="px-3 py-3">
-            <p className="label">Pagados</p>
-            <p className="amount mt-0.5 text-positive">{formatMoney(totalPaid, room.currency)}</p>
-          </div>
-          <div className="px-3 py-3">
-            <p className="label">Pendientes</p>
-            <p className="amount mt-0.5 text-foreground">
-              {formatMoney(totalPending, room.currency)}
+            <p className="hero-number mt-2 text-[2.75rem]">
+              {formatMoney(totalPending > 0 ? totalPending : totalMonthly, room.currency)}
             </p>
-          </div>
-        </div>
+            {/* Un segmento por cada fijo: se van llenando a medida que se pagan. */}
+            <div className="mt-5 flex gap-1">
+              {ordered
+                .slice()
+                .sort((a, b) => Number(b.paid) - Number(a.paid))
+                .map(({ item, paid }) => (
+                  <span
+                    key={item.id}
+                    className={cn('h-2 flex-1 rounded-full', paid ? 'bg-highlight' : 'bg-white/12')}
+                  />
+                ))}
+            </div>
+            <p className="mt-2.5 text-[13px] text-ink-muted">
+              {paidCount} de {statuses.length} pagados · {formatMoney(totalMonthly, room.currency)} al mes
+            </p>
+          </section>
+        )}
 
-        {/* Lista de Gastos Fijos */}
-        <div className="flex flex-col gap-3">
-          {statuses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border p-8 text-center">
-              <CalendarClock className="mb-2 size-8 text-muted-foreground/40" />
-              <p className="font-display text-[15px] font-600 text-foreground">
-                No tienes gastos fijos aún
-              </p>
-              <p className="label mt-1 max-w-xs">
-                Añade el arriendo, el internet o la luz con su día de pago para no olvidarlos.
-              </p>
+        {loading && statuses.length === 0 ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : statuses.length === 0 ? (
+          <div className="flex flex-col items-center px-6 pt-14 text-center">
+            <span className="text-5xl">🗓️</span>
+            <h2 className="mt-4 font-display text-2xl font-500 text-foreground">
+              Sin gastos fijos todavía
+            </h2>
+            <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              El arriendo, el internet, la luz… con su día de pago, para que no se les pase ninguno.
+            </p>
+            <button
+              onClick={handleOpenCreate}
+              className="mt-6 flex h-12 items-center gap-2 rounded-full bg-foreground px-6 text-sm font-700 text-background active:opacity-80"
+            >
+              <Plus className="size-4" /> Añadir el primero
+            </button>
+          </div>
+        ) : (
+          <section>
+            <div className="mb-2 flex items-center justify-between px-1">
+              <h3 className="eyebrow">Este mes</h3>
               <button
                 onClick={handleOpenCreate}
-                className="mt-4 flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 font-display text-sm font-600 text-primary-foreground transition-colors"
+                className="flex items-center gap-1 text-xs font-700 text-foreground"
               >
-                <Plus className="size-4" /> Añadir el primero
+                <Plus className="size-3.5" /> Añadir
               </button>
             </div>
-          ) : (
-            statuses.map(({ item, paid, daysRemaining, isOverdue, isToday }) => {
-              const cat = categoryOf(item.category)
-              // El estado va en una línea de texto con su punto de color. Antes
-              // cada tarjeta se teñía entera y la lista parecía un semáforo.
-              const estado = paid
-                ? { text: 'Pagado este mes', color: 'var(--positive)', Icon: CheckCircle2 }
-                : isToday
-                  ? { text: 'Vence hoy', color: 'var(--chart-3)', Icon: Clock }
-                  : isOverdue
-                    ? {
-                        text: `Venció hace ${Math.abs(daysRemaining)} días`,
-                        color: 'var(--destructive)',
-                        Icon: AlertCircle,
-                      }
-                    : {
-                        text: `Vence en ${daysRemaining} días`,
-                        color: 'var(--muted-foreground)',
-                        Icon: Calendar,
-                      }
+            <div className="surface overflow-hidden">
+              {ordered.map(({ item, paid, daysRemaining, isOverdue, isToday }) => {
+                const cat = categoryOf(item.category)
+                const estado = paid
+                  ? { text: 'Pagado', className: 'text-positive' }
+                  : isToday
+                    ? { text: 'Vence hoy', className: 'text-warning font-800' }
+                    : isOverdue
+                      ? {
+                          text: `Venció hace ${Math.abs(daysRemaining)} ${Math.abs(daysRemaining) === 1 ? 'día' : 'días'}`,
+                          className: 'text-destructive font-800',
+                        }
+                      : {
+                          text: `En ${daysRemaining} ${daysRemaining === 1 ? 'día' : 'días'} · el ${item.dueDay}`,
+                          className: 'text-muted-foreground',
+                        }
 
-              return (
-                <div key={item.id} className={cn('surface p-4', paid && 'opacity-65')}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="text-xl leading-none">{cat.emoji}</span>
-                      <div className="min-w-0">
-                        <h4 className="truncate font-display text-[15px] font-600 text-foreground">
-                          {item.name}
-                        </h4>
-                        <p className="label truncate">
-                          {cat.label} · día {item.dueDay} de cada mes
-                        </p>
-                      </div>
-                    </div>
-                    <p className="amount shrink-0 text-foreground">
-                      {formatMoney(item.amount, room.currency)}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
-                    <span
-                      className="flex min-w-0 items-center gap-1.5 text-xs font-500"
-                      style={{ color: estado.color }}
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0"
+                  >
+                    {/* Tocar la fila abre la edición; el botón de la derecha paga. */}
+                    <button
+                      onClick={() => handleOpenEdit(item)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-70"
                     >
-                      <estado.Icon className="size-3.5 shrink-0" />
-                      <span className="truncate">{estado.text}</span>
+                      <span
+                        className={cn(
+                          'flex size-10 shrink-0 items-center justify-center rounded-2xl text-lg',
+                          paid && 'grayscale',
+                        )}
+                        style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 16%, transparent)` }}
+                      >
+                        {cat.emoji}
+                      </span>
+                      <span className="min-w-0">
+                        <span
+                          className={cn(
+                            'block truncate text-[15px] font-700',
+                            paid ? 'text-muted-foreground line-through decoration-1' : 'text-foreground',
+                          )}
+                        >
+                          {item.name}
+                        </span>
+                        <span className={cn('block truncate text-xs font-600', estado.className)}>
+                          {estado.text}
+                        </span>
+                      </span>
+                    </button>
+
+                    <span
+                      className={cn(
+                        'amount shrink-0 text-sm',
+                        paid ? 'text-muted-foreground' : 'text-foreground',
+                      )}
+                    >
+                      {formatMoney(item.amount, room.currency)}
                     </span>
 
-                    <div className="flex shrink-0 items-center gap-1">
-                      {!paid && (
-                        <button
-                          onClick={() => handlePay(item)}
-                          disabled={payingId === item.id}
-                          className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-600 text-primary-foreground transition-colors disabled:opacity-50"
-                        >
-                          <CalendarCheck className="size-3.5" />
-                          <span>{payingId === item.id ? 'Registrando…' : 'Pagar'}</span>
-                        </button>
-                      )}
+                    {paid ? (
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-positive/15 text-positive">
+                        <Check className="size-4" strokeWidth={2.6} />
+                      </span>
+                    ) : (
                       <button
-                        onClick={() => handleOpenEdit(item)}
-                        className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        title="Editar gasto fijo"
+                        onClick={() => handlePay(item)}
+                        disabled={payingId === item.id}
+                        aria-label={`Marcar ${item.name} como pagado`}
+                        className="flex h-9 shrink-0 items-center justify-center rounded-full bg-foreground px-3.5 text-xs font-800 text-background transition-opacity active:opacity-70 disabled:opacity-50"
                       >
-                        <Edit2 className="size-3.5" />
+                        {payingId === item.id ? <Loader2 className="size-4 animate-spin" /> : 'Pagar'}
                       </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        title="Eliminar gasto fijo"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </div>
+                    )}
                   </div>
-                </div>
-              )
-            })
-          )}
-        </div>
+                )
+              })}
+            </div>
+            <p className="label mt-3 px-1">
+              Al pagar se anota el gasto y le aparece a toda la casa.
+            </p>
+          </section>
+        )}
       </div>
 
-      {/* Modal Crear / Editar Gasto Fijo */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
-            <button
-              onClick={() => setModalOpen(false)}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
+        <Sheet
+          title={editingItem ? 'Editar gasto fijo' : 'Nuevo gasto fijo'}
+          onClose={() => setModalOpen(false)}
+        >
+          <form onSubmit={handleSave} className="flex flex-col gap-5">
+            <label className="block">
+              <FieldLabel>Nombre</FieldLabel>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Arriendo, internet, Netflix…"
+                className={inputClass}
+              />
+            </label>
 
-            <h3 className="font-display text-lg font-600 text-foreground">
-              {editingItem ? 'Editar Gasto Fijo' : 'Nuevo Gasto Fijo'}
-            </h3>
-            <p className="mb-4 text-xs text-muted-foreground">
-              Configura el monto y el día límite de pago de cada mes
-            </p>
-
-            <form onSubmit={handleSave} className="flex flex-col gap-4">
-              <div>
-                <label className="mb-1 block text-xs font-500 text-foreground">
-                  Nombre del gasto fijo
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej: Arriendo, Plan Internet, Netflix, Gimnasio"
-                  className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-500 text-foreground">
-                  Monto mensual ({room.currency})
-                </label>
+            <label className="block">
+              <FieldLabel>Monto mensual · {room.currency}</FieldLabel>
+              <div className="flex items-baseline gap-1 border-b-2 border-foreground/15 pb-1 focus-within:border-foreground">
+                <span className="hero-number text-3xl text-muted-foreground">$</span>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="1"
                   step="1"
                   required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 amount text-lg text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="hero-number w-full bg-transparent text-4xl text-foreground outline-none"
                 />
               </div>
+            </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-500 text-foreground">Categoría</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as CategoryId)}
-                    className="w-full rounded-2xl border border-border bg-background px-3 py-2.5 text-sm font-600 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            <div>
+              <FieldLabel>Categoría</FieldLabel>
+              <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCategory(c.id)}
+                    className={cn(
+                      'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-700 transition-colors',
+                      category === c.id
+                        ? 'ink border-transparent'
+                        : 'border-border bg-card text-foreground',
+                    )}
                   >
-                    {EXPENSE_CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.emoji} {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-500 text-foreground">
-                    Día límite de pago
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="31"
-                    required
-                    value={dueDay}
-                    onChange={(e) => setDueDay(e.target.value)}
-                    placeholder="Día (1-31)"
-                    className="w-full rounded-2xl border border-border bg-background px-3 py-2.5 text-sm font-600 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
+                    <span>{c.emoji}</span>
+                    {c.label}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="flex-1 rounded-2xl border border-border bg-muted py-2.5 text-xs font-500 text-foreground transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-primary py-2.5 font-display text-sm font-600 text-primary-foreground transition-colors"
-                >
-                  {editingItem ? 'Guardar Cambios' : 'Añadir Gasto Fijo'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <label className="block">
+              <FieldLabel>Se paga el día</FieldLabel>
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="31"
+                required
+                value={dueDay}
+                onChange={(e) => setDueDay(e.target.value)}
+                placeholder="1 a 31"
+                className={cn(inputClass, 'w-28')}
+              />
+            </label>
+
+            <div className="mt-1 flex flex-col gap-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex h-12 w-full items-center justify-center rounded-2xl bg-foreground text-[15px] font-700 text-background transition-opacity active:opacity-80 disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="size-4 animate-spin" /> : editingItem ? 'Guardar' : 'Añadir'}
+              </button>
+
+              {editingItem &&
+                (confirmDelete ? (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDelete(editingItem.id)
+                        setModalOpen(false)
+                      }}
+                      className="h-11 flex-1 rounded-2xl bg-destructive text-sm font-700 text-white"
+                    >
+                      Sí, eliminarlo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(false)}
+                      className="h-11 flex-1 rounded-2xl bg-muted text-sm font-700 text-foreground"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex h-11 items-center justify-center gap-1.5 text-sm font-700 text-destructive"
+                  >
+                    <Trash2 className="size-4" /> Eliminar gasto fijo
+                  </button>
+                ))}
+            </div>
+          </form>
+        </Sheet>
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, Trash2, X } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -10,6 +10,7 @@ import {
   type Kind,
 } from '@/lib/finance'
 import { stripRecurringTag } from '@/lib/recurring'
+import { FieldLabel, Sheet, inputClass } from '@/components/sheet'
 import { cn } from '@/lib/utils'
 
 export function EditExpenseModal({
@@ -69,153 +70,139 @@ export function EditExpenseModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="glass-strong relative w-full max-w-md overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-pop-in">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <X className="size-4" />
-        </button>
-
-        <h3 className="font-display text-lg font-600 text-foreground">Corregir Movimiento</h3>
-        <p className="mb-4 text-xs text-muted-foreground">
-          Modifica los detalles, cambia de gasto a ingreso o elimínalo
-        </p>
-
-        <form onSubmit={handleSave} className="flex flex-col gap-4">
-          {/* Selector Gasto / Ingreso */}
-          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-1">
+    <Sheet title="Corregir movimiento" onClose={onClose}>
+      <form onSubmit={handleSave} className="flex flex-col gap-5">
+        {/* Gasto o ingreso */}
+        <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
+          {(
+            [
+              { id: 'expense' as Kind, label: 'Gasto' },
+              { id: 'income' as Kind, label: 'Ingreso' },
+            ]
+          ).map((option) => (
             <button
+              key={option.id}
               type="button"
               onClick={() => {
-                setKind('expense')
-                if (!EXPENSE_CATEGORIES.some((c) => c.id === category)) setCategory('mercado')
+                setKind(option.id)
+                if (option.id === 'expense' && !EXPENSE_CATEGORIES.some((c) => c.id === category))
+                  setCategory('mercado')
+                if (option.id === 'income' && !INCOME_CATEGORIES.some((c) => c.id === category))
+                  setCategory('nomina')
               }}
               className={cn(
-                'rounded-xl py-2 text-xs font-500 transition-all',
-                kind === 'expense'
-                  ? 'bg-destructive/15 text-destructive shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
+                'rounded-full py-2 text-sm font-700 transition-colors',
+                kind === option.id ? 'ink' : 'text-muted-foreground',
               )}
             >
-              💸 Es un Gasto
+              {option.label}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setKind('income')
-                if (!INCOME_CATEGORIES.some((c) => c.id === category)) setCategory('nomina')
-              }}
-              className={cn(
-                'rounded-xl py-2 text-xs font-500 transition-all',
-                kind === 'income'
-                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              💰 Es un Ingreso
-            </button>
-          </div>
+          ))}
+        </div>
 
-          {/* Monto */}
-          <div>
-            <label className="mb-1 block text-xs font-500 text-foreground">
-              Monto ({currency})
-            </label>
+        {/* El monto, grande: es lo que más se corrige. */}
+        <label className="block">
+          <FieldLabel>Monto · {currency}</FieldLabel>
+          <div className="flex items-baseline gap-1 border-b-2 border-foreground/15 pb-1 focus-within:border-foreground">
+            <span className="hero-number text-3xl text-muted-foreground">$</span>
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               step="1"
               required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-background px-4 py-2.5 amount text-lg text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="hero-number w-full bg-transparent text-4xl text-foreground outline-none"
               placeholder="0"
             />
           </div>
+        </label>
 
-          {/* Categoría */}
-          <div>
-            <label className="mb-1 block text-xs font-500 text-foreground">Categoría</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as CategoryId)}
-              className="w-full rounded-2xl border border-border bg-background px-3 py-2.5 text-sm font-600 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.emoji} {c.label}
-                </option>
-              ))}
-            </select>
+        <div>
+          <FieldLabel>Categoría</FieldLabel>
+          <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategory(c.id)}
+                className={cn(
+                  'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-700 transition-colors',
+                  category === c.id
+                    ? 'ink border-transparent'
+                    : 'border-border bg-card text-foreground',
+                )}
+              >
+                <span>{c.emoji}</span>
+                {c.label}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Descripción / Nota */}
-          <div>
-            <label className="mb-1 block text-xs font-500 text-foreground">Descripción / Nota</label>
+        <div className="grid grid-cols-[1fr_auto] gap-3">
+          <label className="block min-w-0">
+            <FieldLabel>Nota</FieldLabel>
             <input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              placeholder="Ej: Éxito mercado, Domicilio, etc."
+              className={inputClass}
+              placeholder="Ej: mercado del mes"
               maxLength={200}
             />
-          </div>
-
-          {/* Fecha */}
-          <div>
-            <label className="mb-1 block text-xs font-500 text-foreground">Fecha del movimiento</label>
+          </label>
+          <label className="block">
+            <FieldLabel>Fecha</FieldLabel>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={cn(inputClass, 'w-[9.5rem] px-3')}
             />
-          </div>
+          </label>
+        </div>
 
-          {/* Botones de acción */}
-          <div className="mt-2 flex flex-col gap-2">
-            <button
-              type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-display text-sm font-600 text-primary-foreground shadow-lg shadow-primary/20 transition-colors"
-            >
-              <Check className="size-4" /> Guardar Cambios
-            </button>
+        <div className="mt-1 flex flex-col gap-2">
+          <button
+            type="submit"
+            className="flex h-12 w-full items-center justify-center rounded-2xl bg-foreground text-[15px] font-700 text-background transition-opacity active:opacity-80"
+          >
+            Guardar
+          </button>
 
-            {confirmDelete ? (
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDelete(expense.id)
-                    onClose()
-                  }}
-                  className="flex-1 rounded-2xl bg-destructive py-2 text-xs font-500 text-destructive-foreground transition-all"
-                >
-                  Sí, borrar definitivamente
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(false)}
-                  className="rounded-2xl border border-border bg-muted px-4 py-2 text-xs font-500 text-foreground"
-                >
-                  Cancelar
-                </button>
-              </div>
-            ) : (
+          {confirmDelete ? (
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setConfirmDelete(true)}
-                className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-600 text-muted-foreground transition-colors hover:text-destructive"
+                onClick={() => {
+                  onDelete(expense.id)
+                  onClose()
+                }}
+                className="h-11 flex-1 rounded-2xl bg-destructive text-sm font-700 text-white"
               >
-                <Trash2 className="size-3.5" /> Borrar este movimiento
+                Sí, borrarlo
               </button>
-            )}
-          </div>
-        </form>
-      </div>
-    </div>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="h-11 flex-1 rounded-2xl bg-muted text-sm font-700 text-foreground"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="flex h-11 items-center justify-center gap-1.5 text-sm font-700 text-destructive"
+            >
+              <Trash2 className="size-4" /> Borrar movimiento
+            </button>
+          )}
+        </div>
+      </form>
+    </Sheet>
   )
 }

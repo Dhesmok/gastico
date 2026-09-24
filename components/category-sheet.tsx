@@ -8,17 +8,16 @@
 // esa nota entra en la memoria de la sala y la próxima vez cae bien sola.
 // ---------------------------------------------------------------------------
 
-import { useEffect } from 'react'
-import { X } from 'lucide-react'
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
-  categoryOf,
   formatMoney,
+  categoryOf,
   type CategoryId,
   type Expense,
 } from '@/lib/finance'
 import { stripRecurringTag } from '@/lib/recurring'
+import { Sheet } from '@/components/sheet'
 import { cn } from '@/lib/utils'
 
 export function CategorySheet({
@@ -32,63 +31,21 @@ export function CategorySheet({
   onPick: (category: CategoryId) => void
   onClose: () => void
 }) {
-  // En el celular se cierra con el botón; en el escritorio, con Escape.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
   const current = categoryOf(expense.category)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <button
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-        onClick={onClose}
-        aria-label="Cerrar"
-      />
+    <Sheet
+      title="¿En qué va?"
+      subtitle={`${stripRecurringTag(expense.note) || current.label} · ${formatMoney(expense.amount, currency)}`}
+      onClose={onClose}
+    >
+      <Group title="Gastos" categories={EXPENSE_CATEGORIES} current={expense.category} onPick={onPick} />
+      <Group title="Ingresos" categories={INCOME_CATEGORIES} current={expense.category} onPick={onPick} />
 
-      <div className="animate-pop-in relative max-h-[85svh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-border bg-card p-4 shadow-2xl sm:rounded-3xl">
-        <div className="mb-3 flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-[15px] font-600 text-foreground">
-              ¿En qué va este movimiento?
-            </p>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {stripRecurringTag(expense.note) || current.label} · {formatMoney(expense.amount, currency)}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted"
-            aria-label="Cerrar"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        <Group
-          title="Gastos"
-          categories={EXPENSE_CATEGORIES}
-          current={expense.category}
-          onPick={onPick}
-        />
-        <Group
-          title="Ingresos"
-          categories={INCOME_CATEGORIES}
-          current={expense.category}
-          onPick={onPick}
-        />
-
-        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-          Si lo corriges dos veces, Cuenti aprende: la próxima vez que escribas algo parecido lo
-          manda solo a esa categoría.
-        </p>
-      </div>
-    </div>
+      <p className="label mt-4 leading-relaxed">
+        Si lo corriges dos veces, Cuenti aprende y la próxima vez lo pone solo.
+      </p>
+    </Sheet>
   )
 }
 
@@ -105,9 +62,7 @@ function Group({
 }) {
   return (
     <>
-      <p className="mb-1.5 mt-3 label">
-        {title}
-      </p>
+      <p className="eyebrow mb-2 mt-4 first:mt-1">{title}</p>
       <div className="grid grid-cols-3 gap-2">
         {categories.map((cat) => {
           const active = cat.id === current
@@ -116,16 +71,20 @@ function Group({
               key={cat.id}
               onClick={() => onPick(cat.id)}
               className={cn(
-                'flex flex-col items-center gap-1 rounded-2xl border px-2 py-2.5 text-center transition-colors',
-                active ? 'border-primary bg-primary/10' : 'border-border bg-background',
+                'flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 text-center transition-transform active:scale-95',
+                active ? 'ink' : 'bg-card',
               )}
-              style={active ? undefined : { backgroundColor: `color-mix(in oklch, ${cat.color} 8%, transparent)` }}
+              style={
+                active
+                  ? undefined
+                  : { backgroundColor: `color-mix(in srgb, ${cat.color} 12%, var(--card))` }
+              }
             >
-              <span className="text-lg leading-none">{cat.emoji}</span>
+              <span className="text-xl leading-none">{cat.emoji}</span>
               <span
                 className={cn(
-                  'text-[11px] font-500 leading-tight',
-                  active ? 'text-primary' : 'text-foreground',
+                  'text-xs font-700 leading-tight',
+                  active ? 'text-ink-foreground' : 'text-foreground',
                 )}
               >
                 {cat.label}

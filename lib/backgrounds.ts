@@ -22,8 +22,8 @@ function glow(a: string, b: string, intensidadA = 9, intensidadB = 8): React.CSS
   return {
     backgroundColor: 'var(--background)',
     backgroundImage: [
-      `radial-gradient(120% 90% at 8% 0%, color-mix(in oklch, ${a} ${intensidadA}%, transparent), transparent 60%)`,
-      `radial-gradient(110% 80% at 100% 100%, color-mix(in oklch, ${b} ${intensidadB}%, transparent), transparent 60%)`,
+      `radial-gradient(120% 90% at 8% 0%, color-mix(in srgb, ${a} ${intensidadA}%, transparent), transparent 60%)`,
+      `radial-gradient(110% 80% at 100% 100%, color-mix(in srgb, ${b} ${intensidadB}%, transparent), transparent 60%)`,
     ].join(', '),
     backgroundAttachment: 'local',
   }
@@ -35,33 +35,33 @@ export const CHAT_BACKGROUNDS: ChatBackground[] = [
     label: 'Acogedor',
     style: glow('var(--primary)', 'var(--accent)'),
     swatch:
-      'radial-gradient(circle at 25% 20%, color-mix(in oklch, var(--primary) 45%, transparent), transparent 65%), radial-gradient(circle at 80% 85%, color-mix(in oklch, var(--accent) 55%, transparent), var(--background))',
+      'radial-gradient(circle at 25% 20%, color-mix(in srgb, var(--primary) 45%, transparent), transparent 65%), radial-gradient(circle at 80% 85%, color-mix(in srgb, var(--accent) 55%, transparent), var(--background))',
   },
   {
     id: 'mint',
     label: 'Menta',
     style: glow('var(--accent)', 'var(--chart-5)', 11, 8),
     swatch:
-      'linear-gradient(150deg, color-mix(in oklch, var(--accent) 55%, transparent), color-mix(in oklch, var(--chart-5) 40%, transparent), var(--background))',
+      'linear-gradient(150deg, color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--chart-5) 40%, transparent), var(--background))',
   },
   {
     id: 'sunset',
     label: 'Atardecer',
     style: glow('var(--chart-4)', 'var(--chart-3)', 10, 10),
     swatch:
-      'linear-gradient(150deg, color-mix(in oklch, var(--chart-4) 55%, transparent), color-mix(in oklch, var(--chart-3) 55%, transparent), var(--background))',
+      'linear-gradient(150deg, color-mix(in srgb, var(--chart-4) 55%, transparent), color-mix(in srgb, var(--chart-3) 55%, transparent), var(--background))',
   },
   {
     id: 'bubbles',
     label: 'Puntitos',
     style: {
       backgroundColor: 'var(--background)',
-      backgroundImage: `radial-gradient(color-mix(in oklch, var(--primary) 12%, transparent) 1.5px, transparent 1.5px)`,
+      backgroundImage: `radial-gradient(color-mix(in srgb, var(--primary) 12%, transparent) 1.5px, transparent 1.5px)`,
       backgroundSize: '18px 18px',
       backgroundAttachment: 'local',
     },
     swatch:
-      'radial-gradient(circle at 30% 30%, color-mix(in oklch, var(--primary) 50%, transparent) 22%, transparent 23%), radial-gradient(circle at 70% 70%, color-mix(in oklch, var(--primary) 50%, transparent) 22%, var(--background) 23%)',
+      'radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--primary) 50%, transparent) 22%, transparent 23%), radial-gradient(circle at 70% 70%, color-mix(in srgb, var(--primary) 50%, transparent) 22%, var(--background) 23%)',
   },
   {
     id: 'plain',

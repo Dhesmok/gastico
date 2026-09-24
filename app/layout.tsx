@@ -1,18 +1,19 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Fredoka, Nunito } from 'next/font/google'
+import { Fraunces, Manrope } from 'next/font/google'
 import './globals.css'
 
-const fredoka = Fredoka({
+// Una serif con carácter para las cifras y los títulos, y una sans limpia
+// para leer. Juntas le quitan a la app la cara de plantilla.
+const fraunces = Fraunces({
   subsets: ['latin'],
-  variable: '--font-fredoka',
-  weight: ['400', '500', '600', '700'],
+  variable: '--font-fraunces',
+  axes: ['opsz', 'SOFT'],
 })
 
-const nunito = Nunito({
+const manrope = Manrope({
   subsets: ['latin'],
-  variable: '--font-nunito',
-  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
 })
 
 export const metadata: Metadata = {
@@ -42,11 +43,14 @@ export const viewport: Viewport = {
   // La barra del navegador toma el color del fondo, y cambia con el tema para
   // que en el celular no quede una franja clara encima de la app oscura.
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f6fc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0d0c14' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f0e6' },
+    { media: '(prefers-color-scheme: dark)', color: '#171410' },
   ],
   // La app ocupa hasta detrás de la barra de gestos; el padding lo pone el CSS.
   viewportFit: 'cover',
+  // En Android el teclado encoge la pantalla en vez de taparla: así la caja
+  // del chat queda siempre a la vista.
+  interactiveWidget: 'resizes-content',
 }
 
 export default function RootLayout({
@@ -55,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`${fredoka.variable} ${nunito.variable} bg-background`}>
+    <html lang="es" className={`${fraunces.variable} ${manrope.variable} bg-background`}>
       <body className="antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

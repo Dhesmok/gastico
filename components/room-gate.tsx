@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronRight, DoorOpen, HeartHandshake, KeyRound, Loader2, LogOut, Plus, Sparkles } from 'lucide-react'
+import { ChevronRight, Loader2 } from 'lucide-react'
+import { AuthShell } from '@/components/login-screen'
+import { inputClass } from '@/components/sheet'
 import { createRoom, formatCode, joinRoom, myRooms } from '@/lib/room'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +24,8 @@ export function RoomGate({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [known, setKnown] = useState<{ id: string; name: string; code: string }[]>([])
+  // Con salas guardadas, el formulario se esconde: casi siempre se entra a una de esas.
+  const [showForm, setShowForm] = useState(false)
 
   // Si este usuario ya pertenece a alguna sala, ofrecerla de un toque (deduplicada).
   useEffect(() => {
@@ -29,8 +33,12 @@ export function RoomGate({
       .then((rooms) => {
         const unique = Array.from(new Map(rooms.map((r) => [r.id, r])).values())
         setKnown(unique)
+        if (unique.length === 0) setShowForm(true)
       })
-      .catch(() => setKnown([]))
+      .catch(() => {
+        setKnown([])
+        setShowForm(true)
+      })
   }, [])
 
   async function submit() {
@@ -63,171 +71,150 @@ export function RoomGate({
   }
 
   return (
-    <main className="relative flex min-h-svh items-center justify-center overflow-hidden px-4 py-8 sm:px-5 sm:py-10">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-24 -top-24 size-96 rounded-full bg-primary/30 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 size-[28rem] rounded-full bg-accent/30 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 size-72 -translate-x-1/2 rounded-full bg-chart-3/25 blur-3xl" />
-      </div>
-
-      <div className="glass-strong w-full max-w-md animate-pop-in rounded-3xl border border-border/80 bg-card/95 p-5 shadow-2xl shadow-primary/10 sm:rounded-4xl sm:border-white/40 sm:p-9">
-        <div className="mb-6 flex flex-col items-center text-center">
-          <div className="animate-bob mb-4 flex size-14 sm:size-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <HeartHandshake className="size-7 sm:size-8" />
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-600 tracking-tight text-foreground">
-            Cuentas Claras
-          </h1>
-          <p className="mt-2 text-pretty text-xs sm:text-sm leading-relaxed text-muted-foreground">
-            Creen una sala, compártanse el ID y la contraseña, y lleven los gastos del mes
-            chateando.
-          </p>
-        </div>
-
-        {known.length > 0 && (
-          <div className="mb-5">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="label">
-                Tus salas guardadas
-              </p>
-              <span className="text-[11px] font-600 text-primary">
-                {known.length} {known.length === 1 ? 'sala' : 'salas'}
+    <AuthShell
+      title={
+        known.length > 0 ? (
+          <>
+            ¿A qué <em className="text-primary">sala</em> entramos?
+          </>
+        ) : (
+          <>
+            Armen su <em className="text-primary">sala</em>.
+          </>
+        )
+      }
+      subtitle={
+        known.length > 0
+          ? 'Toca una de tus salas o entra a otra con su ID.'
+          : 'Uno la crea y le pasa el ID y la contraseña al otro.'
+      }
+    >
+      {known.length > 0 && (
+        <div className="surface mb-5 overflow-hidden">
+          {known.map((room) => (
+            <button
+              key={room.id}
+              onClick={() => onReady(room.id)}
+              className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left last:border-0 active:bg-muted"
+            >
+              <span className="ink flex size-10 shrink-0 items-center justify-center rounded-2xl font-display text-lg">
+                {room.name.slice(0, 1).toUpperCase()}
               </span>
-            </div>
-            <div className="flex flex-col gap-2">
-              {known.map((room) => (
-                <button
-                  key={room.id}
-                  onClick={() => onReady(room.id)}
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
-                >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary transition-transform group-hover:scale-105">
-                    <DoorOpen className="size-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-600 text-foreground">
-                      {room.name}
-                    </span>
-                    <span className="block font-mono text-xs text-muted-foreground">
-                      {formatCode(room.code)}
-                    </span>
-                  </span>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                </button>
-              ))}
-            </div>
-            <div className="my-5 flex items-center gap-3">
-              <span className="h-px flex-1 bg-border/80" />
-              <span className="label">o entra a otra</span>
-              <span className="h-px flex-1 bg-border/80" />
-            </div>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-700 text-foreground">
+                  {room.name}
+                </span>
+                <span className="block font-mono text-xs text-muted-foreground">
+                  {formatCode(room.code)}
+                </span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!showForm ? (
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex h-12 w-full items-center justify-center rounded-2xl border border-border text-sm font-700 text-foreground active:bg-muted"
+        >
+          Crear o unirme a otra sala
+        </button>
+      ) : (
+        <div className="animate-reveal">
+          <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
+            {(
+              [
+                { id: 'create' as Mode, label: 'Crear sala' },
+                { id: 'join' as Mode, label: 'Tengo un ID' },
+              ]
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setMode(tab.id)
+                  setError(null)
+                }}
+                className={cn(
+                  'rounded-full py-2 text-sm font-700 transition-colors',
+                  mode === tab.id ? 'ink' : 'text-muted-foreground',
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-        )}
 
-            <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
-              {(
-                [
-                  { id: 'create' as Mode, label: 'Crear sala', icon: Plus },
-                  { id: 'join' as Mode, label: 'Entrar a una', icon: KeyRound },
-                ]
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setMode(tab.id)
-                    setError(null)
-                  }}
-                  className={cn(
-                    'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-600 transition-colors',
-                    mode === tab.id
-                      ? 'bg-card text-foreground'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  <tab.icon className="size-4" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {mode === 'create' ? (
-                <Field
-                  label="Nombre de la sala"
-                  value={roomName}
-                  onChange={setRoomName}
-                  placeholder="Nuestra casa"
-                  maxLength={40}
-                />
-              ) : (
-                <Field
-                  label="ID de la sala"
-                  value={code}
-                  onChange={(v) => setCode(v.toUpperCase())}
-                  placeholder="ABCD-1234"
-                  maxLength={9}
-                  mono
-                />
-              )}
-
+          <div className="flex flex-col gap-3">
+            {mode === 'create' ? (
               <Field
-                label="Contraseña de la sala"
-                value={password}
-                onChange={setPassword}
-                placeholder="mínimo 4 caracteres"
-                type="password"
-                maxLength={64}
+                label="Nombre de la sala"
+                value={roomName}
+                onChange={setRoomName}
+                placeholder="Nuestra casa"
+                maxLength={40}
               />
-
+            ) : (
               <Field
-                label="¿Cómo te llamamos?"
-                value={nick}
-                onChange={setNick}
-                placeholder="tu nombre o apodo"
-                maxLength={20}
-                onEnter={submit}
+                label="ID de la sala"
+                value={code}
+                onChange={(v) => setCode(v.toUpperCase())}
+                placeholder="ABCD-1234"
+                maxLength={9}
+                mono
               />
-            </div>
-
-            {error && (
-              <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-500 leading-relaxed text-destructive">
-                {error}
-              </p>
             )}
 
-            <button
-              onClick={submit}
-              disabled={busy}
-              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-600 text-primary-foreground transition-colors hover:brightness-110 disabled:opacity-60"
-            >
-              {busy ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  {mode === 'create' ? 'Creando…' : 'Entrando…'}
-                </>
-              ) : (
-                <>{mode === 'create' ? 'Crear nuestra sala' : 'Entrar a la sala'}</>
-              )}
-            </button>
+            <Field
+              label="Contraseña de la sala"
+              value={password}
+              onChange={setPassword}
+              placeholder="mínimo 4 caracteres"
+              type="password"
+              maxLength={64}
+            />
 
-            <div className="mt-5 flex items-start gap-2 rounded-xl bg-muted px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-              <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
-              <span>
-                {mode === 'create'
-                  ? 'Al crear la sala te damos un ID de 8 caracteres. Compártelo con tu pareja junto con la contraseña y listo: nadie más entra.'
-                  : 'Pide el ID y la contraseña a quien creó la sala. Son distintas a las tuyas de entrada.'}
-              </span>
-            </div>
+            <Field
+              label="¿Cómo te llamamos?"
+              value={nick}
+              onChange={setNick}
+              placeholder="tu nombre o apodo"
+              maxLength={20}
+              onEnter={submit}
+            />
+          </div>
 
-            <button
-              onClick={onSignOut}
-              className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-500 text-muted-foreground transition-colors hover:text-destructive"
-            >
-              <LogOut className="size-3.5" />
-              Cerrar sesión
-            </button>
-      </div>
-    </main>
+          {error && (
+            <p className="mt-3 rounded-2xl bg-destructive/10 px-4 py-2.5 text-[13px] font-600 leading-relaxed text-destructive">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={submit}
+            disabled={busy}
+            className="mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-foreground text-[15px] font-700 text-background transition-opacity active:opacity-80 disabled:opacity-60"
+          >
+            {busy ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {mode === 'create' ? 'Creando…' : 'Entrando…'}
+              </>
+            ) : (
+              <>{mode === 'create' ? 'Crear la sala' : 'Entrar a la sala'}</>
+            )}
+          </button>
+        </div>
+      )}
+
+      <button
+        onClick={onSignOut}
+        className="mx-auto mt-4 flex px-3 py-2 text-xs font-700 text-muted-foreground transition-colors hover:text-destructive"
+      >
+        Cerrar sesión
+      </button>
+    </AuthShell>
   )
 }
 
@@ -252,9 +239,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block label">
-        {label}
-      </span>
+      <span className="eyebrow mb-1.5 block">{label}</span>
       <input
         type={type}
         value={value}
@@ -264,10 +249,7 @@ function Field({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && onEnter) onEnter()
         }}
-        className={cn(
-          'h-12 w-full rounded-xl border border-border bg-card px-3.5 text-sm font-500 text-foreground outline-none transition-colors placeholder:font-400 placeholder:text-muted-foreground focus:border-primary/60',
-          mono && 'font-mono tracking-widest',
-        )}
+        className={cn(inputClass, mono && 'font-mono tracking-widest')}
       />
     </label>
   )
